@@ -52,6 +52,8 @@ Put this file in `exercises/`!
 library(dplyr) # for %>%, arrange, desc, slice_, mutate, if_else, na_if, across, if_any, pick, lag, lead
 library(tidyr) # for drop_na, replace_na, fill
 library(tibble) # for tribble
+library(knitr)
+library(kableExtra)
 
 ```
 
@@ -116,7 +118,8 @@ Arrange `dat_survey` by condition (alphabetically), and within each condition fr
 
 ```{r}
 
-
+dat_survey %>% 
+  arrange(condition, desc(pss_1))
 
 ```
 
@@ -138,7 +141,7 @@ dat_survey %>%
 Run this chunk several times. What happens? Then add `set.seed(42)` on the line before it, and run it several times again. What changes? Why does this matter for reproducibility?
 
 ```{r}
-
+set.seed(42)
 dat_survey %>%
   slice_sample(n = 3)
 
@@ -175,7 +178,8 @@ Using `na_if()`, convert the missing data code in `age` to `NA`.
 
 ```{r}
 
-
+dat_survey %>% 
+  mutate(age = na_if(age, 999))
 
 ```
 
@@ -192,7 +196,9 @@ Using a single `across()` call, convert `-99` to `NA` in all four stress items.
 
 ```{r}
 
-
+dat_survey %>% 
+  mutate(across(.cols = c(pss_1, pss_2, pss_3, pss_4),
+         .fns = ~ na_if(.x, -99)))
 
 ```
 
@@ -204,7 +210,10 @@ Why not just use `mutate(across(where(is.numeric), ~ na_if(.x, -99)))`?
 
 ```{r}
 
-
+dat_survey %>% 
+  mutate(across(.cols = c(pss_1, pss_2, pss_3, pss_4),
+         .fns = ~ na_if(.x, -99)),
+         age = na_if(age, 999))
 
 ```
 
@@ -214,7 +223,10 @@ Items 2 and 3 are reverse-keyed. On a 1-5 scale, a reversed score is `6 - score`
 
 ```{r}
 
-
+dat_survey %>% 
+  mutate(across(.cols = c(pss_2, pss_3),
+                .fns = ~ 6 - .x,
+                .names = "{.col}_reversed"))
 
 ```
 
@@ -237,7 +249,9 @@ The scale's responses can only be 1-5. Create a column `pss_impossible` that is 
 
 ```{r}
 
-
+dat_survey %>% 
+  mutate(pss_impossible = if_any(.cols = c(pss_1, pss_2, pss_3, pss_4),
+                                 .fns = ~ !is.na(.x) & (.x < 1 | .x > 5)))
 
 ```
 
@@ -261,7 +275,14 @@ Starting from your code that converts `-99` to `NA` and reverse scores items 2 a
 
 ```{r}
 
-
+dat_survey %>% 
+  mutate(across(.cols = c(pss_1, pss_2, pss_3, pss_4),
+         .fns = ~ na_if(.x, -99)),
+         across(.cols = c(pss_2, pss_3),
+                .fns = ~ 6 - .x,
+                .names = "{.col}_reversed"),
+         pss_sum = rowSums(pick(pss_1, pss_2_reversed, pss_3_reversed, pss_4), na.rm = TRUE))
+  
 
 ```
 
@@ -287,7 +308,14 @@ Create `pss_n_missing` and `pss_mean` that implement this. Which participants ge
 
 ```{r}
 
-
+dat_survey %>% 
+  mutate(across(.cols = c(pss_1, pss_2, pss_3, pss_4),
+         .fns = ~ na_if(.x, -99)),
+         across(.cols = c(pss_2, pss_3),
+                .fns = ~ 6 - .x,
+                .names = "{.col}_reversed"),
+         pss_n_missing = rowSums(is.na(pick(pss_1, pss_2_reversed, pss_3_reversed, pss_4))),
+         pss_mean = if_else(pss_n_missing <= 1, rowMeans(pick(pss_1, pss_2_reversed, pss_3_reversed, pss_4), na.rm = TRUE), NA_real_))
 
 ```
 
@@ -299,7 +327,9 @@ Using `fill()`, fill in the `id` and `block` columns of `dat_stroop`. Save the r
 
 ```{r}
 
-
+dat_stroop_filled <- dat_stroop %>% 
+  fill(id, block)
+  
 
 ```
 
@@ -313,7 +343,10 @@ Using `dat_stroop_filled`, keep only the test block, and create a column `after_
 
 ```{r}
 
-
+dat_stroop_filled %>% 
+  filter(block == "test") %>% 
+  mutate(after_error = if_else(lag(correct) == 0, "post-error", "post-correct"))
+  
 
 ```
 
@@ -325,7 +358,11 @@ Using only the functions you know so far, how could you fix it? (Hint: `lag()` c
 
 ```{r}
 
-
+dat_stroop_filled %>% 
+  filter(block == "test") %>% 
+  mutate(after_error = case_when(is.na(lag(id)) | lag(id) != id ~ NA_character_,
+                                 lag(correct) == 0 ~ "post-error",
+                                 TRUE ~ "post-correct"))
 
 ```
 
@@ -335,7 +372,8 @@ Create a column `n_errors_so_far` that counts how many errors the participant ha
 
 ```{r}
 
-
+dat_stroop_filled %>% 
+  mutate(n_errors_so_far = cumsum(correct == 0))
 
 ```
 
@@ -344,13 +382,12 @@ Create a column `n_errors_so_far` that counts how many errors the participant ha
 This code is meant to convert missing data codes, reverse score items 2 and 3, and calculate a mean score for each participant. It has (at least) four bugs. Find and fix them one at a time.
 
 ```{r}
-#| eval: false
+
 
 dat_survey_broken <- dat_survey %>%
-  mutate(across(starts_with("pss_"), na_if(.x, -99)) %>%
-  mutate(across(c(pss_2, pss_3), ~ 6 - .x, .names = {.col}_reversed)) %>%
-  mutate(pss_mean = mean(pss_1, pss_2_reversed, pss_3_reversed, pss_4)) %>%
-  drop_na()
+  mutate(across(.cols = starts_with("pss_"), .fns = ~ na_if(.x, -99))) %>%
+  mutate(across(.cols = c(pss_2, pss_3), .fns = ~ 6 - .x, .names = "{.col}_reversed")) %>%
+  mutate(pss_mean = rowMeans(pick(pss_1, pss_2_reversed, pss_3_reversed, pss_4)))
 
 ```
 
@@ -369,7 +406,32 @@ Write a single pipe that creates `dat_survey_processed` from `dat_survey`. Add a
 
 ```{r}
 
+dat_survey_processed <- dat_survey %>%
+  # Fehlwertcodes in NA umwandeln: 999 beim Alter, -99 bei den Items
+  mutate(age = na_if(age, 999),
+         across(.cols = starts_with("pss_"),
+                .fns = ~ na_if(.x, -99))) %>%
+  # unmögliche Antworten ausserhalb von 1 bis 5 auf NA setzen
+  mutate(across(.cols = starts_with("pss_"),
+                .fns = ~ if_else(.x < 1 | .x > 5, NA_real_, .x))) %>%
+  # Items 2 und 3 umpolen, in neue Spalten
+  mutate(across(.cols = c(pss_2, pss_3),
+                .fns = ~ 6 - .x,
+                .names = "{.col}_reversed")) %>%
+  # fehlende Items zählen, Mittelwert nur bei höchstens einem fehlenden Item
+  mutate(pss_n_missing = rowSums(is.na(pick(pss_1, pss_2_reversed, pss_3_reversed, pss_4))),
+         pss_mean = if_else(pss_n_missing <= 1,
+                            rowMeans(pick(pss_1, pss_2_reversed, pss_3_reversed, pss_4),
+                                     na.rm = TRUE),
+                            NA_real_)) %>%
+  # nur die benötigten Spalten behalten
+  select(id, age, condition, pss_n_missing, pss_mean) %>%
+  # absteigend nach Stresswert sortieren
+  arrange(desc(pss_mean))
 
+dat_survey_processed %>%
+  kable() %>%
+  kable_classic(full_width = FALSE)
 
 ```
 
@@ -390,7 +452,25 @@ Write a single pipe that creates `dat_stroop_processed` from `dat_stroop`.
 
 ```{r}
 
+dat_stroop_processed <- dat_stroop %>%
+  # id und block auffüllen
+  fill(id, block) %>%
+  # nur den Testblock behalten
+  filter(block == "test") %>%
+  # nach Person und Durchgang sortieren
+  arrange(id, trial) %>%
+  # vorheriger Durchgang falsch? erste Zeile jeder Person NA
+  mutate(after_error = case_when(is.na(lag(id)) | lag(id) != id ~ NA_character_,
+                                 lag(correct) == 0 ~ "post-error",
+                                 TRUE ~ "post-correct"),
+  # Veränderung der Reaktionszeit zum vorherigen Durchgang
+         rt_change = if_else(is.na(lag(id)) | lag(id) != id,
+                             NA_real_,
+                             rt - lag(rt)))
 
+dat_stroop_processed %>%
+  kable() %>%
+  kable_classic(full_width = FALSE)
 
 ```
 

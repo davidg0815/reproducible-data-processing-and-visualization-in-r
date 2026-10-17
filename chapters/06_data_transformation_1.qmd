@@ -98,9 +98,9 @@ In general, tell select what you *do want*, not what you *don't want*.
 
 #### Exercise
 
-Check your understanding of positive and negative selections: 
+Check your understanding of positive and negative selections:
 
-1. What would happen if you mix positive and negative selections? i.e., What columns will be present in the output when your run the code below?
+1.  What would happen if you mix positive and negative selections? i.e., What columns will be present in the output when your run the code below?
 
 ```{r}
 #| eval: false
@@ -131,7 +131,7 @@ dat_demographics_selected %>%
 ```
 :::
 
-2. Why are those columns present and not others?
+2.  Why are those columns present and not others?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
 Once positive selections are present in the select call, the negative ones are redundant. You've already told `select()` what to include, which implies what not to include.
@@ -281,13 +281,13 @@ dat_fewer_columns %>%
 
 There are many other {tidyselect} helper functions including:
 
--   `starts_with()` : Selects columns ending in a character string
--   `ends_with()` : Selects columns ending in a character string
--   `contains()` : Selects columns containing a character string, not necessarily at the start or end
--   `all_of()` : Selects all of the column names in a vector e.g., `all_of(c("a", "b"))`
--   `any_of()` : Selects any of the column names in a vector that are present, silently dropping missing ones. This can be very useful when columns may or may not be present, but has the risk of creating silent errors.
--   `where()` : Select columns that meet a criterion, e.g., `where(is.numeric)` selects only columns containing numeric data.
--   `everything()` : Selects all columns. This will seem redundant right now, but will become useful later on when we cover `pivot_` functions
+- `starts_with()` : Selects columns ending in a character string
+- `ends_with()` : Selects columns ending in a character string
+- `contains()` : Selects columns containing a character string, not necessarily at the start or end
+- `all_of()` : Selects all of the column names in a vector e.g., `all_of(c("a", "b"))`
+- `any_of()` : Selects any of the column names in a vector that are present, silently dropping missing ones. This can be very useful when columns may or may not be present, but has the risk of creating silent errors.
+- `where()` : Select columns that meet a criterion, e.g., `where(is.numeric)` selects only columns containing numeric data.
+- `everything()` : Selects all columns. This will seem redundant right now, but will become useful later on when we cover `pivot_` functions
 
 #### Exercise
 
@@ -402,12 +402,12 @@ dat_fewer_columns %>%
 
 Negative selection using `-` is selection using a "set operation" or a set of logical rules that determine which column names are in the selected set. There are others:
 
--   Set operations:
-    -   `-` negative selection
-    -   `c()` : combine selections
-    -   `!` invert selection
-    -   `&` must meet both selection rules
-    -   `|` can meet either selection criteria
+- Set operations:
+  - `-` negative selection
+  - `c()` : combine selections
+  - `!` invert selection
+  - `&` must meet both selection rules
+  - `|` can meet either selection criteria
 
 For example: select columns that refer to scale 3 AND items \>=10:
 
@@ -472,9 +472,9 @@ dat_many_columns %>%
 
 The first chunk in this chapter read in the 'data_demographics_raw_messy.csv' file and renamed columns.
 
--   Rewrite that chunk here - as much as possible from memory, without simply copy pasting.
--   Add another pipe and selecting the "id", "question" and "response" columns.
--   Print a table of the resulting data frame using `kable()` and `kable_classic()`
+- Rewrite that chunk here - as much as possible from memory, without simply copy pasting.
+- Add another pipe and selecting the "id", "question" and "response" columns.
+- Print a table of the resulting data frame using `kable()` and `kable_classic()`
 
 Note: no solution provided here to reduce the temptation to peek or copy-paste.
 
@@ -632,8 +632,8 @@ Not all rows in a dataset are useful to us. When processing data, we often wish 
 
 It is important to learn the difference between `select()` and `filter()`, it is initially confusing.
 
--   `select()` keeps or drops **columns**
--   `filter()` keeps or drops **rows**
+- `select()` keeps or drops **columns**
+- `filter()` keeps or drops **rows**
 
 For example, filter the 'question' column to contain only "age" items:
 
@@ -650,12 +650,12 @@ dat_filtered_age %>%
 
 Write code to:
 
--   Take the 'dat_demographics_renamed' data frame.
--   Create two data frames called 'dat_filtered_age' and 'dat_filtered_gender'.
--   Retain only the relevant rows of 'question' for each.
--   Rename the 'response' columns to what variable it now contains.
--   Drop the 'question' columns since they're now irrelevant.
--   Print a table of each data frame.
+- Take the 'dat_demographics_renamed' data frame.
+- Create two data frames called 'dat_filtered_age' and 'dat_filtered_gender'.
+- Retain only the relevant rows of 'question' for each.
+- Rename the 'response' columns to what variable it now contains.
+- Drop the 'question' columns since they're now irrelevant.
+- Print a table of each data frame.
 
 ```{r}
 #| include: false
@@ -716,9 +716,9 @@ dat_filtered_gender %>%
 
 You can specify the logical test for filtering in many ways, including:
 
--   `==` : 'is exactly equal to this one value'
--   `!=` : 'is not exactly equal to
--   `%in%` : 'is exactly equal to one of the following values'
+- `==` : 'is exactly equal to this one value'
+- `!=` : 'is not exactly equal to
+- `%in%` : 'is exactly equal to one of the following values'
 
 Note that equivalence is two equals signs (`==`) whereas setting arguments in functions is one (`=`).
 
@@ -754,8 +754,8 @@ dat_filtered_gender %>%
 
 You can also combine multiple tests with various operators:
 
--   `&` : AND, i.e., meeting both criterion.
--   `|` : OR, i.e., meeting either criterion.
+- `&` : AND, i.e., meeting both criterion.
+- `|` : OR, i.e., meeting either criterion.
 
 ```{r}
 # & criterion X and Y
@@ -775,10 +775,10 @@ dat_demographics_renamed %>%
 
 Write code to:
 
--   Take the 'dat_demographics_renamed' data frame.
--   Create the data frame 'dat_filtered_rt'.
--   Retain only rows where where reaction time ('re') is more than 500 ms.
--   Print a table of each data frame.
+- Take the 'dat_demographics_renamed' data frame.
+- Create the data frame 'dat_filtered_rt'.
+- Retain only rows where where reaction time ('re') is more than 500 ms.
+- Print a table of each data frame.
 
 ```{r}
 #| include: false
@@ -827,10 +827,10 @@ dat_filtered_rt %>%
 
 Write code to:
 
--   Take the 'dat_demographics_renamed' data frame.
--   Create the data frame 'dat_filtered_rt'.
--   Retain only rows where where both reaction time ('rt') is more than 500 ms and gender is either 'male', 'female', or 'non-binary'.
--   Print a table of each data frame.
+- Take the 'dat_demographics_renamed' data frame.
+- Create the data frame 'dat_filtered_rt'.
+- Retain only rows where where both reaction time ('rt') is more than 500 ms and gender is either 'male', 'female', or 'non-binary'.
+- Print a table of each data frame.
 
 ```{r}
 #| include: false
@@ -976,13 +976,13 @@ dat_demographics_mutated %>%
 
 Write code to:
 
--   Take the 'dat_demographics_renamed'.
--   Create a data frame named 'dat_demographics_mutated'.
--   Retain only the gender question rows.
--   Rename 'response' to 'gender'.
--   Use the `stringr::str_to_lower()` function to convert 'gender' to lower case strings'.
--   Retain only the id and gender columns.
--   Print the data frame.
+- Take the 'dat_demographics_renamed'.
+- Create a data frame named 'dat_demographics_mutated'.
+- Retain only the gender question rows.
+- Rename 'response' to 'gender'.
+- Use the `stringr::str_to_lower()` function to convert 'gender' to lower case strings'.
+- Retain only the id and gender columns.
+- Print the data frame.
 
 ```{r}
 #| include: false
@@ -1064,8 +1064,8 @@ Working with character strings using {stringr} and 'regular expressions' (regex)
 
 For the moment, know that you can:
 
--   Use functions like `str_to_lower()` to convert all text to lower case (as in the above example).
--   Use `str_remove_all()` to remove everything except letters (`str_remove_all(x, "[^A-Za-z]")`) or everything except numbers (`str_remove_all(x, "[^0-9\\.]")`).
+- Use functions like `str_to_lower()` to convert all text to lower case (as in the above example).
+- Use `str_remove_all()` to remove everything except letters (`str_remove_all(x, "[^A-Za-z]")`) or everything except numbers (`str_remove_all(x, "[^0-9\\.]")`).
 
 Above, you used {stringr}'s `str_to_lower()` function to convert all letters to lower case. Let's apply that here to quickly improve things:
 
@@ -1194,25 +1194,25 @@ What is the difference between select and filter?
 Name some helper functions from {tidyselect}.
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
--   `starts_with()`
--   `ends_with()`
--   `contains()`
--   `all_of()`
--   `any_of()`
--   `where()`
--   `everything()`
+- `starts_with()`
+- `ends_with()`
+- `contains()`
+- `all_of()`
+- `any_of()`
+- `where()`
+- `everything()`
 :::
 
 Explain what each of them do.
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
--   `starts_with()` : Selects columns ending in a character string
--   `ends_with()` : Selects columns ending in a character string
--   `contains()` : Selects columns containing a character string, not necessarily at the start or end
--   `all_of()` : Selects all of the column names in a vector e.g., `all_of(c("a", "b"))`
--   `any_of()` : Selects any of the column names in a vector that are present, silently dropping missing ones. This can be very useful when columns may or may not be present, but has the risk of creating silent errors.
--   `where()` : Select columns that meet a criterion, e.g., `where(is.numeric)` selects only columns containing numeric data.
--   `everything()` : Selects all columns.
+- `starts_with()` : Selects columns ending in a character string
+- `ends_with()` : Selects columns ending in a character string
+- `contains()` : Selects columns containing a character string, not necessarily at the start or end
+- `all_of()` : Selects all of the column names in a vector e.g., `all_of(c("a", "b"))`
+- `any_of()` : Selects any of the column names in a vector that are present, silently dropping missing ones. This can be very useful when columns may or may not be present, but has the risk of creating silent errors.
+- `where()` : Select columns that meet a criterion, e.g., `where(is.numeric)` selects only columns containing numeric data.
+- `everything()` : Selects all columns.
 :::
 
 ### Positive vs. negative selections and filters
@@ -1220,8 +1220,8 @@ Explain what each of them do.
 Explain the difference between positive and negative selections in `select()` and `filter()` and how they are done in each.
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
--   In `select()`, positive selections mean *keep* these columns (e.g., `select(mpg, cyl)`), while negative selections mean *drop* these columns (e.g., `select(-mpg, -cyl)`).
--   In `filter()`, conditions act positively by default (e.g., `filter(mpg > 20)` keeps rows with mpg \> 20). To "negate" a condition, you use `!` or inequality operators (e.g., `filter(!(mpg > 20))` or `filter(mpg <= 20)`).
+- In `select()`, positive selections mean *keep* these columns (e.g., `select(mpg, cyl)`), while negative selections mean *drop* these columns (e.g., `select(-mpg, -cyl)`).
+- In `filter()`, conditions act positively by default (e.g., `filter(mpg > 20)` keeps rows with mpg \> 20). To "negate" a condition, you use `!` or inequality operators (e.g., `filter(!(mpg > 20))` or `filter(mpg <= 20)`).
 :::
 
 ### Set operators
@@ -1231,11 +1231,11 @@ What set operators can be used with `select()` and how?
 ::: {.callout-note collapse="true" title="Click to show answer"}
 `select()` supports set operations on columns using tidyselect helpers:
 
--   `-` : negative selection (drop columns)\
--   `c()` : combine multiple selections (union)\
--   `!` : invert a selection rule\
--   `&` : must meet *both* selection rules (intersection)\
--   `|` : can meet *either* selection rule (union)
+- `-` : negative selection (drop columns)\
+- `c()` : combine multiple selections (union)\
+- `!` : invert a selection rule\
+- `&` : must meet *both* selection rules (intersection)\
+- `|` : can meet *either* selection rule (union)
 
 Example:
 
@@ -1249,9 +1249,9 @@ What set operators can be used with `filter()` and how?
 ::: {.callout-note collapse="true" title="Click to show answer"}
 With filter(), set operations are expressed with logical operators applied to rows:
 
--   `&` : keeps rows that satisfy all conditions (intersection)
--   `|` : keeps rows that satisfy any condition (union)
--   `!` : excludes rows that meet a condition (negation/difference)
+- `&` : keeps rows that satisfy all conditions (intersection)
+- `|` : keeps rows that satisfy any condition (union)
+- `!` : excludes rows that meet a condition (negation/difference)
 
 Example:
 
@@ -1267,21 +1267,21 @@ dat %>%
 
 Complete the interactive exercises for:
 
--   [`select()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrselect)
--   [`relocate()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrrelocate)
--   [`filter()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrfilter)
--   [`mutate()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrmutate)
--   [`case_when()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrcase_when)
+- [`select()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrselect)
+- [`relocate()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrrelocate)
+- [`filter()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrfilter)
+- [`mutate()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrmutate)
+- [`case_when()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrcase_when)
 
 ### Practice data transformation using multiple functions
 
 In your local version of this .qmd file:
 
--   Use the 'dat_demographics_messy' to create a new data frame called 'dat_age_tidier'
--   Use `disinct()` to understand what unique responses are present in the 'age' column.
--   Use the other functions you learned in this chapter to clean the age column so that it contains only numbers.
--   Convert the age variable to a numeric variable with `as.numeric()`.
--   Print the unique responses present in the processed 'age' column as a table.
+- Use the 'dat_demographics_messy' to create a new data frame called 'dat_age_tidier'
+- Use `disinct()` to understand what unique responses are present in the 'age' column.
+- Use the other functions you learned in this chapter to clean the age column so that it contains only numbers.
+- Convert the age variable to a numeric variable with `as.numeric()`.
+- Print the unique responses present in the processed 'age' column as a table.
 
 ```{r}
 #| include: false

@@ -186,8 +186,6 @@ dat_gender_tidier_with_duplicates %>%
 
 ```
 
-
-
 ```{r}
 
 # count unique participant ids and the number of rows they have
@@ -196,7 +194,6 @@ dat_gender_tidier_with_duplicates %>%
   count(n_rows, name = "n_ids_with_n_rows")
 
 ```
-
 
 ```{r}
 
@@ -273,8 +270,6 @@ dat_gender_tidier %>%
 
 <!-- ```{r} -->
 
-
-
 <!-- ``` -->
 
 <!-- #### 3 TODO -->
@@ -282,8 +277,6 @@ dat_gender_tidier %>%
 <!-- Using only participants with complete, calculate the mean and SD of all participant's mean scores on the self-reports. -->
 
 <!-- ```{r} -->
-
-
 
 <!-- ``` -->
 
@@ -294,8 +287,6 @@ dat_gender_tidier %>%
 <!-- Also add to that data frame a new column called "exclude_amp" and set it to "exclude" if more than 10% of a participant's trials are too-fast trials and "include" if not. -->
 
 <!-- ```{r} -->
-
-
 
 <!-- ``` -->
 
@@ -308,8 +299,6 @@ dat_gender_tidier %>%
 <!-- # data_amp_scored %>% -->
 
 <!-- ``` -->
-
-
 
 ## Frequncies of sets of columns
 
@@ -345,5 +334,3 @@ It can be useful to arrange the output by the frequencies.
 ## Check your learning
 
 What is the difference between `mutate()` and `summarize()`? If I use the wrong one, will I get the same answer? E.g., mutate(mean_age = mean(age, na.rm = TRUE)) vs. summarize(mean_age = mean(age, na.rm = TRUE))
-
-
