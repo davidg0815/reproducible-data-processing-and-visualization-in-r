@@ -57,6 +57,7 @@ dat_demographics_selected %>%
 
 What code would you write to select the 'date' and 'correct' columns?
 
+
 ::: {.callout-note collapse="true" title="Click to show answer"}
 ```{r}
 dat_demographics_selected <- dat_demographics_renamed %>%
@@ -119,7 +120,7 @@ dat_demographics_selected %>%
 ```{r}
 #| eval: true
 #| include: false
-dat_demographics_selected <- dat_demographics_renamed %>%
+dat_demographics_selected <- dat_demographics_renamed %>%1
   select(id, 
          question, 
          response,
@@ -194,34 +195,43 @@ Write code to:
 
 ```{r}
 #| include: false
+dat_fewer_colums <- dat_many_columns |> 
+  select("depression_scale1_item1",
+"depression_scale1_item2",
+"depression_scale1_item3",
+"depression_scale1_item4",
+"depression_scale1_item5",
+"depression_scale1_item6",
+"depression_scale1_item7",
+"depression_scale1_item8",
+"depression_scale1_item9",
+"depression_scale1_item10",
+"depression_scale2_item1",
+"depression_scale2_item2",
+"depression_scale2_item3",
+"depression_scale2_item4",
+"depression_scale2_item5",
+"depression_scale2_item6",
+"depression_scale2_item7",
+"depression_scale3_item1",
+"depression_scale3_item2",
+"depression_scale3_item3",
+"depression_scale3_item4",
+"depression_scale3_item5",
+"depression_scale3_item6",
+"depression_scale3_item7",
+"depression_scale3_item8",
+"depression_scale3_item9",
+"depression_scale3_item10",
+"depression_scale3_item11", 
+"depression_scale3_item12",
+"depression_scale3_item13",
+"depression_scale3_item14", 
+"depression_scale3_item15")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+dat_fewer_colums |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -295,33 +305,12 @@ Write code to select all columns belonging to scale 2 from the 'dat_many_columns
 
 ```{r}
 #| include: false
+dat_fewer_columns <- dat_many_columns |> 
+  select(contains("scale2"))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+dat_fewer_columns |> 
+  colnames() |> 
+  dput()
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -341,35 +330,13 @@ Write code to select from the 'dat_many_columns' data frame the "id", "age" and 
 
 ```{r}
 #| include: false
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+dat_fewer_columns <- dat_many_columns |> 
+  select(id,
+         age,
+         gender,
+         contains("item3")) |> 
+  colnames() |> 
+  dput()
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -480,35 +447,20 @@ Note: no solution provided here to reduce the temptation to peek or copy-paste.
 
 ```{r}
 #| include: false
+dat_demographics_renamed2 <-
+  read_csv(file = "data/raw/data_demographics_raw_messy.csv",
+           skip = 2) |> 
+  clean_names() |> 
+  rename(id = subject_code, 
+         block_trial = block_code_and_trial_number, 
+         question = trial_code, 
+         response = key_response_use_this, 
+         rt = x0_ms_onset_rt) |> 
+  select(id, question, response)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+dat_demographics_renamed2 |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
 ```
 
 ## Moving columns with `dplyr::relocate()`
@@ -534,35 +486,15 @@ What code is needed to relocate the columns of 'dat_demographics_renamed' so tha
 
 ```{r}
 #| include: false
+dat_demographics_reordered <- dat_demographics_renamed |> 
+  relocate(id, .before = 1) |> 
+  relocate(question, .after = "id") |> 
+  relocate(response, .after = "question")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+dat_demographics_reordered |> 
+  head() |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -659,34 +591,23 @@ Write code to:
 
 ```{r}
 #| include: false
+dat_filtered_age <- dat_demographics_renamed |> 
+  filter(question == "age") |> 
+  select(-question) |>
+  rename(age = "response")
 
+dat_filtered_gender <- dat_demographics_renamed |> 
+  filter(question == "gender") |> 
+  select(-question) |>
+  rename(gender = "response")
 
+dat_filtered_age |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+dat_filtered_gender |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -782,34 +703,12 @@ Write code to:
 
 ```{r}
 #| include: false
+dat_filtered_rt <- dat_demographics_renamed |> 
+  filter(rt > 500 & question == "gender" & response %in% c("male", "female", "non-binary"))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+dat_filtered_rt |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -986,28 +885,16 @@ Write code to:
 
 ```{r}
 #| include: false
+dat_demographics_mutated <- dat_demographics_renamed |> 
+  filter(question == "gender") |> 
+  rename(gender = response) |> 
+  mutate(gender = stringr::str_to_lower(gender)) |>
+  select(id, gender)
+ 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+dat_demographics_mutated |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -1284,8 +1171,40 @@ In your local version of this .qmd file:
 - Print the unique responses present in the processed 'age' column as a table.
 
 ```{r}
-#| include: false
 
+dat_age_tidier <-  dat_demographics_messy
 
+dat_age_tidier |> 
+  distinct(age)
+
+dat_age_tidier <-  dat_demographics_messy |> 
+  mutate(age = str_to_lower(age)) |> 
+  mutate(age = case_when(
+    age == "forty" ~ "40",
+    age == "thirty five" ~ "35",
+    age == "thirty" ~ "30",
+    age == "thirty eight" ~ "38",
+    age == "twenty four" ~ "24",
+    age == "twenty nine" ~ "29",
+    age == "twenty one" ~ "21",
+    age == "forty five" ~ "45",
+    age == "nineteen" ~ "19",
+    age == "thirty four" ~ "34",
+    age == "thirty one" ~ "31",
+    age == "thirty seven" ~ "37",
+    age == "thirty two" ~ "32",
+    age == "twenty eight" ~ "28",
+    age == "twenty five" ~ "25",
+    age == "twenty three" ~ "23",
+    age == "twenty two" ~ "22",
+    TRUE ~ age
+  )) |> 
+  mutate(age = as.numeric(age))
+
+dat_age_tidier |> 
+  count(age) |> 
+  arrange(desc(n)) |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
 
 ```

@@ -1,0 +1,136 @@
+---
+title: "Week 2 - in class"
+editor: source
+author: "Ian Hussey"
+date: 21/09/2026
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+Put this file in `exercises/`!
+
+# How to do multi-line typing?
+
+Write "file_1" to "file_5" quickly, one line each, using multi line typing
+
+file_x1
+file_x2
+file_x3
+file_x4
+file_x5
+
+NEVER REPEAT YOURSELF (because of typo)
+
+# How to insert a code chunk below this heading?
+
+#x <- 10 just text
+
+# The value of x is: 'r x' --- exception, its code for reporting
+
+```{r}
+
+#x <- 10 actual code 
+
+```
+
+
+
+# How would you find out which of `readr::read_csv()`'s arguments allows you to ignore the first N lines when reading a file?  
+
+```{r}
+
+install.packages("readr")
+load.library("readr")
+require("readr")
+?read_csv()
+
+```
+
+
+# What do each of these do? When I run it and print `x` and `y` what will their values be?
+
+```{r}
+
+x <- 5
+y = 10
+y -> x
+
+x
+y
+
+```
+
+# What does a styler do?
+
+it makes your code more readable and brings it into certain convention
+
+# Why might this not run?
+
+```{r}
+#| eval: false
+
+#voth mass and dplyr have a select function = name space collision
+# either only load packages you need or unload afterwards
+
+library(dplyr)
+library(MASS)
+
+mtcars |>
+  select(mpg, cyl)
+
+#mtcars |>
+#  MASS::select(mpg, cyl)
+
+#mtcars |>
+#  dplyr::select(mpg, cyl)
+  
+```
+
+
+
+# How to change the date at the top of the html file this qmd renders to always be today's date?
+
+date: today
+
+# How to print this table more nicely?
+
+
+```{r}
+
+detach("package:MASS", unload=TRUE)
+library(tibble)
+
+mtcars |>
+  rownames_to_column() |>
+  select(rowname, mpg, cyl) |>
+  slice(1:5)
+
+```
+
+
+# Fine the `data_processed_chocolatepoop.csv` file and load it, using only RStudio
+
+Ensure this qmd file is in `exercises/`!
+
+```{r}
+
+list.dirs("../data/processed",
+          full.names = FALSE,
+          recursive = FALSE)
+list.files("../data/processed")
+
+file.exists("../data/processed/data_processed_chocolatepoop.csv")
+dat <- read_csv("../data/processed/data_processed_chocolatepoop.csv")
+
+```
+
+# Explain why you don't need `setwd()` for the previous question
+
+.qmd files use relative paths
+
+

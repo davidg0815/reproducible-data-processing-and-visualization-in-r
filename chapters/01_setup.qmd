@@ -42,7 +42,7 @@ If you prefer the latter, you can download JetBrainsMono from [here](https://www
 
 If you are reading this book as part of a course with me at the University of Bern, please:
 
--   Install the Slack app. You can download it [for Windows here](https://slack.com/downloads/windows) or [for Mac here](https://slack.com/downloads/mac).
--   I will send an invitation to the course's Slack workspace to all students enrolled in the course. Please check your \@students.unibe.ch email address.
--   Install the GitHub desktop app. You can download [here](https://desktop.github.com/download/).
--   Make an account yourself on https://github.com and log into it on the GitHub desktop app. University of Bern does provide you access to a branded GitHub account, but you'll lose access to it after you finish your studies, so it's better to make your own private account.
+- Install the Slack app. You can download it [for Windows here](https://slack.com/downloads/windows) or [for Mac here](https://slack.com/downloads/mac).
+- I will send an invitation to the course's Slack workspace to all students enrolled in the course. Please check your \@students.unibe.ch email address.
+- Install the GitHub desktop app. You can download [here](https://desktop.github.com/download/).
+- Make an account yourself on https://github.com and log into it on the GitHub desktop app. University of Bern does provide you access to a branded GitHub account, but you'll lose access to it after you finish your studies, so it's better to make your own private account.

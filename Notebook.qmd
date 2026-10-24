@@ -1,0 +1,225 @@
+---
+title: "Notebook"
+---
+
+```{r}
+library(readr) # for read_csv()
+library(janitor) # for clean_names()
+library(dplyr) # for %>%
+library(knitr) # for kable()
+library(kableExtra) # for kable_extra()
+library(tidyselect)
+library(truffle)
+```
+
+```{r}
+# select certain rows
+dat_demographics_selected <- dat_demographics_renamed |> 
+  select(date, 
+         correct)
+```
+
+```{r}
+# Mit dput colnames priten für copy and paste purpose
+dput(colnames(dat_demographics_renamed))
+```
+```{r}
+dat_demographics_selected <- dat_demographics_renamed |> 
+  select(date,
+         id,
+         build,
+         block_trial,
+         question,
+         response,
+         correct,
+         rt)
+```
+
+```{r}
+# print a lot of columns umständlich
+
+dat_many_columns |> 
+  colnames() |> 
+  dput()
+```
+```{r}
+dat_fewer_colums <- dat_many_columns |> 
+  select("depression_scale1_item1",
+"depression_scale1_item2",
+"depression_scale1_item3",
+"depression_scale1_item4",
+"depression_scale1_item5",
+"depression_scale1_item6",
+"depression_scale1_item7",
+"depression_scale1_item8",
+"depression_scale1_item9",
+"depression_scale1_item10",
+"depression_scale2_item1",
+"depression_scale2_item2",
+"depression_scale2_item3",
+"depression_scale2_item4",
+"depression_scale2_item5",
+"depression_scale2_item6",
+"depression_scale2_item7",
+"depression_scale3_item1",
+"depression_scale3_item2",
+"depression_scale3_item3",
+"depression_scale3_item4",
+"depression_scale3_item5",
+"depression_scale3_item6",
+"depression_scale3_item7",
+"depression_scale3_item8",
+"depression_scale3_item9",
+"depression_scale3_item10",
+"depression_scale3_item11", 
+"depression_scale3_item12",
+"depression_scale3_item13",
+"depression_scale3_item14", 
+"depression_scale3_item15")
+
+dat_fewer_colums |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
+```
+
+```{r}
+# nutzen der tidy select finctions
+dat_fewer_columns <- dat_many_columns |> 
+  select(contains("scale2"))
+
+dat_fewer_columns |> 
+  colnames() |> 
+  dput()
+```
+
+```{r}
+# Write code to select from the ‘dat_many_columns’ data frame the “id”, “age” and “gender” columns AND all columns related to item3.
+dat_fewer_columns <- dat_many_columns |> 
+  select(id,
+         age,
+         gender,
+         contains("item3")) |> 
+  colnames() |> 
+  dput()
+```
+```{r}
+# Write code to select from the ‘dat_many_columns’ data frame the “id”, “age” and “gender” columns AND all columns related to item1.
+dat_fewer_columns <- dat_many_columns |> 
+  select(id,
+         age,
+         gender,
+         ends_with("item1")) |> 
+  colnames() |> 
+  dput()
+```
+
+
+```{r}
+# To practice {tidyselect} helpers and selection set operations, write code in a creative and unnecessarily complex way to select the columns “id”, “gender”, and “age”, and the items from scale 1 and scale 3 that whose items are <= 10.
+dat_fewer_columns <- dat_many_columns |> 
+  select(id, gender, age,
+         num_range("depression_scale1_item", 1:10) |
+         num_range("depression_scale3_item", 1:10))
+
+dat_fewer_columns |> 
+  colnames() |> 
+  dput()
+```
+
+```{r}
+# The first chunk in this chapter read in the ‘data_demographics_raw_messy.csv’ file and renamed columns.
+# Rewrite that chunk here - as much as possible from memory, without simply copy pasting.
+# Add another pipe and selecting the “id”, “question” and “response” columns.
+# Print a table of the resulting data frame using kable() and kable_classic()
+
+dat_demographics_renamed2 <-
+  read_csv(file = "data/raw/data_demographics_raw_messy.csv",
+           skip = 2) |> 
+  clean_names() |> 
+  rename(id = subject_code, 
+         block_trial = block_code_and_trial_number, 
+         question = trial_code, 
+         response = key_response_use_this, 
+         rt = x0_ms_onset_rt) |> 
+  select(id, question, response)
+
+dat_demographics_renamed2 |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
+
+```
+
+```{r}
+# What code is needed to relocate the columns of ‘dat_demographics_renamed’ so that they are in the order “id”, “question”, “response”, and then the remaining columns.
+
+dat_demographics_reordered <- dat_demographics_renamed |> 
+  relocate(id, .before = 1) |> 
+  relocate(question, .after = "id") |> 
+  relocate(response, .after = "question")
+
+dat_demographics_reordered |> 
+  head() |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
+```
+```{r}
+# Take the ‘dat_demographics_renamed’ data frame.
+# Create two data frames called ‘dat_filtered_age’ and ‘dat_filtered_gender’.
+# Retain only the relevant rows of ‘question’ for each.
+# Rename the ‘response’ columns to what variable it now contains.
+# Drop the ‘question’ columns since they’re now irrelevant.
+# Print a table of each data frame.
+
+dat_filtered_age <- dat_demographics_renamed |> 
+  filter(question == "age") |> 
+  select(-question) |>
+  rename(age = "response")
+
+dat_filtered_gender <- dat_demographics_renamed |> 
+  filter(question == "gender") |> 
+  select(-question) |>
+  rename(gender = "response")
+
+dat_filtered_age |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
+
+dat_filtered_gender |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
+```
+```{r}
+#Take the ‘dat_demographics_renamed’ data frame.
+# Create the data frame ‘dat_filtered_rt’.
+# Retain only rows where where both reaction time (‘rt’) is more than 500 ms and gender is either ‘male’, ‘female’, or # ‘non-binary’.
+# Print a table of each data frame.
+dat_filtered_rt <- dat_demographics_renamed |> 
+  filter(rt > 500 & question == "gender" & response %in% c("male", "female", "non-binary"))
+
+dat_filtered_rt |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
+```
+6.5.1.1 Exercise
+Write code to:
+
+Take the ‘dat_demographics_renamed’.
+Create a data frame named ‘dat_demographics_mutated’.
+Retain only the gender question rows.
+Rename ‘response’ to ‘gender’.
+Use the stringr::str_to_lower() function to convert ‘gender’ to lower case strings’.
+Retain only the id and gender columns.
+Print the data frame.
+```{r}
+dat_demographics_mutated <- dat_demographics_renamed |> 
+  filter(question == "gender") |> 
+  rename(gender = response) |> 
+  mutate(gender = stringr::str_to_lower(gender)) |>
+  select(id, gender)
+ 
+
+dat_demographics_mutated |> 
+  kable() |> 
+  kable_classic(full_width = FALSE)
+```
+

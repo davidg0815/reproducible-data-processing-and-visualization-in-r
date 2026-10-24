@@ -1,0 +1,9 @@
+---
+title: "Uebungen_Notebook"
+---
+
+5.0 guidline für die aufgabe in ein paar wochen: nach dieser reihenfolge sollte man sich zuerst mal mit den daten vertraut machen ein "codebook" schreiben
+
+```{r}
+
+```

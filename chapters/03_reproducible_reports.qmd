@@ -1,4 +1,31 @@
-# Reproducible reports
+---
+title: "Reproducible reports"
+author: "David Gnaser"
+date: today
+---
+
+```{r}
+x <- 5
+y <- x-3
+y
+```
+
+```{r}
+#| eval: false
+#| include: false
+install.packages("tidyverse")
+install.packages("janitor")
+install.packages("report")
+install.packages("kableExtra")
+
+```
+
+```{r}
+#| eval: false
+#| include: false
+install.packages("styler")
+library(styler)
+```
 
 ```{r}
 #| include: false
@@ -98,8 +125,8 @@ Normal text.
 
 **bold text**
 
--   bullet points
--   bullet points
+- bullet points
+- bullet points
 
 1.  numbered list
 2.  numbered list
@@ -224,7 +251,7 @@ As before, read the comments and code below to see if you can understand the gen
 library(ggplot2)
 
 # plot
-ggplot(dat_processed_long, aes(score, race_iat)) +
+ggplot(dat_processed_long, aes(score, race_iat, color = subscale)) +
   geom_point(alpha = 0.7) +
   facet_wrap(~ subscale) +
   theme_linedraw() +
@@ -255,11 +282,11 @@ Edit your local copy of this .qmd file to make the following changes.
 
 ### Insert a new chunk and write code to install the following packages
 
--   Insert a new code chunk at the top of this file.
--   Use the `install.packages()` function to install the packages {tidyverse}, {janitor}, {knitr}, {kableExtra}, and {report}. Remember to exclude the "{}" and use quotation marks around the package names.
--   Run this chunk to install these packages.
--   Try to render the file. It should fail.
--   `install.packages()` calls will cause the render to fail, so we have to set the code in that chunk to not run. You could comment out this code, but the better option is to use chunk settings: include `#| eval: false` at the top of the chunk. Or, click the settings/gear icon on the top-right of the code chunk and click "Output\>Show nothing (don't run code)", which will insert in the chunk both `#| eval: false` ("don't run the code") and `#| include: false` ("don't show the code in the .html").
+- Insert a new code chunk at the top of this file.
+- Use the `install.packages()` function to install the packages {tidyverse}, {janitor}, {knitr}, {kableExtra}, and {report}. Remember to exclude the "{}" and use quotation marks around the package names.
+- Run this chunk to install these packages.
+- Try to render the file. It should fail.
+- `install.packages()` calls will cause the render to fail, so we have to set the code in that chunk to not run. You could comment out this code, but the better option is to use chunk settings: include `#| eval: false` at the top of the chunk. Or, click the settings/gear icon on the top-right of the code chunk and click "Output\>Show nothing (don't run code)", which will insert in the chunk both `#| eval: false` ("don't run the code") and `#| include: false` ("don't show the code in the .html").
 
 ### Render the report
 
@@ -277,9 +304,9 @@ Add the following text to the YAML header on line 4: `date: today`. Now when you
 
 Either type it yourself using backticks or use the keyboard shortcut: Ctrl + Alt + I (Windows) or Cmd + Alt + I (Mac). Enter some simple working code inside the chunk:
 
--   Assign the variable `x` to have the value `5`
--   Assign the variable `y` to have the value `x` minus `3`.
--   Print the value of `y` as output.
+- Assign the variable `x` to have the value `5`
+- Assign the variable `y` to have the value `x` minus `3`.
+- Print the value of `y` as output.
 
 Run the code in the chunk by clicking the green right-arrow: ![](../images/chunk_run_this_chunk.png)
 

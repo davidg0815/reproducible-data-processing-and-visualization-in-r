@@ -174,7 +174,7 @@ head(dat, n = 10) %>%
 
 ### How to insert a pipe?
 
-You can insert a pipe by typing `%>%` or using the following keyboard shortcuts. 
+You can insert a pipe by typing `%>%` or using the following keyboard shortcuts.
 
 - Windows: shift + Ctrl + M
 - Mac: shift + Cmd + M
@@ -244,9 +244,9 @@ This sounds obvious, but it's harder than it sounds and it often isn't done.
 
 Various naming conventions exist and are used for both objects (e.g., data frames) and functions.
 
--   snake_case: standard in {tidyverse} code, e.g., `write_csv()`
--   lower.dot.case: often used in older functions in base-R, e.g., `write.csv()`
--   camelCase: often used in Python
+- snake_case: standard in {tidyverse} code, e.g., `write_csv()`
+- lower.dot.case: often used in older functions in base-R, e.g., `write.csv()`
+- camelCase: often used in Python
 
 On the one hand, as long as you're consitent, it doesn't matter which one you use.
 
@@ -260,10 +260,10 @@ If more than one column has the same name, you'll have issues trying to work wit
 
 The following cause problems:
 
--   Column names that begin with a number, e.g., `1_to_7_depression`.
--   Column names that contain spaces, e.g., \`depression 1 to 7'.
--   Column names that contain characters other than letters and numbers, e.g., `depression_1_to_7*`.
--   Column names that are 'reserved names' in R, e.g., `TRUE`.
+- Column names that begin with a number, e.g., `1_to_7_depression`.
+- Column names that contain spaces, e.g., \`depression 1 to 7'.
+- Column names that contain characters other than letters and numbers, e.g., `depression_1_to_7*`.
+- Column names that are 'reserved names' in R, e.g., `TRUE`.
 
 For example, the 'dat_demographics_raw' data frame contains a columns named `correct` and `0 ms onset RT`.
 
@@ -410,11 +410,11 @@ Download the data and code for this e-Book (see the [Introduction](../index.qmd)
 
 In your local version of this .qmd file:
 
--   Create a data frame called `dat_likert_messy` by reading the .csv file from '../data/raw/data_likert_messy.csv'.
--   Print its column names.
--   Create a new data frame called `dat_likert_renamed` by taking `dat_likert_messy` and using `rename()` and the pipe to rename every column so that it conforms to the four principles above.
--   Use `head()` to print the first few rows of `dat_likert_renamed` so that you can verify that the renaming was successful. 
--   Write suitable comments explaining the code.
+- Create a data frame called `dat_likert_messy` by reading the .csv file from '../data/raw/data_likert_messy.csv'.
+- Print its column names.
+- Create a new data frame called `dat_likert_renamed` by taking `dat_likert_messy` and using `rename()` and the pipe to rename every column so that it conforms to the four principles above.
+- Use `head()` to print the first few rows of `dat_likert_renamed` so that you can verify that the renaming was successful.
+- Write suitable comments explaining the code.
 
 ```{r}
 #| include: false
@@ -469,3 +469,23 @@ dat_likert_renamed <- dat_likert_messy %>%
 head(dat_likert_renamed)
 ```
 :::
+
+```{r}
+dat_likert_messy <- read_csv("../data/raw/data_likert_messy.csv") %>% 
+  colnames() %>% 
+  dput()
+```
+
+```{r}
+dat_likert_messy <- read_csv("../data/raw/data_likert_messy.csv")
+dat_likert_renamed <- dat_likert_messy %>% 
+  rename(Date_d_m_y = "Date d m y",
+          subject_code = "subject code",
+          Item_1_likert_scale_1_to_7 = "1 to 7 likert scale item 1",
+          Item_2_likert_scale_1_to_7 = "1 to 7 likert scale item 2")
+  
+dat_likert_renamed %>% 
+  head() %>% 
+  kable() %>% 
+  kable_classic(full_width = FALSE)
+```

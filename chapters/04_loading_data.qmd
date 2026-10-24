@@ -26,10 +26,10 @@ In the immediate aftermath of the 2008 Financial Crisis, an article by then-Harv
 
 For coverage of this fascinating and horrifying story:
 
--   [Wikipedia page](https://en.wikipedia.org/wiki/Growth_in_a_Time_of_Debt)
--   Commentary by [Paul Krugman, Nobel Laureat, in the New York Times](https://www.nytimes.com/2013/04/19/opinion/krugman-the-excel-depression.html?_r=0)
--   [The Guardian](https://www.theguardian.com/politics/2013/apr/18/uncovered-error-george-osborne-austerity)
--   [The London Economic Review](https://www.thelondoneconomic.com/lifestyle/george-osborne-plunged-uk-into-austerity-due-to-an-error-on-a-spreadsheet-335732/))
+- [Wikipedia page](https://en.wikipedia.org/wiki/Growth_in_a_Time_of_Debt)
+- Commentary by [Paul Krugman, Nobel Laureat, in the New York Times](https://www.nytimes.com/2013/04/19/opinion/krugman-the-excel-depression.html?_r=0)
+- [The Guardian](https://www.theguardian.com/politics/2013/apr/18/uncovered-error-george-osborne-austerity)
+- [The London Economic Review](https://www.thelondoneconomic.com/lifestyle/george-osborne-plunged-uk-into-austerity-due-to-an-error-on-a-spreadsheet-335732/))
 
 ### Case study 2: Excel corrupts the genomics literature
 
@@ -72,6 +72,26 @@ R_course/
         ├── code_shouldnt_usually_go_here.qmd
         └── ... (other .csv files)
 ```
+
+```{r}
+#| eval: false
+library("knitr")
+library("kableExtra")
+library("readr")
+        
+dat_likert <- read_csv(".../data/raw/data_likert.csv")
+dat_likert |> 
+  knitr::kable(align = "r") |> 
+  kableExtra::kable_styling(full_width = FALSE)
+```
+```{r}
+list.dirs(path = "../data/raw",
+          full.names = FALSE,
+          recursive = FALSE)
+list.files("../data/raw")
+file.exists("../data/raw/data_likert.rds")
+```
+
 
 Because .qmd files use 'relative' paths, to load the 'data_shouldnt_usually_go_here.csv' file I only need to do the following, without any `setwd()` call:
 
