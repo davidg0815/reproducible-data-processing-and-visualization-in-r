@@ -96,7 +96,7 @@ Before class:
 In class:
 
 - Questions about reshaping and pivots
-<!-- - In-class exercises - [click to download .qmd](exercises/12_reshaping_and_pivots_in_class_exercises.qmd) -->
+- In-class exercises - [click to download .qmd](exercises/12_reshaping_and_pivots_in_class_exercises.qmd)
 
 ### Week 9
 
@@ -110,7 +110,7 @@ In class:
 - Questions about binding and joining
 - Questions about sharing and privacy
 - Lecture and exercise: Intro to GitHub, diffs
-<!-- - In-class exercises - [click to download .qmd](exercises/13_to_14_sharing_and_privacy_in_class_exercises.qmd) -->
+- In-class exercises - [click to download .qmd](exercises/13_binding_and_joining_in_class_exercises.qmd)
 
 ### Week 10
 
