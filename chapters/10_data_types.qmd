@@ -19,7 +19,7 @@ This chapter covers the main data types in R, missing values (`NA`), the surpris
 The most common types you will encounter are:
 
 | Type | Example values | Abbreviation in tibbles | Notes |
-|---|---|---|---|
+|----|----|----|----|
 | logical | `TRUE`, `FALSE`, `NA` | `<lgl>` | Also called booleans |
 | integer | `1L`, `2L`, `-5L` | `<int>` | Whole numbers. The `L` forces a number to be stored as an integer |
 | double | `1`, `2.5`, `-0.001` | `<dbl>` | Numbers with or without decimals. Also called "numeric" or "floats" |
@@ -333,42 +333,42 @@ dat_regression_betas_rounded %>%
   kable_classic(full_width = FALSE)
 ```
 
-Rounding should be one of the very last steps, just before results are reported. Calculations done on rounded numbers accumulate rounding error, and decisions such as whether *p* < .05 should always be made on the unrounded values.
+Rounding should be one of the very last steps, just before results are reported. Calculations done on rounded numbers accumulate rounding error, and decisions such as whether *p* \< .05 should always be made on the unrounded values.
 
 ## Reporting *p*-values in APA style
 
 The one thing that psychologists don't round using the round-half-up rule is *p*-values. Instead, the APA style guide's conventions for reporting *p*-values combine several different steps:
 
 1.  Report exact *p*-values to two or three decimal places, e.g., *p* = .023.
-2.  *p*-values smaller than .001 are reported as *p* < .001, rather than being rounded. *p* = .000 is never reported, because a *p*-value can never be exactly 0.
+2.  *p*-values smaller than .001 are reported as *p* \< .001, rather than being rounded. *p* = .000 is never reported, because a *p*-value can never be exactly 0.
 3.  No leading zero is used, because *p*-values can never be larger than 1, i.e., .023 rather than 0.023.
-4.  The result is text, not a number: "< .001" can't be stored as a number.
+4.  The result is text, not a number: "\< .001" can't be stored as a number.
 
 So "APA rounding" isn't really rounding at all. It is a mix of rounding, thresholding, and text formatting. This also means that it has to be the very last step: once *p*-values have been converted to text, you can no longer compare them to .05 or do any other calculations with them.
 
-There are also edge cases that need thought. For example, *p* = .0499 would be rounded to .050, which looks non-significant even though it is below .05. Decisions should always be made on the unrounded values, and when rounding would move a *p*-value to the other side of the significance threshold, it is better to report enough decimal places to keep it on the correct side, i.e., *p* = .0499. Similarly, a *p*-value can never be exactly 1, so values that would round to 1.000 are better reported as *p* > .999.
+There are also edge cases that need thought. For example, *p* = .0499 would be rounded to .050, which looks non-significant even though it is below .05. Decisions should always be made on the unrounded values, and when rounding would move a *p*-value to the other side of the significance threshold, it is better to report enough decimal places to keep it on the correct side, i.e., *p* = .0499. Similarly, a *p*-value can never be exactly 1, so values that would round to 1.000 are better reported as *p* \> .999.
 
 ### Existing functions
 
 Surprisingly, most of the functions in common R packages for formatting *p*-values don't follow APA style. For example, here is how several of them format the *p*-values .2346, .04999, and .0004:
 
 | Function | .2346 | .04999 | .0004 | Issue |
-|---|---|---|---|---|
-| base R `format.pval(p, digits = 3, eps = .001)` | 0.235 | 0.050 | <0.001 | Leading zeros |
-| `scales::label_pvalue()` | 0.235 | 0.050 | <0.001 | Leading zeros |
-| `insight::format_p()` | p = 0.235 | p = 0.050 | p < .001 | Inconsistent leading zeros |
+|----|----|----|----|----|
+| base R `format.pval(p, digits = 3, eps = .001)` | 0.235 | 0.050 | \<0.001 | Leading zeros |
+| `scales::label_pvalue()` | 0.235 | 0.050 | \<0.001 | Leading zeros |
+| `insight::format_p()` | p = 0.235 | p = 0.050 | p \< .001 | Inconsistent leading zeros |
 | `rstatix::p_format()` | 0.2346 | 0.05 | 0.0004 | Not rounded to 3 decimals |
-| `papaja::printp()` | .235 | .050 | < .001 | Follows APA style, but rounds .04999 across .05 |
-| `truffle::round_p_value()` | .235 | .04999 | < .001 | Follows APA style, and adds decimals rather than rounding across .05 |
+| `papaja::printp()` | .235 | .050 | \< .001 | Follows APA style, but rounds .04999 across .05 |
+| `truffle::round_p_value()` | .235 | .04999 | \< .001 | Follows APA style, and adds decimals rather than rounding across .05 |
 
 {papaja} does follow APA style, but it is a large package designed for writing entire manuscripts in R Markdown, so it's a heavy dependency if you only want to format *p*-values. The {truffle} package therefore provides a lightweight function for this, `round_p_value()`, which:
 
--   Rounds half up, in a way that isn't affected by floating point representation (like `roundwork::round_up()`), e.g., .1235 becomes .124.
--   Reports values below .001 as "< .001".
--   Removes the leading zero.
--   Adds extra decimal places when rounding would move a *p*-value to the other side of .05, e.g., .04999 becomes .04999 rather than .050. The threshold can be changed with the `alpha` argument, or this behavior turned off with `alpha = NULL`.
--   Reports values that would round to 1 as "> .999".
--   Throws an error for values below 0 or above 1, which can't be *p*-values.
+- Rounds half up, in a way that isn't affected by floating point representation (like `roundwork::round_up()`), e.g., .1235 becomes .124.
+- Reports values below .001 as "\< .001".
+- Removes the leading zero.
+- Adds extra decimal places when rounding would move a *p*-value to the other side of .05, e.g., .04999 becomes .04999 rather than .050. The threshold can be changed with the `alpha` argument, or this behavior turned off with `alpha = NULL`.
+- Reports values that would round to 1 as "\> .999".
+- Throws an error for values below 0 or above 1, which can't be *p*-values.
 
 ```{r}
 # install.packages("devtools"); devtools::install_github("ianhussey/truffle")
@@ -399,9 +399,9 @@ Notice that, after this, the 'p' column is character rather than numeric.
 
 The *p*-values below were calculated in an analysis. Write code that:
 
--   Creates a column 'significant' that is TRUE if *p* < .05 and FALSE otherwise.
--   Creates a column 'p_apa' that contains the *p*-value formatted in APA style.
--   Does these two steps in the right order.
+- Creates a column 'significant' that is TRUE if *p* \< .05 and FALSE otherwise.
+- Creates a column 'p_apa' that contains the *p*-value formatted in APA style.
+- Does these two steps in the right order.
 
 ```{r}
 dat_p_values <- tibble(test = c("H1", "H2", "H3", "H4"),
@@ -474,9 +474,9 @@ There are a few exceptions where the answer is known even though one value is no
 
 R has a few other special values that are easily confused with `NA`:
 
--   `NaN` ("Not a Number") is the result of an impossible calculation, like `0/0`.
--   `Inf` and `-Inf` are positive and negative infinity, e.g., the result of `1/0`.
--   `NULL` means "nothing at all", rather than "a missing value". It has length 0, so it disappears when combined with other values.
+- `NaN` ("Not a Number") is the result of an impossible calculation, like `0/0`.
+- `Inf` and `-Inf` are positive and negative infinity, e.g., the result of `1/0`.
+- `NULL` means "nothing at all", rather than "a missing value". It has length 0, so it disappears when combined with other values.
 
 ```{r}
 0/0
@@ -533,11 +533,11 @@ The intervention group's sum score of 0 looks like a real value, but it's not. I
 
 Because every column can only contain one type, `NA` also has types:
 
-| Missing value | Type |
-|---|---|
-| `NA` | logical |
-| `NA_integer_` | integer |
-| `NA_real_` | double |
+| Missing value   | Type      |
+|-----------------|-----------|
+| `NA`            | logical   |
+| `NA_integer_`   | integer   |
+| `NA_real_`      | double    |
 | `NA_character_` | character |
 
 A plain `NA` is logical. A column that contains *only* `NA`s, e.g., an optional free-text question that no one answered, is therefore also logical:
@@ -706,7 +706,7 @@ Most decimal numbers can't be stored exactly in binary, so the computer stores t
 Why should you never report *p* = 0? What does a *p*-value of exactly 0 tell you?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
-A *p*-value can never be exactly 0. A *p*-value of exactly 0 is a sign that the true value was too small to be represented, e.g., because it was calculated as 1 minus a number very close to 1. Report it as *p* < .001.
+A *p*-value can never be exactly 0. A *p*-value of exactly 0 is a sign that the true value was too small to be represented, e.g., because it was calculated as 1 minus a number very close to 1. Report it as *p* \< .001.
 :::
 
 ### Rounding and reporting
@@ -720,19 +720,19 @@ Why should you usually use `roundwork::round_up()` rather than `round()`?
 How is APA-style reporting of *p*-values different from ordinary rounding? Why should it be the last step?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
-It combines rounding to two or three decimals, reporting values below .001 as "< .001", and removing the leading zero. The result is text rather than a number, so any comparisons (e.g., *p* < .05) and calculations must be done before formatting.
+It combines rounding to two or three decimals, reporting values below .001 as "\< .001", and removing the leading zero. The result is text rather than a number, so any comparisons (e.g., *p* \< .05) and calculations must be done before formatting.
 :::
 
 ### Practice
 
 In your local version of this .qmd file:
 
--   Use 'dat_regression_betas' to create a table suitable for a manuscript.
--   Create a column 'significant' based on the unrounded *p*-values.
--   Round the beta estimates and confidence intervals to 2 decimal places using `round_up()`.
--   Combine the confidence intervals into a single column 'beta_ci' formatted like "[0.12, 0.52]". Hint: use `paste0()`, which is covered in more detail in the next chapter.
--   Format the *p*-values in APA style.
--   Keep only the columns 'beta_estimate', 'beta_ci', 'p', and 'significant', and print the table.
+- Use 'dat_regression_betas' to create a table suitable for a manuscript.
+- Create a column 'significant' based on the unrounded *p*-values.
+- Round the beta estimates and confidence intervals to 2 decimal places using `round_up()`.
+- Combine the confidence intervals into a single column 'beta_ci' formatted like "\[0.12, 0.52\]". Hint: use `paste0()`, which is covered in more detail in the next chapter.
+- Format the *p*-values in APA style.
+- Keep only the columns 'beta_estimate', 'beta_ci', 'p', and 'significant', and print the table.
 
 ```{r}
 #| include: false

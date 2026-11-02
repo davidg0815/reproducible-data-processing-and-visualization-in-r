@@ -24,13 +24,13 @@ Read [Wickham's chapter on Tidy Data](https://r4ds.hadley.nz/data-tidy.html#sec-
 
 Alison Horst has created some infographics that explain its simplest elements well:
 
-![](../images/tidy data 1.jpg)
+![](../images/tidy%20data%201.jpg)
 
-![](../images/tidy data 2.jpg)
+![](../images/tidy%20data%202.jpg)
 
-![](../images/tidy data 3.jpg)
+![](../images/tidy%20data%203.jpg)
 
-![](../images/tidy data 4.jpg)
+![](../images/tidy%20data%204.jpg)
 
 ## Examples of more and less Tidy Data
 
@@ -58,11 +58,11 @@ table3 %>%
 
 #### Check your learning
 
-Why do table2 and table3 not as Tidy as table1? 
+Why do table2 and table3 not as Tidy as table1?
 
 ## Non-tidy data
 
-There are many forms of data that are non-tidy without being messy. A proper understanding of Tidy Data requires that you understand this distinction. See [Wickham's description](https://r4ds.had.co.nz/tidy-data.html#non-tidy-data) in the first edition of the R4DS book. 
+There are many forms of data that are non-tidy without being messy. A proper understanding of Tidy Data requires that you understand this distinction. See [Wickham's description](https://r4ds.had.co.nz/tidy-data.html#non-tidy-data) in the first edition of the R4DS book.
 
 ## There is no one Tidy to rule them all
 
@@ -86,7 +86,7 @@ table1 %>%
 
 This gif helps illustrate what's happening when you pivot data to be wider or longer ([source](https://github.com/gadenbuie/tidyexplain?tab=readme-ov-file#pivot-wider-and-longer)):
 
-![](../images/pivot longer.gif)
+![](../images/pivot%20longer.gif)
 
 ## Example
 
@@ -140,7 +140,7 @@ cronbachs_depression2_alpha <- res_alpha_depression2$total$raw_alpha |>
 
 ```
 
-Cronbach's $\alpha$s: 
+Cronbach's $\alpha$s:
 
 - Depression1 scale: `r cronbachs_depression1_alpha`
 - Depression1 scale: `r cronbachs_depression2_alpha`
@@ -220,7 +220,7 @@ ggplot(dat_likert_wide, aes(x = depression2_item7)) +
 
 ```
 
--   These plots repeat the mortal coding sin of repeating ourselves. If we reshaped the data to 'long' format we could use just one ggplot() call that includes facet_wrap().
+- These plots repeat the mortal coding sin of repeating ourselves. If we reshaped the data to 'long' format we could use just one ggplot() call that includes facet_wrap().
 
 ### `pivot_longer()`
 
@@ -380,11 +380,11 @@ Note that if a participant had values in *both* columns, `coalesce()` would sile
 
 This is a general pattern worth noticing. Many {tidyverse} functions are "*wrappers*": shortcuts for logic that you could already write yourself with more general functions. You have already seen several in the [Data transformation I](06_data_transformation_1.qmd) and [Data transformation II](07_data_transformation_2.qmd) chapters:
 
--   Renaming and relocating columns inside `select()` does the work of `rename()` and `relocate()`.
--   `na_if(age, -99)` is a shortcut for `if_else(age == -99, NA, age)`.
--   `slice_head(n = 5)` is a shortcut for `filter(row_number() <= 5)`.
--   `drop_na(gender)` is a shortcut for `filter(!is.na(gender))`.
--   `coalesce(age_v1, age_v2)` is a shortcut for `if_else(!is.na(age_v1), age_v1, age_v2)`.
+- Renaming and relocating columns inside `select()` does the work of `rename()` and `relocate()`.
+- `na_if(age, -99)` is a shortcut for `if_else(age == -99, NA, age)`.
+- `slice_head(n = 5)` is a shortcut for `filter(row_number() <= 5)`.
+- `drop_na(gender)` is a shortcut for `filter(!is.na(gender))`.
+- `coalesce(age_v1, age_v2)` is a shortcut for `if_else(!is.na(age_v1), age_v1, age_v2)`.
 
 Wrappers make code shorter and easier to read, and are often less error-prone. But it is useful to understand the logic they wrap: it helps you know exactly what a function will do in unusual cases (e.g., what happens when both columns contain a value), and when no wrapper exists for your problem, you can fall back on writing the logic yourself with `mutate()`, `if_else()`, and `case_when()`.
 
@@ -395,22 +395,20 @@ The above plot does not order the items correctly (item1, item10, item2, etc).
 Use `mutate()` to remove 'depression' and 'item' from the column contents and plot it again.
 
 ```{r}
+#| fig-height: 8
+#| fig-width: 6
+library(tidyr)
 
-
-
-
-
-
-
-
-
-
-
-
-
+dat_likert_long_tidy %>% 
+  mutate(item = as.numeric(str_remove_all(item, "item")),
+         scale = as.numeric(str_remove_all(scale, "depression"))) %>% 
+ggplot(aes(x = response)) +
+  geom_histogram(binwidth = 1, boundary = -0.5) +
+  theme_linedraw() +
+  facet_grid(item ~ scale)
 ```
 
-### More advanced `pivot_longer()` 
+### More advanced `pivot_longer()`
 
 Separation can be done inside pivots.
 
@@ -485,7 +483,7 @@ Do all studies have 2 conditions? `r as.logical(check1)`
 
 ### Practice `pivot_longer()` and other functions to calculate sum scores
 
-Calculate the mean and SD of each item. Do not repeat your code: use pivot_longer and other functions. 
+Calculate the mean and SD of each item. Do not repeat your code: use pivot_longer and other functions.
 
 ```{r}
 
@@ -544,24 +542,33 @@ sd = sd(response))
 
 Now calculate:
 
-1. Each participant's mean score on each scale - **without** using item1+item2+item3 etc; use a pivot first.
-2. The sample's mean and SD on each scale
-3. Plot participants' mean-scores on each scale 
+1.  Each participant's mean score on each scale - **without** using item1+item2+item3 etc; use a pivot first.
+2.  The sample's mean and SD on each scale
+3.  Plot participants' mean-scores on each scale
 
 ```{r}
 
-# dat_likert_long_meanscored <- dat_likert_wide
+dat_likert_long_meanscored <- dat_likert_wide %>% 
+  pivot_longer(cols = starts_with("depression"),
+               names_to = c("scale", "scale_num", "item"),
+               names_pattern = "(depression)(\\d+)_item(\\d+)",
+               names_transform = list(item = as.integer),
+               values_to = "response") %>%
+  group_by(scale_num, id) %>% 
+  summarize(mean = mean(response),
+         SD = sd(response))
 
 
 
-# ggplot(dat_likert_long_meanscored, aes(x = meanscore)) +
-#   geom_histogram(binwidth = 1, boundary = -0.5) +
-#   theme_linedraw() +
-#   facet_wrap(~ scale)
+
+ ggplot(dat_likert_long_meanscored, aes(x = mean)) +
+   geom_histogram(binwidth = 1, boundary = -0.5) +
+   theme_linedraw() +
+   facet_wrap(~ scale_num)
 
 ```
 
-## `pivot_wider()` 
+## `pivot_wider()`
 
 pivot_wider is the opposite to pivot_longer. Note that it requires an id column(s) to know which rows below to the same participants.
 
@@ -591,15 +598,15 @@ Convert our mean-scored data from longer format back to wider:
 
 ```{r}
 
-# dat_likert_wide_meanscored <- dat_likert_long_meanscored %>%
-#   pivot_wider(names_from = scale,
-#               values_from = meanscore)
+ dat_likert_wide_meanscored <- dat_likert_long_meanscored %>%
+   pivot_wider(names_from = scale_num,
+               values_from = mean)
 
 ```
 
 ## Practice `pivot_wider()` more
 
-Wrangle the demographics data from one of the early chapters to calculate the sample size, the M and SD age, and the counts of each gender. 
+Wrangle the demographics data from one of the early chapters to calculate the sample size, the M and SD age, and the counts of each gender.
 
 Before, we used filter() to wrangle the age and gender data separately. This time, reshape it using a pivot.
 
@@ -607,9 +614,19 @@ Before, we used filter() to wrangle the age and gender data separately. This tim
 
 dat_demographics_raw <- read_csv("../data/raw/data_demographics_raw.csv")
 
+dat_demographics_wide <- dat_demographics_raw %>% 
+  pivot_wider(id_cols = subject,
+              names_from = trialcode,
+              values_from = response) %>% 
+  # aufräumen
+  group_by(gender) %>% 
+  summarize(mean_age = mean(age),
+            SD_age = sd(age),
+            N = n())
 
-
-
+dat_demographics_wide %>% 
+  kable() %>% 
+  kable_classic(full_width = FALSE)
 
 
 
@@ -617,20 +634,28 @@ dat_demographics_raw <- read_csv("../data/raw/data_demographics_raw.csv")
 
 ### Practice `pivot_wider()` and other functions
 
-The Affect Misattribution Procedure (AMP) claims to be a measure of automatic evaluations of stimuli without the participants intention or awareness [@payne2013]. This data comes from an AMP study where participants are asked to evaluate Chinese characters and ignore the picture stimuli that are briefly presented before each Chinese character. The AMP effect is quantified as the difference in the ratings of the Chinese characters preceeded by one stimulus type (positive) vs. the other (negative). The idea is that participants should not evaluate the images, only the Chinese characters, but the images nonetheless influence their evaluations.  
+The Affect Misattribution Procedure (AMP) claims to be a measure of automatic evaluations of stimuli without the participants intention or awareness [@payne2013]. This data comes from an AMP study where participants are asked to evaluate Chinese characters and ignore the picture stimuli that are briefly presented before each Chinese character. The AMP effect is quantified as the difference in the ratings of the Chinese characters preceeded by one stimulus type (positive) vs. the other (negative). The idea is that participants should not evaluate the images, only the Chinese characters, but the images nonetheless influence their evaluations.
 
 - Remove the instructions trials and the practice trials.
 - Create an 'evaluation' variable. When the stimulus was prime_positive, 'evaluation' = 'correct'. When stimulus was prime_negative, 'evaluation' is 'correct' reverse scored.
 - Calculate the mean evaluation per stimulus type (positive vs negative)
 - Pivot the data wider so that you have mean_evaluation_positive and mean_evaluation_negative.
-- Calculate the `amp_effect` for each participant: the difference in mean evaluations of the positive vs. negative stimuli. 
+- Calculate the `amp_effect` for each participant: the difference in mean evaluations of the positive vs. negative stimuli.
 - Create a separate data frame with the mean and SD of the amp_effect in the sample. If mean evaluation deviates from 0.5 (neutral), and AMP effect is present.
 
 ```{r}
 
 dat_amp <- read_csv("../data/raw/data_amp_raw.csv")
+dat_amp %>% 
+  filter(trialcode == "prime_negative" | trialcode == "prime_positive") %>% 
+  mutate(evaluation = trialcode == "prime_positive") %>% 
+  group_by(trialcode) %>% 
+  summarize(n_evaluation = sum(!is.na(evaluation)),
+            mean_evaluation = if_else(n_evaluation > 0, mean(evaluation, na.rm = TRUE), NA_real_))
 
-
+  dat_amp %>% 
+  kable() %>% 
+  kable_classic(full_width = FALSE)
 
 
 
@@ -656,5 +681,3 @@ household |>
   )
 
 ```
-
-
