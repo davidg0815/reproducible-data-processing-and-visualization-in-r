@@ -8,6 +8,16 @@
 options(scipen = 999)  
 ```
 
+This chapter introduces the basic building blocks you need before working with data in R: the difference between R, RStudio, and {tidyverse}; the parts of the RStudio interface; how to install and load packages; how to find help; how to create objects; and how to write code that other people (including future you) can read.
+
+None of this is specific to psychology data, but all of it comes up every time you process data. In particular, managing your dependencies (the packages your code needs) and writing readable code are core parts of making your work reproducible, which we build on in the next chapter on [Reproducible reports](03_reproducible_reports.qmd).
+
+```{r}
+library(dplyr) # for %>%, mutate(), group_by(), summarise(), filter(), select()
+library(ggplot2) # for the example plot
+library(stringr) # for str_c()
+```
+
 ## What's the difference between Base R, RStudio IDE, and tidyverse?
 
 This is an understandable point of confusion, so let's clarify:
@@ -40,7 +50,7 @@ Screenshot of Source editor mode:
 
 ![](../images/source_editor.png){style="border: 1px solid black;"}
 
-You can also view the a live preview of the rendered file, including tables, plots, math, etc., using 'Visual' editor mode, although there will some simplifications compared to when you render a .html file. We'll cover rendering in a later chapter.
+You can also view a live preview of the rendered file, including tables, plots, math, etc., using 'Visual' editor mode, although there will be some simplifications compared to when you render a .html file. We'll cover rendering in a later chapter.
 
 Screenshot of Visual editor mode:
 
@@ -84,7 +94,7 @@ When you get a bit more experienced with RStudio, I highly recommend you check o
 
 ## Dependencies
 
-Base R includes a powerful core of many useful functions, but it doesn’t include every tool you might need. To do specialized tasks you can install 'packages' that contain other functions and documentation to help you understand them. Once your code makes use of another package, it 'depends' on that that package for the code to run, so we say that the package is a 'dependency' for that script. Packages that can
+Base R includes a powerful core of many useful functions, but it doesn’t include every tool you might need. To do specialized tasks you can install 'packages' that contain other functions and documentation to help you understand them. Once your code makes use of another package, it 'depends' on that package for the code to run, so we say that the package is a 'dependency' for that script.
 
 Install packages from the most common database of R packages, CRAN, with `install.packages()`. Each package only needs to be installed once for it to be present on your computer, not every time the script runs.
 
@@ -111,7 +121,7 @@ devtools::install_github("ianhussey/psychdsish") # username/repository
 devtools::install_github("ianhussey/truffle") # username/repository
 ```
 
-Dependencies, i.e., packages that your code requires to run, can be loaded with `library()`. For tidiness, these should usually all be loaded at the start of your script. Some chapters in this book load libraries only when they're used in order to make it clear which functions come from which libraries. Equally, unused libraries should not be loaded.
+Dependencies, i.e., packages that your code requires to run, can be loaded with `library()`. For tidiness, these should usually all be loaded at the start of your script. Each chapter in this book does this in a code chunk just after its introduction, with a comment saying what each package is used for. Equally, unused libraries should not be loaded.
 
 ```{r}
 library(tidyverse) # umbrella package that loads dplyr/tidyr/ggplot2 and others
@@ -157,7 +167,10 @@ Solve this issue either by specifying which package should be used each time you
 #| warning: true
 library(conflicted)
 conflict_prefer(name = "select", winner = "dplyr")
+conflict_prefer(name = "filter", winner = "dplyr")
 ```
+
+Once {conflicted} is loaded, R throws an error whenever you use a function name that more than one loaded package provides, rather than silently picking one. Here, `filter()` exists in both {dplyr} and {stats} (which R always loads), so we also tell R to prefer {dplyr}'s version. The code later in this chapter uses `filter()`, and would not run without this line.
 
 ## Assignment of objects
 
@@ -227,21 +240,12 @@ Code can be written many different ways and still run. For example, both of the 
 ```{r}
 #| eval: false
 #| include: false
-# install.packages("devtools"); devtools::install_github("ianhusssey/psychdsish")
+# install.packages("devtools"); devtools::install_github("ianhussey/psychdsish")
 library(psychdsish)
 print_poorly_styled_code()
 ```
 
 ```{r}
-#| include: false
-conflicts_prefer(dplyr::filter)
-```
-
-```{r}
-library(dplyr)
-library(ggplot2)
-library(stringr)
-
 mtcars %>% mutate(am=ifelse(am==1,
 "manual","automatic"),gear=factor(
   gear
@@ -274,10 +278,6 @@ guides(fill=guide_legend(title="Transmission"))+coord_flip()
 ```
 
 ```{r}
-library(dplyr)
-library(ggplot2)
-library(stringr)
-
 # take the 'mtcars' dataset
 mtcars %>%
   # convert some of the existing data columns
@@ -331,15 +331,90 @@ You can then restyle any code you've written by highlighting the code (click+dra
 
 ![](../images/styler.gif)
 
+
+## Key functions
+
+The main functions and tools covered in this chapter:
+
+| Function or tool | Package | What it does |
+|------------------|---------|--------------|
+| `install.packages()` | {utils} | Installs a package from CRAN. Only needs to be run once per computer. |
+| `devtools::install_github()` | {devtools} | Installs a package from a GitHub repository. |
+| `library()` | {base} | Loads an installed package so its functions can be used in this session. |
+| `?` | {utils} | Opens the help page for a function, e.g., `?select`. |
+| `::` | {base} | Uses a function from a specific package without loading it, or to avoid a namespace collision, e.g., `dplyr::select()`. |
+| `conflict_prefer()` | {conflicted} | Says which package's version of an identically named function should be used. |
+| `<-` | {base} | Assigns a value to an object, e.g., `x <- 5`. |
+| `#` | {base} | Starts a comment: everything to its right on that line is ignored when the code runs. |
+| Styler addin | {styler} | Restyles selected code, or a whole file, to follow the Tidyverse Style Guide. |
+
 ## Exercises
 
-### Fix style / indentation / white space
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
 
-Edit your local copy of this .qmd file to make the following changes. If you're reading this as an eBook on the website, create a new .R file in RStudio on your computer ('File\>New File\>R script'). Copy and paste the code below into that file.
+### Check your understanding
 
-Restyle the code with the Styler Addin.
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
 
-You can undo this with Ctrl + z (Windows) or Cmd + z (Mac) if you want to see it before/after again.
+1.  Which of these is a set of R packages, rather than a language or an application? `r webexercises::mcq(c("base R", "RStudio", answer = "tidyverse", "Quarto"))`
+2.  Code typed directly into the console is saved so that you can rerun it later. `r webexercises::torf(FALSE)`
+3.  Which is the conventional way to assign the value 5 to the object x? `r webexercises::mcq(c("x = 5", "5 -> x", "x == 5", answer = "x <- 5"))`
+4.  After running x <- 3 and then x <- x * 2, what does x contain? `r webexercises::mcq(c("3", answer = "6", "x * 2", "An error"))`
+5.  If you load {dplyr} and then {MASS}, select() will use the {dplyr} version. `r webexercises::torf(FALSE)`
+6.  R ignores everything to the right of # on a line of code. `r webexercises::torf(TRUE)`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  {tidyverse} is a set of packages that extend base R. Base R is the language, RStudio is the application you write code in, and Quarto is the system for making reports from .qmd files.
+2.  False. Code run in the console is not saved anywhere you can easily rerun it. Write your code in a script (.R or .qmd) so that it can be rerun, modified, and shared.
+3.  `<-` is the conventional assignment operator in R. `=` and `->` also work but are best avoided, and `==` tests whether two values are equal rather than assigning anything.
+4.  6. The right-hand side is calculated first using the current value of 'x' (3), and the result (6) is then assigned to 'x', replacing the old value.
+5.  False. The package loaded last masks identically named functions from packages loaded earlier, so `select()` would refer to `MASS::select()`. Use `dplyr::select()` or `conflict_prefer()` to be explicit.
+6.  True. This is how comments work, both on their own lines and beside code.
+:::
+
+What is the difference between installing a package and loading it?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+Installing a package (`install.packages()`) downloads it to your computer. You only need to do this once per computer, not every time your script runs. Loading a package (`library()`) makes its functions available in the current R session, and needs to happen every time the script runs. That's why `library()` calls belong in your script, but `install.packages()` calls should not run every time.
+:::
+
+What is a 'dependency', and why should you load all of a script's dependencies at the top of the script?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+A dependency is a package that your code needs in order to run. Loading them all at the top makes it easy for you and others to see at a glance which packages need to be installed before the code will run, and makes sure they are loaded before any code that uses them.
+:::
+
+What is the difference between a .R file, a .qmd file, and a .md file?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+A .R file contains only R code and comments. A .qmd (Quarto) file can contain text, code, and the code's output, such as tables and plots, and can be rendered to a .html file. A .md (markdown) file contains formatted text but no code that can be run.
+:::
+
+You get an unexpected error from a function that you know works, e.g., `select()`. What might be causing it, and what are two ways to fix it?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+A namespace collision: another loaded package has a function with the same name, and R is using that version instead. You can check with the help menu (e.g., `?select`), which will show more than one entry. Fix it either by specifying the package each time you use the function (e.g., `dplyr::select()`), or by stating which version you prefer with `conflict_prefer()` from {conflicted}. Loading only the packages you need also makes this less likely.
+:::
+
+Which of these two comments is more useful, and why? `# remove participants under 18` or `# filter rows where age is less than 18`
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+The first one. The code itself already shows *how* it works (filtering rows on age), so the second comment just repeats it. The first one explains *why* the code exists, which the code alone can't tell you.
+:::
+
+### Practice
+
+In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
+
+#### Fix style, indentation, and white space
+
+If you're reading this as an eBook on the website, create a new .R file in RStudio on your computer ('File\>New File\>R script'), and copy and paste the code below into that file.
+
+-   Restyle the code with the Styler Addin.
+-   You can undo this with Ctrl + z (Windows) or Cmd + z (Mac) if you want to see it before/after again.
+-   Compare the result with the well-styled version earlier in the chapter. What did {styler} fix, and what did it not do (e.g., add comments)?
 
 ```{r}
 #| eval: false # do not run this chunk, only display the code
@@ -378,4 +453,26 @@ axis.text.x=element_text(angle=45,hjust=1)
 )+labs(
 x="Group",y="Average MPG")+
 guides(fill=guide_legend(title="Transmission"))+coord_flip()
+```
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+Install {styler} first if you haven't already (see the Code styling section). Highlight the code, then click "Addins"\>"STYLER"\>"Style selection". If you can't see the Addins menu item, it's in the toolbar at the top of RStudio.
+:::
+
+#### Assign, comment, and get help
+
+-   Assign your age to an object called `age` and your name to an object called `name`, then print both.
+-   Create a new object `age_in_months` from `age`, and print it.
+-   Add a comment above each line that explains why the code is there.
+-   Open the help page for `mean()`. What does its `na.rm` argument do?
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+Use `<-` for assignment, and put text (but not numbers) in quotation marks. Typing an object's name on its own line prints it. Use `?` to open a help page, and look at the 'Arguments' section.
+:::
+
+```{r}
+#| include: false
+
+
+
 ```

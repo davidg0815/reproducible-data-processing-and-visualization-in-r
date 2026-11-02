@@ -15,15 +15,13 @@ The same data can be arranged in different shapes. Questionnaire data, for examp
 Reshaping data between these shapes is called pivoting. This chapter covers the ideas behind how data should be structured (Tidy Data), the two main functions for reshaping data, `pivot_longer()` and `pivot_wider()` from the {tidyr} package, and related functions for splitting and combining columns.
 
 ```{r}
-library(dplyr)
-library(tidyr)
-library(tibble)
-library(stringr)
-library(readr)
-library(ggplot2)
-library(knitr)
-library(kableExtra)
-library(roundwork)
+library(dplyr) # for %>%, mutate(), select(), group_by(), summarize(), coalesce()
+library(tidyr) # for pivot_longer(), pivot_wider(), separate(), unite()
+library(tibble) # for tribble(), as_tibble()
+library(stringr) # for str_remove()
+library(readr) # for read_csv()
+library(ggplot2) # for plotting
+library(roundwork) # for round_up()
 
 # devtools::install_github("ianhussey/truffle")
 library(truffle) # for simulating data
@@ -60,17 +58,11 @@ Illustrations from the Openscapes blog [Tidy Data for reproducibility, efficienc
 {tidyr} includes several versions of the same data: the number of tuberculosis cases and the population of three countries in two years. `table1` is the tidiest, and therefore the easiest to work with in most workflows, because it follows all three rules.
 
 ```{r}
-table1 %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+table1
 
-table2 %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+table2
 
-table3 %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+table3
 ```
 
 #### Exercise
@@ -108,9 +100,7 @@ The same data can be represented in more than one way and still be tidy: it can 
 ```{r}
 table2 %>%
   pivot_wider(names_from = type,
-              values_from = count) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+              values_from = count)
 ```
 
 What counts as a single observation depends on your question. If you are interested in each country in each year, `table1` is tidy. If you are interested in how cases and population compare as measures, `table2` might be more useful.
@@ -137,10 +127,7 @@ dat_likert_wide <-
   truffle_demographics()
 
 dat_likert_wide %>%
-  head() %>%
-  kable() %>%
-  kable_classic(full_width = FALSE) %>%
-  scroll_box(width = "100%")
+  head()
 ```
 
 Wide data like this is useful for some analyses, e.g., calculating internal consistency, which needs each item in its own column:
@@ -443,16 +430,16 @@ If one of these other columns varies within a participant, rows are not combined
 head(cms_patient_experience)
 
 # without id_cols: measure_title differs between rows, so rows aren't combined
-cms_patient_experience |>
+cms_patient_experience %>%
   pivot_wider(names_from = measure_cd,
-              values_from = prf_rate) |>
+              values_from = prf_rate) %>%
   head()
 
 # with id_cols: one row per organization
-cms_patient_experience |>
+cms_patient_experience %>%
   pivot_wider(id_cols = starts_with("org"),
               names_from = measure_cd,
-              values_from = prf_rate) |>
+              values_from = prf_rate) %>%
   head()
 ```
 
@@ -544,7 +531,7 @@ head(dat_meta_long)
 ```{r}
 household
 
-household |>
+household %>%
   pivot_longer(cols = !family,
                names_to = c(".value", "child"),
                names_sep = "_",
@@ -617,9 +604,7 @@ dat_descriptives_wide %>%
   pivot_longer(cols = everything(),
                names_to = c("variable", ".value"),
                names_sep = "_") %>%
-  mutate(across(c(mean, sd), \(x) round_up(x, digits = 2))) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  mutate(across(c(mean, sd), \(x) round_up(x, digits = 2)))
 ```
 
 Note that this relies on the variable names not containing an underscore themselves. If they did, e.g., 'depression_total', you would need `names_pattern` instead, e.g., `"(.*)_(mean|sd)"`.
@@ -681,9 +666,7 @@ dat_versions <- tribble(
   5,   NA,      NA
 )
 
-dat_versions %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+dat_versions
 ```
 
 We want a single 'age' column. You already know how to do this with `mutate()` and `if_else()`: "if 'age_v1' is not missing, use it; otherwise, use 'age_v2'".
@@ -692,9 +675,7 @@ We want a single 'age' column. You already know how to do this with `mutate()` a
 dat_versions %>%
   mutate(age = if_else(condition = !is.na(age_v1), # the logical test applied: is age_v1 not missing?
                        true = age_v1, # if so, use age_v1
-                       false = age_v2)) %>% # if not, use age_v2 (which may itself be NA)
-  kable() %>%
-  kable_classic(full_width = FALSE)
+                       false = age_v2)) # if not, use age_v2 (which may itself be NA)
 ```
 
 This works, but it gets clumsy quickly. If there were a third version of the survey, you would need to nest one `if_else()` inside another, or write a `case_when()`:
@@ -712,9 +693,7 @@ Because this is such a common task, {dplyr} provides `coalesce()`, which does ex
 
 ```{r}
 dat_versions %>%
-  mutate(age = coalesce(age_v1, age_v2)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  mutate(age = coalesce(age_v1, age_v2))
 ```
 
 The result is identical to the `if_else()` version, and `coalesce(age_v1, age_v2, age_v3)` would extend to a third column without any extra logic.
@@ -735,9 +714,43 @@ Note that if a participant had values in *both* columns, `coalesce()` would sile
 
 Wrappers make code shorter and easier to read, and are often less error-prone. But it is useful to understand the logic they wrap: it helps you know exactly what a function will do in unusual cases (e.g., what happens when both columns contain a value), and when no wrapper exists for your problem, you can fall back on writing the logic yourself with `mutate()`, `if_else()`, and `case_when()`.
 
+## Key functions
+
+The main functions covered in this chapter:
+
+| Function | Package | What it does |
+|----------|---------|--------------|
+| `pivot_longer()` | {tidyr} | Makes data longer: stacks several columns into rows. |
+| `separate()` | {tidyr} | Splits one column into several, using a separator. |
+| `separate_wider_delim()` | {tidyr} | A newer alternative to `separate()` with more informative errors. |
+| `pivot_wider()` | {tidyr} | Makes data wider: spreads rows into several columns. |
+| `as_tibble(rownames = )` | {tibble} | Converts a matrix, e.g., from `cor()`, to a tibble, keeping the row names as a column. |
+| `unite()` | {tidyr} | Combines several columns into one by pasting their values together. |
+| `coalesce()` | {dplyr} | Returns, for each row, the first value that is not `NA` across several columns. |
+
 ## Exercises
 
-### Tidy data
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
+
+### Check your understanding
+
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
+
+1.  Which function splits one column into several columns using a separator? `r webexercises::mcq(c("unite()", "coalesce()", answer = "separate()", "pivot_wider()"))`
+2.  A wide data frame has 50 rows: one per participant, with an 'id' column and 17 item columns. After pivoting the 17 item columns longer, how many rows does it have? `r webexercises::mcq(c("17", "50", "67", answer = "850"))`
+3.  The `cols` argument of `pivot_longer()` accepts the same helpers as `select()`, such as `starts_with()`. `r webexercises::torf(TRUE)`
+4.  Which `pivot_wider()` argument replaces missing combinations with a value of your choice, e.g., 0? `r webexercises::mcq(c("id_cols", "values_fn", answer = "values_fill", "names_prefix"))`
+5.  `coalesce(age_v1, age_v2)` returns `NA` only when both 'age_v1' and 'age_v2' are `NA`. `r webexercises::torf(TRUE)`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  `separate()` splits one column into several, e.g., "depression1_item1" into "depression1" and "item1". `unite()` does the opposite.
+2.  850. Each participant gets one row per item: 50 participants x 17 items = 850 rows. The 'id' column is repeated in each row.
+3.  True. You can use `starts_with()`, ranges such as `depression1_item1:depression2_item7`, or negative selection such as `-id`.
+4.  `values_fill`. Only use it when you know what a missing combination means, e.g., that a count is 0.
+5.  True. `coalesce()` returns the first non-missing value in each row, so the result is only `NA` if every column is `NA` in that row.
+:::
 
 What are the three rules of Tidy Data? Which one does `table3` break, and which does `table2` break?
 
@@ -750,8 +763,6 @@ Is long data tidier than wide data?
 ::: {.callout-note collapse="true" title="Click to show answer"}
 Not necessarily. Both can be tidy, and the same data can be tidy in more than one shape. What counts as one observation depends on the question you are asking. Item-level wide data (one row per participant) is the right shape for calculating Cronbach's alpha, whereas long data (one row per participant per item) is the right shape for calculating mean scores per participant with `group_by()` and `summarize()`, or for plotting all items with `facet_wrap()`. Pivoting lets you move between them as needed.
 :::
-
-### `pivot_longer()`
 
 What do the `cols`, `names_to`, and `values_to` arguments of `pivot_longer()` do?
 
@@ -785,8 +796,6 @@ What does `".value"` do in `names_to`? When do you need it?
 It tells `pivot_longer()` that part of each column name is the name of a new column, rather than a value to be stored. You need it when the column names contain both a variable name and the value of another variable, e.g., 'mean_trt', 'sd_trt', 'mean_ctrl', and 'sd_ctrl', where you want columns 'mean' and 'sd' and a 'condition' column.
 :::
 
-### `pivot_wider()`
-
 What is the role of `id_cols` in `pivot_wider()`? What happens if you leave it out and the data contains a column that differs between rows from the same participant, e.g., the time each response was made?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -799,8 +808,6 @@ What happens when `pivot_wider()` finds more than one value for the same cell, e
 It warns that the values are not uniquely identified and creates list-columns containing all the values in each cell, rather than single values. This is almost always a sign that the data has duplicates you need to deal with first (e.g., with `distinct()` or by deciding which attempt to keep). Check with, e.g., `count(id, timepoint) %>% filter(n > 1)`.
 :::
 
-### `coalesce()`
-
 What does `coalesce(x, y)` return when both 'x' and 'y' contain a value? Why is that worth checking?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -809,9 +816,7 @@ It returns 'x', the first non-missing value, and silently ignores 'y'. If the tw
 
 ### Practice
 
-In your local version of this .qmd file, complete the tasks below.
-
-Note: no solutions provided here to reduce the temptation to peek or copy-paste.
+In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
 
 #### Self-report data
 
@@ -822,6 +827,10 @@ Note: no solutions provided here to reduce the temptation to peek or copy-paste.
 -   How many participants are missing at least one item? Did the pivot create any missing values that weren't in the long data? Why?
 -   Calculate each participant's mean score across the three items, for participants with complete data only.
 -   Then do the same calculation again, starting from the long data and without pivoting. Which approach do you find easier, and why?
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+`as.numeric()` turns text that isn't a number into `NA` (with a warning). In `pivot_wider()`, the item names come from 'trialcode' and the values from 'response'. Compare the number of rows for each item in the long data with `count(trialcode)`: not every participant has a row for every item. To calculate the score without pivoting, use `group_by(subject)` and `summarize()`, and think about how to check that a participant has all three items.
+:::
 
 ```{r}
 #| include: false
@@ -838,6 +847,10 @@ In the [Data transformation](06_data_transformation_1.qmd) chapters, we processe
 -   Keep only the 'subject', 'trialcode', and 'response' columns, and pivot the data so that there is one row per participant with an 'age' column and a 'gender' column.
 -   Clean both columns, as in previous chapters.
 -   Calculate the sample size, the mean and SD of age, and the number of participants of each gender.
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+Use `pivot_wider()` with `names_from = trialcode` and `values_from = response`. After the pivot, the cleaning code from the [Data transformation](06_data_transformation_1.qmd) chapters works on the new 'age' and 'gender' columns with `mutate()`, without needing `filter()` to separate them first.
+:::
 
 ```{r}
 #| include: false
@@ -857,6 +870,10 @@ The Affect Misattribution Procedure (AMP) claims to measure automatic evaluation
 -   Pivot the data wider so that you have the columns 'mean_evaluation_positive' and 'mean_evaluation_negative'.
 -   Calculate each participant's 'amp_effect': the difference between their mean evaluations after positive vs. negative primes.
 -   Create a separate data frame with the mean and SD of 'amp_effect' in the sample. Is there an AMP effect, i.e., is the mean 'amp_effect' above 0?
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+Check which values 'trialcode' contains with `count(trialcode)`: the practice trials have their own trialcodes. 'correct' is 0 or 1, so reverse scoring it is `1 - correct`, which you can apply with `if_else()` or `case_when()`. Summarize with `group_by(subject, trialcode)`, then use `pivot_wider()`; to get the column names asked for, you may need to clean up the values of 'trialcode' first, e.g., with `str_remove()`, and use `names_prefix`.
+:::
 
 ```{r}
 #| include: false

@@ -1,5 +1,17 @@
 # Strings and factors
 
+## TODO
+
+show relevance of factors:
+- with a scale: `r order(c("strongly agree", "agree"....)§ (or as plot)
+- with a plot post comes before pre
+- some other ranking, where 10 comes before 1, 2, 
+
+- add the nasty qualtrics bug
+- 
+
+
+
 ```{r}
 #| include: false
 
@@ -14,13 +26,13 @@ This chapter covers two data types that are especially common in psychology data
 The previous chapters have already used a few {stringr} functions, such as `str_to_lower()` and `str_remove_all()`, along with some cryptic-looking patterns like `"[^A-Za-z]"`. This chapter explains how they work.
 
 ```{r}
-library(dplyr)
-library(tidyr)
-library(tibble)
-library(stringr)
-library(forcats)
-library(knitr)
-library(kableExtra)
+library(dplyr)   # for %>%, mutate(), filter(), count(), case_when()
+library(tibble)  # for tibble(), tribble()
+library(stringr) # for str_ functions such as str_detect(), and regex()
+library(forcats) # for fct() and fct_ functions such as fct_relevel()
+
+# devtools::install_github("ianhussey/truffle")
+library(truffle) # for simulating messy demographics data
 ```
 
 ## Strings with {stringr}
@@ -42,9 +54,7 @@ dat_text <- tribble(
   6,   "m",              "27",           "R"
 )
 
-dat_text %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+dat_text
 ```
 
 ### Case
@@ -156,13 +166,6 @@ Using 'dat_text', write code to clean the 'gender' column so that it contains on
 
 
 
-
-
-
-
-
-
-
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -268,13 +271,6 @@ ids <- c("p001", "p123", "p12", "p1234", "xp001", "P001")
 
 ```{r}
 #| include: false
-
-
-
-
-
-
-
 
 
 
@@ -388,8 +384,6 @@ Note what the pattern does *not* handle, though: symbols such as "≤" (which ca
 In the [Data transformation III](08_data_transformation_3.qmd) chapter, some participants' ages were written as words, e.g., "thirty five", and these became `NA` when age was converted to numeric. With {stringr}, we can recover them.
 
 ```{r}
-library(truffle)
-
 set.seed(42)
 
 dat_demographics_messy <- data.frame(id = 1:500) %>%
@@ -454,13 +448,6 @@ Some participants in 'dat_demographics_messy' typed numbers into the gender ques
 
 ```{r}
 #| include: false
-
-
-
-
-
-
-
 
 
 
@@ -699,13 +686,6 @@ Using 'dat_timepoints':
 
 
 
-
-
-
-
-
-
-
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -719,11 +699,61 @@ dat_timepoints %>%
   group_by(timepoint) %>%
   summarize(mean_score = mean(score))
 ```
+
+`fct_recode()` keeps the order of the levels, so the renamed timepoints are still in chronological rather than alphabetical order.
 :::
+
+## Key functions
+
+The main functions covered in this chapter:
+
+| Function | Package | What it does |
+|----------|---------|--------------|
+| `str_to_lower()`, `str_to_upper()`, `str_to_title()`, `str_to_sentence()` | {stringr} | Change the case of letters. |
+| `str_trim()`, `str_squish()` | {stringr} | Remove whitespace at the start and end; `str_squish()` also reduces repeated spaces inside the string to one. |
+| `str_length()` | {stringr} | Counts the number of characters in each string. |
+| `str_c()` | {stringr} | Combines strings, like base R's `paste0()`. |
+| `str_pad()` | {stringr} | Pads strings to a fixed width, e.g., adds leading zeros to ids. |
+| `str_detect()`, `str_starts()`, `str_ends()` | {stringr} | Test whether each string contains, starts with, or ends with a pattern. |
+| `str_remove()`, `str_remove_all()` | {stringr} | Remove the first match, or every match, of a pattern. |
+| `str_replace()`, `str_replace_all()` | {stringr} | Replace the first match, or every match, of a pattern. |
+| `str_extract()` | {stringr} | Returns the part of each string that matches a pattern (or one of its groups). |
+| `str_sub()` | {stringr} | Extracts characters by position. |
+| `str_view()` | {stringr} | Shows which parts of each string match a pattern. Useful for testing regular expressions. |
+| `regex()` | {stringr} | Modifies a pattern, e.g., with `ignore_case = TRUE` or `comments = TRUE`. |
+| `word()` | {stringr} | Extracts words by position. |
+| `factor()`, `fct()` | {base}, {forcats} | Create a factor. `fct()` throws an error for values that are not in the levels, rather than silently turning them into `NA`. |
+| `levels()` | {base} | Returns the levels of a factor, in order. |
+| `fct_relevel()`, `fct_infreq()`, `fct_reorder()`, `fct_rev()` | {forcats} | Change the order of the levels: move levels to the front, order by frequency, order by another variable, or reverse. |
+| `fct_recode()`, `fct_collapse()` | {forcats} | Rename levels, or combine several levels into one. |
+| `fct_lump_n()`, `fct_lump_min()` | {forcats} | Combine rare levels into an "Other" level. |
+| `fct_na_value_to_level()` | {forcats} | Turns `NA` into an explicit level. |
+| `fct_drop()` | {forcats} | Removes unused levels. |
+| `as.numeric(as.character())` | {base} | Converts a factor that contains numbers to the numbers themselves, rather than the internal level codes. |
 
 ## Exercises
 
-### {stringr}
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
+
+### Check your understanding
+
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
+
+1.  What does sort(c('p1', 'p2', 'p10')) return? `r webexercises::mcq(c("p1, p2, p10", answer = "p1, p10, p2", "p10, p1, p2"))`
+2.  Which function orders the levels of a factor from most to least frequent? `r webexercises::mcq(c("fct_relevel()", "fct_reorder()", "fct_rev()", answer = "fct_infreq()"))`
+3.  The pattern '3.5' matches the string '305'. `r webexercises::torf(TRUE)`
+4.  Without specified levels, fct() orders the levels alphabetically. `r webexercises::torf(FALSE)`
+5.  After filter() removes every 'waitlist' row, 'waitlist' is no longer a level of the factor. `r webexercises::torf(FALSE)`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  "p1", "p10", "p2". Strings are sorted alphabetically, character by character, and "1" comes before "2". Padding the numbers with `str_pad()`, e.g., "p001", "p002", "p010", makes them sort correctly.
+2.  `fct_infreq()`. `fct_relevel()` moves specific levels to the front, `fct_reorder()` orders levels by the values of another variable, and `fct_rev()` reverses the current order.
+3.  True. In regex, `.` matches any character, including "0". To match a literal full stop, escape it: `"3\\.5"`.
+4.  False. `fct()` uses the order in which the values first appear in the data. It is base R's `factor()` that sorts them alphabetically.
+5.  False. Levels remain even when there are no observations with that value. Use `fct_drop()` to remove unused levels.
+:::
 
 What is the difference between `str_trim()` and `str_squish()`?
 
@@ -737,8 +767,6 @@ Why is `filter(str_detect(gender, "male"))` a bad way to find male participants?
 `str_detect()` matches the pattern anywhere in the string, so it also returns "female". Better options are an exact comparison, `filter(gender == "male")`, after cleaning the column, or an anchored pattern, `str_detect(gender, "^male$")`.
 :::
 
-### Regular expressions
-
 What does each of these patterns match? `"[^A-Za-z]"`, `"[0-9]+"`, `"^p"`, `"\\."`.
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -747,8 +775,6 @@ What does each of these patterns match? `"[^A-Za-z]"`, `"[0-9]+"`, `"^p"`, `"\\.
 -   `"^p"` : a "p" at the start of the string.
 -   `"\\."` : a literal full stop. Without the backslashes, `.` matches any character.
 :::
-
-### Factors
 
 What is the difference between a character variable and a factor? Name two things that the order of factor levels affects.
 
@@ -770,7 +796,9 @@ It returns the internal integer codes of the levels (1, 2, 3, ...), not the valu
 
 ### Practice
 
-In your local version of this .qmd file:
+In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
+
+#### Cleaning demographics data
 
 -   Use 'dat_demographics_messy' to create 'dat_demographics_clean'.
 -   Clean the 'gender' column using {stringr} functions and `case_when()`, so that it contains only "female", "male", "non-binary", or `NA`.
@@ -778,7 +806,9 @@ In your local version of this .qmd file:
 -   Convert 'gender' to a factor using `fct()`, with the levels ordered from most to least frequent and missing values as an explicit "Not reported" level.
 -   Create a table of the number of participants and mean age for each gender.
 
-Note: no solution provided here to reduce the temptation to peek or copy-paste.
+::: {.callout-note collapse="true" title="Click to show hint"}
+Start with `count(gender)` to see all the variations you need to handle, and check again after cleaning. For the factor, create it with `fct()` first, then use `fct_infreq()`, and only then `fct_na_value_to_level()`, so that "Not reported" is added as a level after the others are ordered.
+:::
 
 ```{r}
 #| include: false

@@ -12,17 +12,30 @@ options(scipen = 999)
 
 This chapter covers "*aggregating*" functions. They aggregate results across rows to create a new data frame that does not contain any of the rows of the original. For example, to convert the 'age' column that contains participants' ages to 'age_mean', which only has one row containing the average age.
 
+Aggregating is how participant-level and sample-level results are created from trial-level and participant-level data, e.g., each participant's mean reaction time, or the mean and SD of age in the sample. The chapter also shows how grouping changes the behaviour of `mutate()`, `filter()`, and the `slice_()` functions from [Data transformation I](06_data_transformation_1.qmd) and [Data transformation II](07_data_transformation_2.qmd), which is needed to apply participant-level exclusion criteria correctly.
+
+```{r}
+library(dplyr) # for %>%, summarize(), group_by(), count(), distinct(), and more
+library(tidyr) # for drop_na(), fill(), expand_grid()
+library(tibble) # for tribble()
+library(stringr) # for str_to_lower(), str_remove_all()
+library(janitor) # for round_half_up()
+
+# devtools::install_github("ianhussey/truffle")
+library(truffle) # for simulating demographics data and adding duplicates
+```
+
 ## Summarizing across rows
 
 It is very common that we need to create summaries across rows. For example, to create the mean and standard deviation of a column like age. This can be done with `summarize()`. Remember: `mutate()` creates new columns or modifies the contents of existing columns, but does not change the number of rows. Whereas `summarize()` reduces a data frame down to one row.
 
+We'll use the same simulated demographics data as in [Data transformation I](06_data_transformation_1.qmd), cleaned in the same way.
+
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code that simulates and cleans the data"
 
-# code to generated and clean data from data_transformation_1:
-library(truffle)
-library(dplyr)
-library(stringr)
-
+# code to generate and clean data from data_transformation_1:
 set.seed(42)
 
 dat_demographics_messy <- data.frame(id = 1:500) %>%
@@ -50,11 +63,6 @@ dat_gender_tidier <- dat_demographics_messy %>%
 ```
 
 ```{r}
-
-library(dplyr)
-library(tidyr)
-library(janitor)
-
 # mean
 dat_gender_tidier %>%
   summarize(mean_age = mean(age, na.rm = TRUE))
@@ -77,7 +85,7 @@ dat_gender_tidier %>%
 
 ### `group_by()`
 
-Often, we don't want to reduce a data frame down to a single row / summarize the whole dataset, but instead we want to create a summary for each (sub)group. For example
+Often, we don't want to reduce a data frame down to a single row / summarize the whole dataset, but instead we want to create a summary for each (sub)group. For example:
 
 ```{r}
 
@@ -187,7 +195,7 @@ dat_gender_tidier %>%
 
 ### Realise that `count()` is just a wrapper function for `summarize()`
 
-`count()` is just the combination of group_by() and summarize() and n(). They produce the same results as above.
+`count()` is just the combination of `group_by()`, `summarize()`, and `n()`. They produce the same results as above.
 
 ```{r}
 
@@ -217,7 +225,7 @@ dat_gender_tidier %>%
 
 ```
 
-### Handling duplicates with multiple-`counts()` and `distinct()`
+### Handling duplicates with multiple `count()`s and `distinct()`
 
 It can be used to remove duplicates, but it's important to remember that you don't know which row is retained vs dropped.
 
@@ -290,7 +298,7 @@ dat_gender_tidier %>%
 
 ```
 
-### Practice using `summarize()`
+#### Exercise
 
 <!-- #### 1 -->
 
@@ -298,13 +306,6 @@ Calculate the N, min, max, mean, and SD of age in `dat_gender_tidier`.
 
 ```{r}
 #| include: false
-
-
-
-
-
-
-
 
 
 
@@ -408,8 +409,6 @@ Compare this to the `summarize()` version in the `group_by()` section above, whi
 Grouped `mutate()` is especially useful for trial-level data, where each participant has many rows. In the previous chapter, we saw that `lag()`, `lead()`, `cumsum()`, and `fill()` don't know anything about participants, so their results can leak from one participant into the next. `group_by(id)` solves this.
 
 ```{r}
-library(tibble) # for tribble()
-
 dat_trials <- tribble(
   ~id, ~trial, ~rt,  ~correct,
   1,   1,      650,  1,
@@ -496,13 +495,6 @@ Using 'dat_trials', write code that creates the following columns, calculated wi
 
 
 
-
-
-
-
-
-
-
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -553,10 +545,9 @@ Both calculate the same mean RT for each participant. `summarize()` returns one 
 To illustrate this, we'll use a larger simulated data set from a reaction time task. Each row is one trial. There are 20 participants who each completed up to 60 trials.
 
 ```{r}
-#| include: false
+#| code-fold: true
+#| code-summary: "Show the code that simulates the data"
 # simulate trial-level reaction time data
-library(tidyr)
-
 set.seed(42)
 
 dat_rt <- expand_grid(id = 1:20, trial = 1:60) %>%
@@ -638,13 +629,6 @@ Using 'dat_rt', write code that excludes participants whose proportion of correc
 
 
 
-
-
-
-
-
-
-
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -664,13 +648,6 @@ Using 'dat_rt', write code that keeps each participant's three slowest trials.
 
 ```{r}
 #| include: false
-
-
-
-
-
-
-
 
 
 
@@ -743,13 +720,6 @@ Modify the pipe above so that, in addition to excluding participants with more t
 
 
 
-
-
-
-
-
-
-
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -777,7 +747,7 @@ dat_rt %>%
 17 participants: participants 7 and 15 are excluded for too-fast responding, and participant 12 for not completing all trials. Note that the participant-level exclusions are applied before any trials are removed, so `n()` counts all the trials each participant completed.
 :::
 
-## Frequncies of sets of columns
+## Frequencies of sets of columns
 
 Note that it is also possible to use count to obtain the frequencies of sets of unique values across columns, e.g., unique combinations of item and response.
 
@@ -808,9 +778,50 @@ It can be useful to arrange the output by the frequencies.
 
 <!-- TODO here or later in -->
 
+## Key functions
+
+The main functions covered in this chapter:
+
+| Function | Package | What it does |
+|----------|---------|--------------|
+| `summarize()` | {dplyr} | Reduces a data frame to one row (or one row per group) of summary values. |
+| `mean()`, `sd()`, `min()`, `max()` | {base}, {stats} | Common summary statistics. Use `na.rm = TRUE` to ignore missing values. |
+| `round_half_up()` | {janitor} | Rounds numbers in the way usually expected in reporting (0.5 is rounded up). |
+| `group_by()` | {dplyr} | Groups a data frame so that later functions operate within each group. |
+| `ungroup()` | {dplyr} | Removes grouping. |
+| `group_vars()` | {dplyr} | Returns the names of the grouping columns, if any. |
+| `.by` argument | {dplyr} | Groups the data for a single function call only, e.g., `summarize(..., .by = gender)`. |
+| `n()` | {dplyr} | Counts the number of rows (in each group). |
+| `count()` | {dplyr} | Counts the number of rows for each unique value (or combination of values) of one or more columns. |
+| `distinct()` | {dplyr} | Returns the unique rows, or unique values of the specified columns. |
+| `distinct(.keep_all = TRUE)` | {dplyr} | Keeps the first row for each unique value of the specified columns, along with all other columns. |
+| `slice_min()`, `slice_max()` | {dplyr} | Keeps the rows with the smallest or largest values of a column (in each group). |
+| `row_number()` | {dplyr} | Numbers the rows (within each group). |
+| `fill()` | {tidyr} | Fills missing values with the previous (or next) non-missing value (within each group). |
+
 ## Exercises
 
-### `mutate()` vs. `summarize()`
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
+
+### Check your understanding
+
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
+
+1.  'dat_gender_tidier' contains 500 participants and 4 gender groups (including NA). How many rows does `dat_gender_tidier %>% group_by(gender) %>% summarize(mean_age = mean(age, na.rm = TRUE))` return? `r webexercises::mcq(c("1", answer = "4", "500", "2000"))`
+2.  After `group_by(gender, condition) %>% summarize(...)`, the result is no longer grouped. `r webexercises::torf(FALSE)`
+3.  A data frame is grouped by gender, which has 4 groups. You then run `slice_min(age, n = 3, with_ties = FALSE)` without ungrouping. How many rows are returned? `r webexercises::mcq(c("3", "4", answer = "12", "All rows"))`
+4.  Which function returns the unique values of a column, without counting them? `r webexercises::mcq(c("count()", "n()", "summarize()", answer = "distinct()"))`
+5.  `group_by()` and the `.by` argument return the groups in the same order. `r webexercises::torf(FALSE)`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  4. `summarize()` returns one row per group, so a grouped summary has as many rows as there are groups. Missing values in the grouping column form their own group.
+2.  False. `summarize()` only removes the *last* level of grouping, so the result is still grouped by gender. Use `ungroup()` or `.groups = "drop"` to remove all grouping.
+3.  12. Grouping persists until it is removed, so `slice_min()` returns three rows *per group*. `ungroup()` first to get the three youngest participants in the whole sample.
+4.  `distinct()` returns the unique values. `count()` returns the unique values *and* the number of rows for each.
+5.  False. `group_by()` sorts the output by the groups, whereas `.by` keeps the groups in the order they first appear in the data.
+:::
 
 What is the difference between `mutate()` and `summarize()`? If you use the wrong one, will you get the same answer? E.g., `mutate(mean_age = mean(age, na.rm = TRUE))` vs. `summarize(mean_age = mean(age, na.rm = TRUE))`.
 
@@ -819,8 +830,6 @@ Both calculate the same mean age, but they return it differently. `summarize()` 
 
 So the *value* is the same, but the *shape* of the result is very different. If you use `mutate()` when you meant `summarize()`, any later step that assumes one row per participant or group, e.g., calculating an N with `n()` or a mean of means, will be wrong.
 :::
-
-### `group_by()`
 
 What does `group_by()` change about how `summarize()`, `mutate()`, `filter()`, and the `slice_()` functions work?
 
@@ -833,17 +842,13 @@ They all do their calculations separately within each group:
 -   `slice_()` functions return rows from each group, e.g., `slice_head(n = 3)` returns the first 3 rows of each group.
 :::
 
-### `ungroup()` and `.by`
-
 Why is it important to `ungroup()`? What is an alternative that avoids the problem?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
-Grouping persists until it is removed, and it's easy to miss because it isn't visible in the data itself. Later functions in the pipe, or in later code using the saved data frame, will silently operate within groups, e.g., `slice_min(age, n = 3)` returns three rows per group rather than three rows in total. 
+Grouping persists until it is removed, and it's easy to miss because it isn't visible in the data itself. Later functions in the pipe, or in later code using the saved data frame, will silently operate within groups, e.g., `slice_min(age, n = 3)` returns three rows per group rather than three rows in total.
 
 Using the `.by` argument (e.g., `summarize(..., .by = gender)`) groups the data for that one function call only, so the result is never left grouped.
 :::
-
-### Counting
 
 What is the difference between `n()` and `sum(!is.na(age))` inside `summarize()`? Which should you report alongside `mean(age, na.rm = TRUE)`?
 
@@ -863,15 +868,11 @@ How can you calculate a proportion inside `summarize()`, e.g., the proportion of
 Take the mean of a logical test, e.g., `mean(age < 25, na.rm = TRUE)`. TRUE counts as 1 and FALSE as 0, so the mean is the proportion of TRUEs.
 :::
 
-### Duplicates
-
 What is the difference between `distinct()` and `distinct(id, .keep_all = TRUE)` when removing duplicate rows? Which is safer?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
 `distinct()` only removes rows that are identical in every column. `distinct(id, .keep_all = TRUE)` keeps the first row for each id, regardless of whether that participant's rows contain different values in other columns. You don't control which row is kept, and conflicting values are silently discarded. `distinct()` is safer because any remaining duplicate ids reveal conflicts that you need to look at and resolve deliberately.
 :::
-
-### Exclusions
 
 What is the difference between a trial-level and a participant-level exclusion rule? How is each implemented?
 
@@ -892,16 +893,20 @@ Complete the interactive exercises for:
 -   [`group_by()` and `summarize()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrgroup_by-summarize)
 -   [`count()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrcount)
 
-### Practice summarizing a demographics table
+### Practice
 
-In your local version of this .qmd file:
+In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
+
+#### Summarizing a demographics table
 
 -   Use 'dat_gender_tidier' to create a table with one row per gender.
 -   Include the number of participants, the percentage of participants, and the mean and SD of age, rounded to 1 decimal place.
 -   Make sure the N reported for the mean age only includes participants with a known age.
 -   Arrange the table from the most to the least common gender.
 
-Note: no solution provided here as many different ones are possible.
+::: {.callout-note collapse="true" title="Click to show hint"}
+Use `group_by(gender)` and `summarize()`, with `n()` for the number of participants and `sum(!is.na(age))` for the N with a known age. The percentage needs the total N across all groups, so calculate it after the summary with an ungrouped `mutate()`, e.g., dividing each group's N by `sum()` of the N column. Then use `arrange(desc())`.
+:::
 
 ```{r}
 #| include: false
@@ -910,16 +915,16 @@ Note: no solution provided here as many different ones are possible.
 
 ```
 
-### Practice processing trial-level data
-
-In your local version of this .qmd file:
+#### Processing trial-level data
 
 -   Use 'dat_rt' to create a data frame called 'dat_rt_participants', with one row per participant.
--   Calculate each participant's number of trials, proportion of correct responses, proportion of too-fast trials (< 200 ms), and mean RT on correct trials only. Hint: all of these can be calculated in one `summarize()` if you first use `mutate()` and `if_else()` to create a column containing the RT on correct trials and `NA` on error trials.
+-   Calculate each participant's number of trials, proportion of correct responses, proportion of too-fast trials (< 200 ms), and mean RT on correct trials only.
 -   Add a column 'exclude' that is "exclude" if the participant has more than 10% too-fast trials *or* did not complete all 60 trials, and "include" otherwise.
 -   Then, using 'dat_rt_participants', calculate the number and percentage of participants who are excluded, and the mean and SD of the included participants' mean RTs.
 
-Note: no solution provided here to reduce the temptation to peek or copy-paste.
+::: {.callout-note collapse="true" title="Click to show hint"}
+All of the participant-level values can be calculated in one `summarize()` if you first use `mutate()` and `if_else()` to create a column containing the RT on correct trials and `NA` on error trials. Remember that the mean of a logical test is a proportion.
+:::
 
 ```{r}
 #| include: false

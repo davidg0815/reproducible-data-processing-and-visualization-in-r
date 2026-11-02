@@ -10,13 +10,25 @@ options(scipen = 999)
 
 ```
 
+This chapter introduces Quarto (.qmd) files, which let you write text and R code in the same document and turn them into a report, such as a .html file. Every chapter of this book is a Quarto file, and you will use them for all the exercises.
+
+Writing your data processing and analysis this way makes it reproducible: each time the report is rendered, all the code runs again from the start, so the numbers, tables, and plots in the report always match the data and code that produced them. The chapter covers code chunks, rendering, markdown formatting, and math, and then gives a quick preview of what a full workflow looks like, from loading raw data to tables, plots, and analyses. You don't need to understand that code yet: the later chapters teach it step by step. It builds on the [Fundamentals](02_fundamentals.qmd) chapter, especially on loading packages.
+
+```{r}
+library(dplyr) # for %>%, rename(), filter(), mutate(), select(), group_by(), summarize()
+library(tidyr) # for pivot_longer()
+library(readr) # for read_csv(), write_csv()
+library(ggplot2) # for ggplot()
+library(report) # for report_text()
+```
+
 ## Literate programming
 
 Literate programming is the idea that code and text should be written in the same document to produce a narrative with reproducible results. It is therefore very suited to writing scientific reports and manuscripts.
 
 ### In-line code
 
-Code can be written in 'in-line' in the text as follows: the code "`` `r 1+1` ``" is run and produces the output "`r 1+1`". In your local .qmd document, you have hover over the in-line code and press cmd-enter or cmd-return (Mac) / ctrl-enter or ctrl-return (Windows) to run the code.
+Code can be written 'in-line' in the text as follows: the code "`` `r knitr::inline_expr("1+1")` ``" is run and produces the output "`r 1+1`". In your local .qmd document, you can hover over the in-line code and press cmd-enter or cmd-return (Mac) / ctrl-enter or ctrl-return (Windows) to run the code.
 
 ### Code chunks
 
@@ -46,7 +58,7 @@ For example, run this code chunk in the local version of .qmd file. Note that th
 
 ```
 
-## Rendering and reproducibilty
+## Rendering and reproducibility
 
 Quarto (.qmd) and RMarkdown (.Rmd) files can produce .html files that can be viewed in any web browser. This has two key functions:
 
@@ -111,7 +123,7 @@ Display an image in visual editor/on rendering: ![](../images/r_meme.png)
 Levels of heading are extremely useful for structuring your report.
 
 1.  They automatically appear as headings in the "Outline" section in RStudio, therefore allowing you to navigate your document easily. When you have a .qmd or .Rmd file open in RStudio, click the 'Outline' button to the top-right of the source file window, where this text appears, to see all the headings in your file. Click any of them to go to that heading in the document.
-2.  When the file is rendered (.qmd) or knitted (.Rmd) to a .html file, the levels of heading will appear as clickable links in the table of contents (assuming that your YAML header at the top of your file has `toc: true`, as this file does).
+2.  When the file is rendered (.qmd) or knitted (.Rmd) to a .html file, the levels of heading will appear as clickable links in the table of contents (assuming that your YAML header at the top of your file has `toc: true`; this book sets this for every chapter).
 
 ## Math typesetting via LaTeX
 
@@ -148,11 +160,6 @@ We will cover these functions in later chapters. For the moment, the point to ap
 Read the comments and code below to see if you can understand the general flow of what is being done, even without knowing these functions yet.
 
 ```{r}
-# dependencies
-library(dplyr)
-library(tidyr)
-library(readr)
-
 # load raw data
 dat_raw <- readr::read_csv("../data/raw/data_raw_bfi.csv")
 
@@ -162,7 +169,7 @@ dat_processed <- dat_raw %>%
   dplyr::rename(race_iat = IAT_score) %>%
   # exclude participants with missing data or who did not meet performance criteria
   dplyr::filter(complete_individual_differences_data == TRUE & exclude_iat == FALSE) %>%
-  # calculate sum scores for the BFI personality subscales
+  # calculate mean scores for the BFI personality subscales
   dplyr::rowwise() %>%
   dplyr::mutate(openness = mean(c_across(starts_with("bfi_o"))),
                 conscientiousness = mean(c_across(starts_with("bfi_c"))),
@@ -193,11 +200,6 @@ Summary statistics such as sample sizes, means and Standard Deviations can be ca
 Again, we will cover these functions in later chapters. For the moment, simply notice that this is quite simple to do. As before, read the comments and code below to see if you can understand the general flow of what is being done, even without knowing these functions yet.
 
 ```{r}
-# dependencies
-library(janitor)
-library(knitr)
-library(kableExtra)
-
 # table
 dat_processed_long %>%
   # summarize mean and SD by subscale
@@ -207,10 +209,7 @@ dat_processed_long %>%
                    sd = sd(score, na.rm = TRUE)) %>%
   # round estimates 
   dplyr::mutate(m = janitor::round_half_up(m, digits = 2),
-                sd = janitor::round_half_up(sd, digits = 2)) %>%
-  # print nicer table
-  knitr::kable(align = 'r') |>
-  kableExtra::kable_styling()
+                sd = janitor::round_half_up(sd, digits = 2))
 ```
 
 ## Plots
@@ -220,9 +219,6 @@ Plots can be made in {ggplot2}, e.g., scatter plots of the association between p
 As before, read the comments and code below to see if you can understand the general flow of what is being done, even without knowing these functions yet.
 
 ```{r}
-# dependencies
-library(ggplot2)
-
 # plot
 ggplot(dat_processed_long, aes(score, race_iat)) +
   geom_point(alpha = 0.7) +
@@ -234,12 +230,9 @@ ggplot(dat_processed_long, aes(score, race_iat)) +
 
 ## Analyses
 
-Analyses can be run, and even their results extracted an interpreted, with the help of R packages such as {report} and {parameters} from the [easystats](https://easystats.github.io/easystats/) cluster of packages.
+Analyses can be run, and even their results extracted and interpreted, with the help of R packages such as {report} and {parameters} from the [easystats](https://easystats.github.io/easystats/) cluster of packages.
 
 ```{r}
-# dependencies
-library(report)
-
 # fit correlation test
 res <- cor.test(formula = ~ race_iat + extroversion, 
                 data = dat_processed, 
@@ -249,33 +242,108 @@ res <- cor.test(formula = ~ race_iat + extroversion,
 report::report_text(res)
 ```
 
+## Key functions
+
+The main tools covered in this chapter:
+
+| Function or tool | Package | What it does |
+|------------------|---------|--------------|
+| In-line code: `` `r ` `` | Quarto | Runs a short piece of R code inside the text and shows its result there. |
+| Code chunk: ```` ```{r} ```` | Quarto | A block of R code whose output appears below it. |
+| Ctrl/Cmd + Alt + I | RStudio | Inserts a new code chunk. |
+| Run current chunk / run all previous chunks buttons | RStudio | Run the code in this chunk, or in all chunks above it. |
+| Render button | Quarto | Runs all the code in a fresh R session and creates the .html report. |
+| `#| eval: false` | Quarto | Chunk option: shows the code but does not run it. |
+| `#| include: false` | Quarto | Chunk option: runs the code but hides both code and output in the report. |
+| `#`, `##`, `###` | Markdown | Levels of heading, used for the Outline and the table of contents. |
+| `*italic*`, `**bold**`, `-` | Markdown | Italic and bold text, and bullet points. |
+| `$...$` and `$$...$$` | LaTeX | In-line and displayed math. |
+| YAML header: `title:`, `author:`, `date:`, `toc:` | Quarto | Settings for the whole document, at the top of the file between two `---` lines. |
+
 ## Exercises
 
-Edit your local copy of this .qmd file to make the following changes.
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
 
-### Insert a new chunk and write code to install the following packages
+### Check your understanding
+
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
+
+1.  Which chunk option runs a chunk's code but hides both the code and its output in the rendered .html file? `r webexercises::mcq(c("#| eval: false", answer = "#| include: false", "#| warning: false", "#| toc: true"))`
+2.  When you render a .qmd file, its code runs in a new R session, so objects in your current Environment are not available to it. `r webexercises::torf(TRUE)`
+3.  If a .qmd file renders successfully, its code is free of errors. `r webexercises::torf(FALSE)`
+4.  Which line of markdown creates a level 2 heading? `r webexercises::mcq(c("#Heading", "**Heading**", answer = "## Heading", "2. Heading"))`
+5.  What do you put around LaTeX math to show it in-line in the text? `r webexercises::mcq(c("Backticks", "Curly braces", "Quotation marks", answer = "Single dollar signs"))`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  `#| include: false` runs the code but leaves it and its output out of the report. `#| eval: false` does the opposite: it shows the code but does not run it.
+2.  True. This is what makes rendering useful for reproducibility: the report can only use what the file itself creates and loads.
+3.  False. Rendering shows that the code runs, not that it does the right thing. Code can run and still contain mistakes, or load packages it doesn't need.
+4.  `## Heading`. The number of `#` symbols sets the level of the heading, and the space after them is required: `#Heading` is not a heading.
+5.  Single dollar signs, e.g., `$\bar{x}$`. Double dollar signs (`$$`) put the math on its own line.
+:::
+
+What is literate programming, and why is it useful for writing scientific reports?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+Literate programming means writing the code and the text that explains it in the same document. The results in the text, tables, and plots are produced directly by the code, so they can't drift out of sync with the analysis or be copied across incorrectly. Anyone with the file and the data can rerun it and check how each result was produced.
+:::
+
+Your code runs fine when you run the chunks one by one in RStudio, but the file fails to render. What are some likely reasons?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+Rendering runs all the code from top to bottom in a fresh R session. Common reasons for a failed render are: the code relies on an object you created in the console or in a chunk you later deleted; a package was loaded in the console but not with `library()` in the file; chunks only work when run in a different order from the one they appear in the file; or the file contains `install.packages()` calls that should not run.
+:::
+
+Why shouldn't `install.packages()` calls run every time a file is rendered? How can you keep them in the file without them running?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+Packages only need to be installed once per computer, so reinstalling them on every render is slow and unnecessary, and it can make the render fail. Add `#| eval: false` at the top of the chunk, so the code is shown but not run.
+:::
+
+When would you use in-line code rather than a code chunk?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+In-line code is for short results that you want to report in a sentence, such as the sample size or a mean, e.g., by writing `nrow(dat)` as in-line R code in the sentence "We recruited ... participants". The number then updates automatically if the data change. Anything longer, such as processing data, making tables or plots, or fitting models, belongs in code chunks.
+:::
+
+### Practice
+
+In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
+
+#### Insert a new chunk and write code to install packages
 
 -   Insert a new code chunk at the top of this file.
--   Use the `install.packages()` function to install the packages {tidyverse}, {janitor}, {knitr}, {kableExtra}, and {report}. Remember to exclude the "{}" and use quotation marks around the package names.
+-   Use the `install.packages()` function to install the packages {tidyverse}, {janitor}, and {report}. Remember to exclude the "{}" and use quotation marks around the package names.
 -   Run this chunk to install these packages.
 -   Try to render the file. It should fail.
 -   `install.packages()` calls will cause the render to fail, so we have to set the code in that chunk to not run. You could comment out this code, but the better option is to use chunk settings: include `#| eval: false` at the top of the chunk. Or, click the settings/gear icon on the top-right of the code chunk and click "Output\>Show nothing (don't run code)", which will insert in the chunk both `#| eval: false` ("don't run the code") and `#| include: false` ("don't show the code in the .html").
 
-### Render the report
+::: {.callout-note collapse="true" title="Click to show hint"}
+You can install several packages with one call by giving `install.packages()` a vector of names, made with `c()`. Chunk options start with `#|` and go on the first lines of the chunk, before any code.
+:::
+
+#### Render the report
 
 Click 'render' to create a reproducible report as a .html from this .qmd file.
 
-### Add authorship
+::: {.callout-note collapse="true" title="Click to show hint"}
+The 'Render' button is in the toolbar above the file in RStudio. If the render fails, read the error message in the 'Background Jobs' or 'Render' pane: it tells you which chunk failed.
+:::
 
-Add the following text to the YAML header on line 3, just under 'title': `author: "yourname"`, and replace 'yourname' with your name. Render the report again with the render button. It will now list you as the author.
+#### Add authorship and date
 
-### Add date
+-   Add the following text to the YAML header, just under 'title': `author: "yourname"`, and replace 'yourname' with your name. Render the report again with the render button. It will now list you as the author.
+-   Add the following text to the YAML header on the next line: `date: today`. Now when you render again, it will list today's date so that you know when the report was created.
 
-Add the following text to the YAML header on line 4: `date: today`. Now when you render again, it will list today's date so that you know when the report was created.
+::: {.callout-note collapse="true" title="Click to show hint"}
+The YAML header is the block at the very top of the file between two lines containing only `---`. If your file doesn't have one, add it as the first lines of the file, e.g., a `---` line, then `title: "Reproducible reports"`, then another `---` line. Each setting goes on its own line.
+:::
 
-### Inserting a new chunk below this heading
+#### Insert a new chunk
 
-Either type it yourself using backticks or use the keyboard shortcut: Ctrl + Alt + I (Windows) or Cmd + Alt + I (Mac). Enter some simple working code inside the chunk:
+Insert a new chunk below this heading. Either type it yourself using backticks or use the keyboard shortcut: Ctrl + Alt + I (Windows) or Cmd + Alt + I (Mac). Enter some simple working code inside the chunk:
 
 -   Assign the variable `x` to have the value `5`
 -   Assign the variable `y` to have the value `x` minus `3`.
@@ -283,8 +351,16 @@ Either type it yourself using backticks or use the keyboard shortcut: Ctrl + Alt
 
 Run the code in the chunk by clicking the green right-arrow: ![](../images/chunk_run_this_chunk.png)
 
-Need a refresher on variable assignment? Go back to the chapter on ![Fundamentals](02_fundamentals.qmd).
+Need a refresher on variable assignment? Go back to the chapter on [Fundamentals](02_fundamentals.qmd).
 
-### Make the plot more colorful
+::: {.callout-note collapse="true" title="Click to show hint"}
+Use `<-` for assignment. You can use `x` on the right-hand side when creating `y`, because it already exists. Typing an object's name on its own line prints it.
+:::
+
+#### Make the plot more colorful
 
 Change the 'aesthetics' call from `aes(score, race_iat)` to `aes(score, race_iat, color = subscale)`. Run all previous chunks to reload and reprocess the data using this button: ![](../images/chunk_run_previous_chunks.png) Then, run the plot chunk again using this one to view your more colorful plot: ![](../images/chunk_run_this_chunk.png)
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+The plot is made in the chunk in the Plots section. The data it uses ('dat_processed_long') is created in an earlier chunk, so if you get an error saying the object can't be found, run the previous chunks first.
+:::

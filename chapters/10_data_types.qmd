@@ -14,6 +14,15 @@ Every column in a data frame has a *type*, e.g., numbers, text, or TRUE/FALSE va
 
 This chapter covers the main data types in R, missing values (`NA`), the surprising behavior of decimal numbers, and rounding and reporting numbers, including *p*-values. Two other types, character strings and factors, are covered in the [next chapter](11_strings_and_factors.qmd).
 
+```{r}
+library(dplyr)     # for %>%, mutate(), filter(), summarize(), near(), between(), if_else()
+library(tibble)    # for tibble(), tribble()
+library(roundwork) # for round_up()
+
+# devtools::install_github("ianhussey/truffle")
+library(truffle)   # for round_p_value()
+```
+
 ## Types of data in R
 
 The most common types you will encounter are:
@@ -30,9 +39,6 @@ The most common types you will encounter are:
 You can check the type of an object or column with `class()`, or see the types of all columns in a data frame with `glimpse()`. Tibbles also show each column's type under its name when printed.
 
 ```{r}
-library(dplyr)
-library(tibble)
-
 dat_example <- tibble(
   id = c(1L, 2L, 3L),
   age = c(23, 31.5, 19),
@@ -275,7 +281,7 @@ round(c(0.5,
         5.5))
 ```
 
-Why is this? Because R's `round()` function uses "banker's rounding, which rounds 5s based on whether the preceding digit is odd or even. This is a good thing in many contexts like accounting, but it's usually not what we want or expect when rounding specific statistical results for inclusion in a report or manuscript.
+Why is this? Because R's `round()` function uses "banker's rounding", which rounds 5s based on whether the preceding digit is odd or even. This is a good thing in many contexts like accounting, but it's usually not what we want or expect when rounding specific statistical results for inclusion in a report or manuscript.
 :::
 
 Floating point numbers make this even less predictable. Because many decimals are stored as very slightly smaller or larger values than they appear, `round()` sometimes rounds a 5 down even when banker's rounding would round it up:
@@ -291,8 +297,6 @@ sprintf("%.20f", 2.675)
 In most of your R scripts, you should instead use the {roundwork} package's `round_up()`, written by [Lukas Jung](https://bsky.app/profile/lhdjung.bsky.social), which produces the round-.5-upwards behavior most of us expect, and accounts for floating point representation.
 
 ```{r}
-library(roundwork)
-
 roundwork::round_up(c(0.5,
                       1.5,
                       2.5,
@@ -303,16 +307,10 @@ roundwork::round_up(c(0.5,
 roundwork::round_up(2.675, digits = 2)
 ```
 
-These will typically be used inside a pipe workflow:
+These will typically be used inside a pipe workflow. First, we'll simulate some regression results to be rounded:
 
 ```{r}
-#| eval: true
-#| include: false
-# make up some values to be rounded
-library(dplyr)
-library(knitr)
-library(kableExtra)
-
+# simulate some values to be rounded
 set.seed(44)
 
 dat_regression_betas <-
@@ -328,9 +326,7 @@ dat_regression_betas_rounded <- dat_regression_betas %>%
          beta_ci_lower = round_up(beta_ci_lower, 2),
          beta_ci_upper = round_up(beta_ci_upper, 2))
 
-dat_regression_betas_rounded %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+dat_regression_betas_rounded
 ```
 
 Rounding should be one of the very last steps, just before results are reported. Calculations done on rounded numbers accumulate rounding error, and decisions such as whether *p* < .05 should always be made on the unrounded values.
@@ -371,9 +367,6 @@ Surprisingly, most of the functions in common R packages for formatting *p*-valu
 -   Throws an error for values below 0 or above 1, which can't be *p*-values.
 
 ```{r}
-# install.packages("devtools"); devtools::install_github("ianhussey/truffle")
-library(truffle)
-
 round_p_value(c(0.1235, 0.0499, 0.0501, 0.0004, 0.9996))
 
 round_p_value(c(0.1235, 0.0499, 0.0501, 0.0004, 0.9996), alpha = NULL)
@@ -388,9 +381,7 @@ dat_regression_betas_rounded <- dat_regression_betas %>%
          beta_ci_upper = round_up(beta_ci_upper, 2),
          p = round_p_value(p))
 
-dat_regression_betas_rounded %>%
-  kable(align = 'r') %>%
-  kable_classic(full_width = FALSE)
+dat_regression_betas_rounded
 ```
 
 Notice that, after this, the 'p' column is character rather than numeric.
@@ -410,13 +401,6 @@ dat_p_values <- tibble(test = c("H1", "H2", "H3", "H4"),
 
 ```{r}
 #| include: false
-
-
-
-
-
-
-
 
 
 
@@ -571,8 +555,6 @@ The column is now a numeric column that happens to be empty, and character strin
 
 ```{r}
 #| error: true
-library(dplyr)
-
 dat_site_1 <- tibble(id = 1:2, notes = NA_real_)
 dat_site_2 <- tibble(id = 3:4, notes = c("late start", "fire alarm"))
 
@@ -632,13 +614,6 @@ Hint: calculate the number of non-missing scores first, and use it in `if_else()
 
 
 
-
-
-
-
-
-
-
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -659,9 +634,49 @@ Dates are their own type in R, and they are notoriously difficult to work with i
 
 This book doesn't cover dates in any detail. If you need to work with them, the {lubridate} package provides functions for parsing dates from text in a known order, e.g., `dmy("23.06.22")` for day-month-year. See the [{lubridate} documentation](https://lubridate.tidyverse.org/) and the [Dates and times chapter](https://r4ds.hadley.nz/datetimes.html) of R for Data Science [@wickham2023r4ds].
 
+## Key functions
+
+The main functions covered in this chapter:
+
+| Function | Package | What it does |
+|----------|---------|--------------|
+| `class()` | {base} | Returns the type (class) of an object or column. |
+| `glimpse()` | {dplyr} | Shows every column of a data frame with its type and first values. |
+| `as.numeric()`, `as.character()`, `as.logical()`, `as.integer()` | {base} | Convert values to another type. Values that can't be converted become `NA`, with a warning. |
+| `sprintf()` | {base} | Formats numbers as text, e.g., `sprintf("%.20f", x)` shows the stored value of `x` to 20 decimal places. |
+| `near()` | {dplyr} | Tests whether two numbers are equal within a small tolerance. Use it instead of `==` for decimal numbers. |
+| `between()` | {dplyr} | Tests whether values are within a range, including the boundaries. |
+| `round()` | {base} | Rounds numbers using banker's rounding (.5 is rounded to the nearest even number). |
+| `round_up()` | {roundwork} | Rounds .5 upwards, as most readers expect, without being affected by floating point representation. |
+| `round_p_value()` | {truffle} | Formats *p*-values in APA style, as text. |
+| `is.na()` | {base} | Tests whether each value is missing. Use it instead of `== NA`. |
+| `NA_real_`, `NA_character_`, `NA_integer_` | {base} | Typed missing values, which make the intended type of a column explicit. |
+
 ## Exercises
 
-### Types
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
+
+### Check your understanding
+
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
+
+1.  What type is the vector created by c(1, 'a', TRUE)? `r webexercises::mcq(c("numeric", "logical", answer = "character", "It throws an error"))`
+2.  What does round(2.5) return? `r webexercises::mcq(c(answer = "2", "3", "2.5"))`
+3.  What does NA > 18 return? `r webexercises::mcq(c("TRUE", "FALSE", answer = "NA"))`
+4.  as.numeric(c('23', 'twenty')) throws an error and stops your code. `r webexercises::torf(FALSE)`
+5.  Integers, such as 1L and 2L, have the same problems with exact comparisons as decimal numbers. `r webexercises::torf(FALSE)`
+6.  is.na() returns TRUE for NaN. `r webexercises::torf(TRUE)`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  Character. A vector can only contain one type, so R converts all the values to the most flexible type among them, and anything combined with a character string becomes a character string. `TRUE` becomes "TRUE" and 1 becomes "1".
+2.  2. `round()` uses banker's rounding, which rounds .5 to the nearest even number. `roundwork::round_up(2.5)` returns 3.
+3.  `NA`. An unknown value might or might not be larger than 18, so the answer is also unknown.
+4.  False. "twenty" becomes `NA`, and R gives the warning "NAs introduced by coercion", but the code keeps running. This is why the warning is important: it is the only sign that information was lost.
+5.  False. Whole numbers can be stored exactly in binary, so only decimal numbers need `near()`.
+6.  True. `is.na()` returns TRUE for both `NA` and `NaN`, e.g., the `NaN` returned by `mean()` for a group with no non-missing values.
+:::
 
 What are the main data types in R? How can you check what type a column is?
 
@@ -674,8 +689,6 @@ Why might a column of ages be read into R as character rather than numeric? How 
 ::: {.callout-note collapse="true" title="Click to show answer"}
 A column can only contain one type, so a single non-numeric value (e.g., "twenty", "25 years", or "female" entered in the wrong field) makes the whole column character. Use `distinct()` or `count()` to find the problematic values, then clean them with `mutate()` before converting with `as.numeric()`. Pay attention to the "NAs introduced by coercion" warning, which tells you that some values could not be converted.
 :::
-
-### `NA`
 
 Why does `x == NA` not work for finding missing values? What should you use instead?
 
@@ -695,8 +708,6 @@ What is the difference between `NA`, `NA_real_`, and `NA_character_`? When shoul
 `NA` is logical, `NA_real_` is numeric (double), and `NA_character_` is character. A plain `NA` can usually be converted automatically to the type needed, but the typed versions fix the column's type, and {dplyr} will throw an error if they are combined with values of a different type. Use the typed `NA` that matches the type the column should have, e.g., `NA_character_` when recoding a character column with `if_else()` or `case_when()`. This makes your intentions explicit and catches mistakes.
 :::
 
-### Floating point
-
 Why is `0.1 + 0.2 == 0.3` FALSE? What should you use instead of `==` to compare decimal numbers?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -708,8 +719,6 @@ Why should you never report *p* = 0? What does a *p*-value of exactly 0 tell you
 ::: {.callout-note collapse="true" title="Click to show answer"}
 A *p*-value can never be exactly 0. A *p*-value of exactly 0 is a sign that the true value was too small to be represented, e.g., because it was calculated as 1 minus a number very close to 1. Report it as *p* < .001.
 :::
-
-### Rounding and reporting
 
 Why should you usually use `roundwork::round_up()` rather than `round()`?
 
@@ -725,14 +734,20 @@ It combines rounding to two or three decimals, reporting values below .001 as "<
 
 ### Practice
 
-In your local version of this .qmd file:
+In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
+
+#### A results table for a manuscript
 
 -   Use 'dat_regression_betas' to create a table suitable for a manuscript.
 -   Create a column 'significant' based on the unrounded *p*-values.
 -   Round the beta estimates and confidence intervals to 2 decimal places using `round_up()`.
--   Combine the confidence intervals into a single column 'beta_ci' formatted like "[0.12, 0.52]". Hint: use `paste0()`, which is covered in more detail in the next chapter.
+-   Combine the confidence intervals into a single column 'beta_ci' formatted like "[0.12, 0.52]".
 -   Format the *p*-values in APA style.
 -   Keep only the columns 'beta_estimate', 'beta_ci', 'p', and 'significant', and print the table.
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+Think about the order of the steps: the significance decision has to come before the *p*-values are turned into text. To build the 'beta_ci' column, use `paste0()`, which is covered in more detail in the next chapter, e.g., `paste0("[", beta_ci_lower, ", ", ...)`.
+:::
 
 ```{r}
 #| include: false

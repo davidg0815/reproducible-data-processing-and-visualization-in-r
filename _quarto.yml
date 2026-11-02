@@ -101,6 +101,9 @@ format:
           /* thin black border around the book's cover image */
           .quarto-cover-image { border: 1px solid #000; }
         </style>
+    # self-marking quizzes made with the {webexercises} package
+    css: include/webex.css
+    include-after-body: include/webex.js
         
 # - badge 1 <span class="badge badge-draft1">✎ Very rough draft</span>
 # - badge 2 <span class="badge badge-draft2">✎ Rough draft</span>
