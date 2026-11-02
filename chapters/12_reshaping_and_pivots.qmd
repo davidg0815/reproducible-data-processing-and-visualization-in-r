@@ -646,14 +646,43 @@ The Affect Misattribution Procedure (AMP) claims to be a measure of automatic ev
 ```{r}
 
 dat_amp <- read_csv("../data/raw/data_amp_raw.csv")
-dat_amp %>% 
-  filter(trialcode == "prime_negative" | trialcode == "prime_positive") %>% 
-  mutate(evaluation = trialcode == "prime_positive") %>% 
-  group_by(trialcode) %>% 
-  summarize(n_evaluation = sum(!is.na(evaluation)),
-            mean_evaluation = if_else(n_evaluation > 0, mean(evaluation, na.rm = TRUE), NA_real_))
 
-  dat_amp %>% 
+# Schritte 1 bis 3
+dat_amp_scored <- dat_amp %>% 
+  # Instruktions- und Übungsdurchgänge entfernen
+  filter(trialcode == "prime_negative" | trialcode == "prime_positive") %>% 
+  # evaluation, bei negativem Prime umgepolt
+  mutate(evaluation = if_else(trialcode == "prime_positive", correct, 1 - correct)) %>% 
+  # mittlere evaluation pro Teilnehmer und Bedingung
+  group_by(subject, trialcode) %>% 
+  summarize(mean_evaluation = mean(evaluation)) %>% 
+  ungroup()
+
+# Schritte 4 und 5
+dat_amp_wide <- dat_amp_scored %>% 
+  # "prime_" aus den Werten entfernen, damit die Spalten richtig heissen
+  mutate(trialcode = str_remove(trialcode, "prime_")) %>% 
+  pivot_wider(id_cols = subject,
+              names_from = trialcode,
+              values_from = mean_evaluation,
+              names_prefix = "mean_evaluation_") %>% 
+  # AMP-Effekt pro Teilnehmer
+  mutate(amp_effect = mean_evaluation_positive - mean_evaluation_negative)
+
+dat_amp_wide %>% 
+  head() %>% 
+  kable() %>% 
+  kable_classic(full_width = FALSE)
+
+# Schritt 6
+dat_amp_summary <- dat_amp_wide %>% 
+  summarize(n = n(),
+            mean_evaluation_positive = mean(mean_evaluation_positive),
+            mean_evaluation_negative = mean(mean_evaluation_negative),
+            mean_amp_effect = mean(amp_effect),
+            sd_amp_effect = sd(amp_effect))
+
+dat_amp_summary %>% 
   kable() %>% 
   kable_classic(full_width = FALSE)
 
