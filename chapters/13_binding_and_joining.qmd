@@ -57,7 +57,7 @@ Practice what you learned in the previous chapter by splitting this data into tw
     -   Pivot the data back to wide, so that there is one row per participant.
 
 ```{r}
-<<<<<<< HEAD
+#<<<<<<< HEAD
 
 
 dat_demographics <- dat_likert_wide %>% 
@@ -74,10 +74,10 @@ dat_likert_scored <- dat_likert_wide %>%
   ungroup() %>% 
   pivot_wider(names_from = scale,
               values_from = participant_mean)
-=======
+#=======
 #| include: false
 
->>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
+#>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 
 ```
@@ -400,9 +400,15 @@ Using `dat_demographics_missing` and `dat_likert_scored_duplicates`:
 2.  Keep the rows of the demographics data that do **not** have a match in the depression data. How many rows are there? Why?
 
 ```{r}
-#| include: false
 
+dat_join <- semi_join(x = dat_likert_scored_duplicates,
+                      y = dat_demographics_missing,
+                      by = "id") %>% 
+  arrange(id)
 
+dat_join_anti <- anti_join(x = dat_demographics_missing,
+                           y = dat_likert_scored_duplicates,
+                           by = "id")
 
 ```
 
@@ -507,8 +513,23 @@ dat_store_3 <- tibble(id = 1:10,
 -   Calculate each customer's total purchases.
 
 ```{r}
-#| include: false
 
+dat_customers %>% 
+  # join data frames
+  left_join(dat_store_1, by = "id") %>% 
+  left_join(dat_store_2, by = "id") %>% 
+  left_join(dat_store_3, by = "id") %>% 
+  # replace NA with 0
+  mutate(purchases_store_1 = replace_na(purchases_store_1, 0),
+         purchases_store_2 = replace_na(purchases_store_2, 0),
+         purchases_store_3 = replace_na(purchases_store_3, 0)) %>% 
+  # summarize and show total purchases across stores for each customer
+  pivot_longer(cols = starts_with("purchase"),
+               names_to = "store",
+               values_to = "purchases",
+               names_prefix = "purchases_") %>% 
+  group_by(id) %>% 
+  summarize(total_Purchases = sum(purchases))
 
 
 ```
@@ -576,8 +597,16 @@ How can you a) find out how many duplicate rows `dat_full_join` contains, and b)
 >>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```{r}
-#| include: false
 
+#a)
+dat_full_join %>% 
+  count(id) %>% 
+  filter(n > 1)
+
+#b)
+dat_full_join %>% 
+  distinct() %>% 
+  arrange(id)
 
 
 ```
@@ -587,7 +616,7 @@ How can you a) find out how many duplicate rows `dat_full_join` contains, and b)
 
 =======
 ::: {.callout-note collapse="true" title="Click to show answer"}
->>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
+
 ```{r}
 # a) participants with more than one row
 dat_full_join %>%
@@ -706,7 +735,6 @@ The code below simulates data from a randomized controlled trial (RCT) of an int
 -   `dat_pre`: social media use at pre.
 -   `dat_post`: social media use at post. Some participants did not complete the post measure.
 -   `dat_exclusions`: the IDs of participants who must be excluded.
->>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```{r}
 set.seed(42)
@@ -751,6 +779,9 @@ dat_post <-
   slice_sample(prop = .75)
 
 dat_exclusions <- tibble(id = c(3, 11, 12))
+
+
+
 ```
 
 <<<<<<< HEAD
@@ -774,10 +805,36 @@ Check your result: how many rows should it have? Does each participant appear on
 ::: {.callout-note collapse="true" title="Click to show hint"}
 Remove the duplicates from `dat_rct_demographics` with `distinct()` before joining. Start from `dat_pre` and use `left_join()` to add `dat_post` (joining by both 'id' and 'condition') and the demographics. Then remove the excluded participants with `anti_join()`. Check the result with `count(id) %>% filter(n > 1)` and `nrow()`, or add `relationship = "one-to-one"` to the joins.
 :::
->>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```{r}
-#| include: false
+
+#start joining, check ids first
+dat_rct_demographics %>% 
+  count(id) %>% 
+  filter(n > 1)
+dat_pre %>% 
+  count(id) %>% 
+  filter(n > 1)
+dat_post %>% 
+  count(id) %>% 
+  filter(n > 1)
+#check rows before
+dat_rct_demographics %>% 
+  nrow()
+  
+#remove duplicates (are exact copies after check)
+dat_combined <- dat_rct_demographics %>% 
+  distinct(id, .keep_all = TRUE) %>% 
+  anti_join(dat_exclusions, by = "id") %>% 
+  left_join(dat_pre, by = "id") %>% 
+  left_join(dat_post, by = c("id", "condition"))
+
+dat_combined %>% 
+  count(id) %>% 
+  filter(n > 1)
+
+dat_combined %>% 
+  nrow()
 
 
 
@@ -786,7 +843,6 @@ Remove the duplicates from `dat_rct_demographics` with `distinct()` before joini
 If you have combined the data correctly, you can run the next chunk to analyze the RCT following best practice: an ANCOVA comparing social media use at post between the conditions, controlling for social media use at pre.
 
 ```{r}
-#| eval: false
 fit <- lm(formula = socialmediause_post ~ socialmediause_pre + condition,
           data = dat_combined)
 
