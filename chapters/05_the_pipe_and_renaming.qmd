@@ -10,41 +10,55 @@ options(scipen = 999)
 
 ```
 
+Raw data from psychology studies rarely arrives with tidy, meaningful column names: experiment software and survey platforms often produce names with spaces, capital letters, symbols, or numbers at the start. Before you can process the data, you need to know what it contains and give its columns names that are easy to work with.
+
+This chapter introduces the pipe (`%>%`), which lets you write data processing code as a readable series of steps, and shows how to explore a data frame's rows and columns and rename them with `rename()` and `janitor::clean_names()`. It builds on loading data with `read_csv()` from the [Loading, viewing and saving data](04_loading_data.qmd) chapter. The pipe is used in every later chapter.
+
+```{r}
+library(readr) # for read_csv()
+library(dplyr) # for %>%, rename(), pull(), and other functions used in the pipe examples
+library(janitor) # for clean_names(), round_half_up()
+```
+
 ## Exploring column names and rows
 
 As in the last chapter, we load data using relative paths and `read_csv()` and view the first few rows with `head()`.
 
 ```{r}
-library(readr) # for read_csv()
-library(dplyr) # for %>%
-library(knitr) # for kable()
-library(kableExtra) # for kable_extra()
-
 dat_demographics_raw <- read_csv(file = "../data/raw/data_demographics_raw_messy.csv") 
 
-head(dat_demographics_raw) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+head(dat_demographics_raw)
 ```
 
 Unfortunately, the 'data_demographics_raw_messy.csv' data set is, as its name suggests, somewhat messy. The column names are on the third row, not the first one.
 
+#### Exercise
+
 How should you alter the above code to ignore the first two lines when reading the data in to R?
+
+```{r}
+#| include: false
+
+
+
+```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
 ```{r}
 dat_demographics_raw <- read_csv(file = "../data/raw/data_demographics_raw_messy.csv", 
                                  skip = 2) # add skip = 2 to ignore the first two lines
 
-head(dat_demographics_raw) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+head(dat_demographics_raw)
 ```
+
+The `skip` argument tells `read_csv()` how many lines to ignore before it reads the column names. See the [Loading, viewing and saving data](04_loading_data.qmd) chapter.
 :::
+
+The rest of the chapter uses the `dat_demographics_raw` data frame loaded in this answer.
 
 ### Count rows and columns with `nrow()` and `ncol()`
 
-Processing and cleaning any data set requires an understanding what it contains - as well as a thorough understanding of how the data was generated (e.g., the study's design and specific implementation; what rows represent what measurement and in what way, etc.).
+Processing and cleaning any data set requires an understanding of what it contains - as well as a thorough understanding of how the data was generated (e.g., the study's design and specific implementation; what rows represent what measurement and in what way, etc.).
 
 A rudimentary but important step to understanding what a data set contains is to know how many rows and columns it contains.
 
@@ -76,7 +90,7 @@ Later, when you're used to using functions such as `rename()` and `mutate()`, yo
 dput(colnames(dat_demographics_raw))
 ```
 
-This takes the output of `colnames()` and applies `dput()` to it. When your data processing calls muliple functions in a row, this could get complicated to read and write. It's therefore time to introduce 'the pipe'.
+This takes the output of `colnames()` and applies `dput()` to it. When your data processing calls multiple functions in a row, this could get complicated to read and write. It's therefore time to introduce 'the pipe'.
 
 ## The pipe
 
@@ -112,9 +126,6 @@ The following example uses functions we have not learned yet. We'll cover them i
 Without the pipe:
 
 ```{r}
-library(dplyr) # for the pipe, rename, mutate, select, group_by, summarize
-library(janitor) # for round_half_up
-
 dat <- 
   mutate(
     summarise(
@@ -137,12 +148,10 @@ dat <-
   )
 
 # print the first few rows
-head(dat, n = 10) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+head(dat, n = 10)
 ```
 
-Notice how the above code has to be written and read from the middle outwards: data is loaded, and what is loaded is used to `rename()` columns, and what the output is used to `mutate()` (create) a new column, whose output is used to `summarize()` across rows for each participant.
+Notice how the above code has to be written and read from the middle outwards: data is loaded, and what is loaded is used to `rename()` columns, and the output of that is used to `mutate()` (create) a new column, whose output is used to `summarize()` across rows for each participant.
 
 This becomes much more linear and human-readable when we use the pipe:
 
@@ -167,10 +176,33 @@ dat <-
   mutate(percent_fast_trials = round_half_up(percent_fast_trials, digits = 2))
 
 # print the first few rows
-head(dat, n = 10) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+head(dat, n = 10)
 ```
+
+#### Exercise
+
+The following code calculates the mean percentage of fast trials across all participants, rounded to one decimal place. Rewrite it using the pipe, so that it reads from left to right (or top to bottom).
+
+```{r}
+round_half_up(mean(dat$percent_fast_trials), digits = 1)
+```
+
+```{r}
+#| include: false
+
+
+
+```
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+```{r}
+dat$percent_fast_trials %>%
+  mean() %>%
+  round_half_up(digits = 1)
+```
+
+Start with the innermost object, then add each function in the order it is applied, from the inside out. The pipe passes the output to the first argument of the next function, so you only write the other arguments, such as `digits = 1`.
+:::
 
 ### How to insert a pipe?
 
@@ -192,39 +224,37 @@ The pipe passes the output of the preceding function on to the next function as 
 ```{r}
 dat_demographics_raw %>% # output passed forward as '.'
   head(x = .) %>% # output passed forward as '.'
-  kable(x = .) %>% # -> output passed forward as '.'
-  kable_classic(kable_input = .,
-                full_width = FALSE)
+  colnames(x = .) %>% # -> output passed forward as '.'
+  dput(x = .)
 ```
 
-If not passed explicitly, the input is passed to the next function's *first* argument OR, if the funtion takes the '.data' argument (i.e., most {tidyverse} functions) it is passed to '.data':
+If not passed explicitly, the input is passed to the next function's *first* argument. Most {tidyverse} functions are designed so that their first argument is the data (often called '.data'), which is why they work so smoothly with the pipe:
 
 ```{r}
 dat_demographics_raw %>% # output passed forward to first argument
   head() %>% # output passed forward to first argument
-  kable() %>% # -> output passed forward to first argument
-  kable_classic(full_width = FALSE)
+  colnames() %>% # -> output passed forward to first argument
+  dput()
 ```
 
 ### The two pipes: `%>%` vs. `|>`
 
-`%>%` is the original pipe created for the {magrittr} package and used throughout the tidyverse packages. It is slightly slower but also more flexible because it can pass to the '.data' argument.
+`%>%` is the original pipe created for the {magrittr} package and used throughout the tidyverse packages. It is slightly slower but also more flexible: you can use the '.' placeholder to pass the input to any argument, more than once, or inside another function call.
 
 `|>` is a version of the pipe added more recently to base-R. It is slightly faster but less flexible. This speed only matters if you're doing this with much larger data sets or very frequently (e.g., in Monte Carlo simulations).
 
-The base R pipe (`|>`) is less intelligent behind the scenes. It always supplies the input as the first argument and can't handle passing to '.data'. If you want to pass its output explicitly, you use '\_' instead of '.'. However, in my experience, this works imperfectly and not all functions will accept it. Example of explicit passing with the base R pipe `|>`:
+The base R pipe (`|>`) also passes the input to the first argument by default. If you want to pass its output explicitly, you use '\_' instead of '.', but with more restrictions: '\_' can only be used once, and only with a named argument (e.g., `head(x = _)`, not `head(_)`). Example of explicit passing with the base R pipe `|>`:
 
 ```{r}
 dat_demographics_raw |> # output passed forward as '_'
   head(x = _) |> # output passed forward as '_'
-  kable(x = _) |> # output passed forward as '_'
-  kable_classic(kable_input = _,
-                full_width = FALSE)
+  colnames(x = _) |> # output passed forward as '_'
+  dput(x = _)
 ```
 
 If you're not sure, it's usually easier to use `%>%`.
 
-I try to use `%>%` throughout this book, but because I use `|>` more often in my own code I might slip up.
+This book uses `%>%` throughout, except where the two pipes are being compared.
 
 ## Renaming columns
 
@@ -248,7 +278,7 @@ Various naming conventions exist and are used for both objects (e.g., data frame
 - lower.dot.case: often used in older functions in base-R, e.g., `write.csv()`
 - camelCase: often used in Python
 
-On the one hand, as long as you're consitent, it doesn't matter which one you use.
+On the one hand, as long as you're consistent, it doesn't matter which one you use.
 
 On the other hand, snake_case is objectively the best answer and you should use it.
 
@@ -260,12 +290,19 @@ If more than one column has the same name, you'll have issues trying to work wit
 
 The following cause problems:
 
+<<<<<<< HEAD
 - Column names that begin with a number, e.g., `1_to_7_depression`.
 - Column names that contain spaces, e.g., \`depression 1 to 7'.
 - Column names that contain characters other than letters and numbers, e.g., `depression_1_to_7*`.
 - Column names that are 'reserved names' in R, e.g., `TRUE`.
+=======
+-   Column names that begin with a number, e.g., `1_to_7_depression`.
+-   Column names that contain spaces, e.g., `depression 1 to 7`.
+-   Column names that contain characters other than letters and numbers, e.g., `depression_1_to_7*`.
+-   Column names that are 'reserved names' in R, e.g., `TRUE`.
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
-For example, the 'dat_demographics_raw' data frame contains a columns named `correct` and `0 ms onset RT`.
+For example, the 'dat_demographics_raw' data frame contains columns named `correct` and `0 ms onset RT`.
 
 If we want to print the rows of `correct` using base-R we can do this with `$`:
 
@@ -316,7 +353,7 @@ Use `dplyr::rename()` to change the name of one or more columns. It works like t
 `df %>% rename(new_name = old_name)`
 ```
 
-Let's create a data frame called `dat_demographics_renamed` from `dat_demographics_raw`, which renames the `0 ms onset RT` column to timely `rt`:
+Let's create a data frame called `dat_demographics_renamed` from `dat_demographics_raw`, which renames the `0 ms onset RT` column to `rt`:
 
 ```{r}
 # view old column names 
@@ -340,75 +377,10 @@ dat_demographics_renamed <- dat_demographics_raw %>%
          rt = "0 ms onset RT")
 
 # view new column names and the first few rows
-head(dat_demographics_renamed) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+head(dat_demographics_renamed)
 ```
 
-## Automatic renaming with `janitor::clean_names()`
-
-Cleaning names is such a common task that there are functions that rename all columns in a dataset at once, such as `janitor::clean_names()`.
-
-However, `clean_names()` can only rename to a standard naming convention and remove problematic characters, it can't choose meaningful variable names.
-
-```{r}
-library(janitor) # for clean_names()
-
-dat_demographics_renamed <- dat_demographics_raw %>%
-  clean_names()
-
-dat_demographics_renamed %>%
-  head() %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
-```
-
-It's still very useful as part of a tidy workflow:
-
-```{r}
-# code you might write to help you write the final varsion below
-dat_demographics_temp <- dat_demographics_raw %>%
-  clean_names()
-
-dat_demographics_temp %>%
-  colnames() %>%
-  dput()
-
-# final working version
-dat_demographics_renamed <- dat_demographics_raw %>%
-  clean_names() %>%
-  rename(id = subject_code, 
-         block_trial = block_code_and_trial_number, 
-         question = trial_code, 
-         response = key_response_use_this, 
-         rt = x0_ms_onset_rt)
-
-dat_demographics_renamed %>%
-  head() %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
-```
-
-## Exercises
-
-### What four principles should column names follow?
-
-::: {.callout-note collapse="true" title="Click to show answer"}
-1.  Use clear and descriptive names
-2.  Use a naming convention such as snake_case
-3.  Use unique names
-4.  Avoid characters that break R syntax, such as spaces, non-alphanumeric characters, or starting column names with a number.
-:::
-
-### Interactive exercises
-
-Complete the interactive `rename()` exercises [here](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrrename). This web app is written in the {shiny} package and allows you to write and run code in your web browser.
-
-### Read .csv file and rename columns
-
-Download the data and code for this e-Book (see the [Introduction](../index.qmd)).
-
-In your local version of this .qmd file:
+#### Exercise
 
 - Create a data frame called `dat_likert_messy` by reading the .csv file from '../data/raw/data_likert_messy.csv'.
 - Print its column names.
@@ -418,32 +390,6 @@ In your local version of this .qmd file:
 
 ```{r}
 #| include: false
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -468,8 +414,11 @@ dat_likert_renamed <- dat_likert_messy %>%
 # check renaming was successful 
 head(dat_likert_renamed)
 ```
+
+The new name goes on the left of `=` and the old name on the right. Old names that contain spaces or start with a number must be put in quotes (or backticks).
 :::
 
+<<<<<<< HEAD
 ```{r}
 dat_likert_messy <- read_csv("../data/raw/data_likert_messy.csv") %>% 
   colnames() %>% 
@@ -488,4 +437,155 @@ dat_likert_renamed %>%
   head() %>% 
   kable() %>% 
   kable_classic(full_width = FALSE)
+=======
+## Automatic renaming with `janitor::clean_names()`
+
+Cleaning names is such a common task that there are functions that rename all columns in a dataset at once, such as `janitor::clean_names()`.
+
+However, `clean_names()` can only rename to a standard naming convention and remove problematic characters, it can't choose meaningful variable names.
+
+```{r}
+dat_demographics_renamed <- dat_demographics_raw %>%
+  clean_names()
+
+dat_demographics_renamed %>%
+  head()
+```
+
+It's still very useful as part of a tidy workflow:
+
+```{r}
+# code you might write to help you write the final version below
+dat_demographics_temp <- dat_demographics_raw %>%
+  clean_names()
+
+dat_demographics_temp %>%
+  colnames() %>%
+  dput()
+
+# final working version
+dat_demographics_renamed <- dat_demographics_raw %>%
+  clean_names() %>%
+  rename(id = subject_code, 
+         block_trial = block_code_and_trial_number, 
+         question = trial_code, 
+         response = key_response_use_this, 
+         rt = x0_ms_onset_rt)
+
+dat_demographics_renamed %>%
+  head()
+```
+
+#### Exercise
+
+Load '../data/raw/data_likert_messy.csv' again, and this time use `clean_names()` in a single pipe to rename its columns. Print the new column names. Which of the four principles do the new names follow, and which still need work?
+
+```{r}
+#| include: false
+
+
+
+```
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+```{r}
+read_csv("../data/raw/data_likert_messy.csv") %>%
+  clean_names() %>%
+  colnames()
+```
+
+The new names are unique, use snake_case, and no longer break R syntax: spaces became underscores, capital letters became lower case, and 'x' was added to names that started with a number. But names like 'x1_to_7_likert_scale_item_1' are still long and not very descriptive, so you would follow `clean_names()` with `rename()`.
+:::
+
+## Key functions
+
+The main functions covered in this chapter:
+
+| Function | Package | What it does |
+|----------|---------|--------------|
+| `head()` | {utils} | Shows the first few rows of a data frame. |
+| `nrow()` | {base} | Returns the number of rows. |
+| `ncol()` | {base} | Returns the number of columns. |
+| `colnames()` | {base} | Returns the column names. |
+| `dput()` | {base} | Prints an object as R code, e.g., column names as a vector you can copy-paste. |
+| `%>%` | {magrittr} (loaded by {dplyr}) | The pipe: passes the output of one function to the next. |
+| `\|>` | {base} | The native pipe: like `%>%` but built into R, using `_` as the placeholder. |
+| `pull()` | {dplyr} | Extracts a single column as a vector, like `$`. |
+| `rename()` | {dplyr} | Renames columns: `rename(new_name = old_name)`. |
+| `clean_names()` | {janitor} | Renames all columns to snake_case and removes characters that break R syntax. |
+
+## Exercises
+
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
+
+### Check your understanding
+
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
+
+1.  Which code is equivalent to x %>% f(y)? `r webexercises::mcq(c("f(y, x)", answer = "f(x, y)", "y(f(x))", "x(f, y)"))`
+2.  When passing output explicitly with the native pipe |>, which placeholder do you use? `r webexercises::mcq(c(".", ".data", answer = "_", "x"))`
+3.  In rename(), the new name goes on the left of the equals sign. `r webexercises::torf(TRUE)`
+4.  Which column name follows all four principles for column names? `r webexercises::mcq(c("1_to_7_depression", "Depression Sum Score", "X3", answer = "depression_sum_score"))`
+5.  What does clean_names() turn a column called '0 ms onset RT' into? `r webexercises::mcq(c(answer = "x0_ms_onset_rt", "0_ms_onset_rt", "rt", "ms_onset_rt"))`
+6.  clean_names() gives columns meaningful, descriptive names. `r webexercises::torf(FALSE)`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  `f(x, y)`. The pipe passes `x` to the first argument of `f()`, and `y` becomes the second argument.
+2.  `_`. The {magrittr} pipe `%>%` uses `.`, the native pipe `|>` uses `_`.
+3.  True. `rename(new_name = old_name)`, the same order as when creating an object with `new_object <- old_object`.
+4.  'depression_sum_score' is descriptive, snake_case, and doesn't break R syntax. '1_to_7_depression' starts with a number, 'Depression Sum Score' contains spaces, and 'X3' is not descriptive.
+5.  'x0_ms_onset_rt'. Spaces become underscores, capitals become lower case, and an 'x' is added because names can't start with a number.
+6.  False. `clean_names()` only applies a naming convention and removes problematic characters. Choosing meaningful names is still up to you, using `rename()`.
+:::
+
+What four principles should column names follow?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+1.  Use clear and descriptive names
+2.  Use a naming convention such as snake_case
+3.  Use unique names
+4.  Avoid characters that break R syntax, such as spaces, non-alphanumeric characters, or starting column names with a number.
+:::
+
+Why is code written with the pipe usually easier to read than nested code that does the same thing?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+Nested code has to be read from the inside out, and the arguments of each function end up far away from the function name. With the pipe, the steps are written in the order they happen, one per line, so the code reads from top to bottom like a description of what is done to the data. It is also easier to comment each step, and to run the pipe one step at a time to check it.
+:::
+
+What is the difference between `%>%` and `|>`? Which does this book use?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+`%>%` comes from the {magrittr} package (loaded by {dplyr}) and uses `.` as its placeholder. `|>` is built into base R (version 4.1 and later), is slightly faster, and uses `_` as its placeholder, but is less flexible. For most purposes they do the same thing. This book uses `%>%`.
+:::
+
+### Interactive exercises
+
+Complete the interactive `rename()` exercises [here](https://errors.shinyapps.io/dplyr-learnr/#section-dplyrrename). This web app is written in the {shiny} package and allows you to write and run code in your web browser.
+
+### Practice
+
+In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
+
+Using a single pipe:
+
+-   Read the file '../data/raw/data_amp_raw.csv'.
+-   Rename all the columns to snake_case.
+-   Then rename the columns that are still not clear and descriptive, e.g., give 'subject' the name 'id', and 'latency' the name 'rt'.
+-   Assign the result to a data frame called `dat_amp_renamed`.
+
+Then print its column names, and the number of rows and columns, to check that no columns were lost.
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+Start with `read_csv()`, then pipe the result to `clean_names()` and then `rename()`. Run `clean_names()` on its own first and use `colnames()` and `dput()` to see the names you need to rename.
+:::
+
+```{r}
+#| include: false
+
+
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 ```

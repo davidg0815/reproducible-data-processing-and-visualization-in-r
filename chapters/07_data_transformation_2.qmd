@@ -12,17 +12,25 @@ options(scipen = 999)
 
 This chapter continues with "*non-aggregating*" functions, i.e., functions that do not reduce many rows down to fewer summary rows. It covers changing the order of rows with `arrange()`, keeping rows based on their position with the `slice_()` functions, dropping rows with missing values with `drop_na()`, and a set of more advanced ways of using `mutate()`: handling missing values, modifying many columns at once, calculating scores across columns, using values from other rows, and filling in empty cells.
 
+```{r}
+library(dplyr) # for %>%, mutate(), arrange(), slice_max(), na_if(), across(), lag()
+library(tidyr) # for drop_na(), replace_na(), fill()
+library(stringr) # for str_to_lower(), str_remove_all()
+library(tibble) # for tribble()
+library(naniar) # for add_n_miss(), miss_var_summary(), vis_miss()
+
+# devtools::install_github("ianhussey/truffle")
+library(truffle) # for simulating data and snuffle_sum_scores()
+```
+
 ## `arrange()` and `desc()`
 
 Arrange (`arrange()`) and descending (`desc()`) allow you to change the order of the rows without changing their contents. `desc()` is almost always used inside `arrange()`, i.e., `arrange(desc(variable))`.
 
-```{r}
-#| include: false
-# generate some messy demographics data with a larger N
-# devtools::install_github("ianhussey/truffle")
-library(truffle)
-library(dplyr)
+The examples in this section use messy demographics data for 500 participants, simulated with {truffle}:
 
+```{r}
+# generate some messy demographics data with a larger N
 set.seed(42)
 
 dat_demographics_messy <- data.frame(id = 1:500) %>%
@@ -30,15 +38,9 @@ dat_demographics_messy <- data.frame(id = 1:500) %>%
   truffle::dirt_demographics()
 ```
 
+First, we tidy the 'gender' column and count the frequency of each response, as in the [Data transformation I](06_data_transformation_1.qmd) chapter:
+
 ```{r}
-
-library(dplyr)
-library(tidyr)
-library(readr)
-library(stringr)
-library(knitr)
-library(kableExtra)
-
 dat_gender_tidier_counts <- dat_demographics_messy %>%
   # convert to lower case and remove non-letters
   mutate(gender = str_to_lower(gender),
@@ -52,27 +54,19 @@ dat_gender_tidier_counts <- dat_demographics_messy %>%
 
 # arrange by increasing N
 dat_gender_tidier_counts %>%
-  arrange(n) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  arrange(n)
 
 # arrange by decreasing N
 dat_gender_tidier_counts %>%
-  arrange(desc(n)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  arrange(desc(n))
 
 # arrange by gender in alphabetical order
 dat_gender_tidier_counts %>%
-  arrange(gender) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  arrange(gender)
 
 # arrange by gender in reverse alphabetical order
 dat_gender_tidier_counts %>%
-  arrange(desc(gender)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  arrange(desc(gender))
 ```
 
 Notice that the `NA` row is placed last whether you use `arrange(gender)` or `arrange(desc(gender))`. `arrange()` always puts missing values at the end.
@@ -135,6 +129,7 @@ Hint: what type of data is the 'age' column? Check with `class()` or `glimpse()`
     age = as.numeric(age)
   )
 
+<<<<<<< HEAD
 dat_age_tidier_counts %>% 
   arrange(desc(age), id) %>% 
   head(10) %>% 
@@ -142,6 +137,8 @@ dat_age_tidier_counts %>%
   kable_classic(full_width = FALSE)
   
 
+=======
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -153,9 +150,7 @@ dat_demographics_messy %>%
   mutate(age = str_remove_all(age, "[^0-9\\.]"),
          age = as.numeric(age)) %>%
   arrange(desc(age), id) %>%
-  head(10) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  head(10)
 ```
 
 Note that arranging a character column that contains numbers sorts it alphabetically, not numerically: "100" comes before "25", which comes before "9". Always check the type of the column you are arranging.
@@ -175,9 +170,7 @@ Sometimes we want to `filter()` for rows not based on their content but their lo
 ```{r}
 # the three most common gender responses
 dat_gender_tidier_counts %>%
-  slice_max(n, n = 3) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  slice_max(n, n = 3)
 ```
 
 Note that the column used by `slice_min()` and `slice_max()` (here, the column named 'n') is a different thing to the argument `n =` (the number of rows to return). It's unfortunate that the column that `count()` creates and this argument share the same name.
@@ -196,9 +189,7 @@ Because the rows are chosen randomly, you will get different rows each time you 
 set.seed(42)
 
 dat_demographics_messy %>%
-  slice_sample(n = 5) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  slice_sample(n = 5)
 ```
 
 #### Exercise
@@ -210,6 +201,7 @@ Write code to return the rows of the three youngest participants in 'dat_demogra
 
 
 
+<<<<<<< HEAD
 dat_demographics_messy %>% 
   mutate(age = str_remove_all(age, "[^0-9\\.]"),
          age = as.numeric(age))
@@ -224,6 +216,8 @@ dat_demographics_messy %>%
 
 
 
+=======
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -231,9 +225,7 @@ dat_demographics_messy %>%
 dat_demographics_messy %>%
   mutate(age = str_remove_all(age, "[^0-9\\.]"),
          age = as.numeric(age)) %>%
-  slice_min(age, n = 3) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  slice_min(age, n = 3)
 ```
 
 Many more than three rows are returned, because of ties: lots of participants share the youngest age, 18. If you really need exactly three rows, you can add `with_ties = FALSE`, but think about whether it makes sense to arbitrarily choose three of the 18-year-olds.
@@ -248,9 +240,7 @@ dat_gender_tidier_counts %>%
   # arrange by decreasing N
   arrange(desc(n)) %>%
   # negative filter rows where gender is not NA
-  filter(!is.na(gender)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  filter(!is.na(gender))
 ```
 
 This negative filter is so common that it has its own helper function: `drop_na()`, from the {tidyr} package. Note that there is also a base-R `na.omit()`, which you should avoid because it always applies to all columns.
@@ -259,30 +249,22 @@ You can pass one, more than one, or no column names to `drop_na()`. If no column
 
 ```{r}
 # retain all rows
-dat_gender_tidier_counts %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+dat_gender_tidier_counts
 
 # drop NA rows in 'gender'
 dat_gender_tidier_counts %>%
   # negative filter rows where !is.na(gender)
-  drop_na(gender) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  drop_na(gender)
 
 # drop NA rows in 'gender' and 'n'
 dat_gender_tidier_counts %>%
   # negative filter rows where !is.na(gender) & !is.na(n)
-  drop_na(gender, n) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  drop_na(gender, n)
 
 # drop NA rows in all columns in data frame
 dat_gender_tidier_counts %>%
   # negative filter rows where all columns are not NA
-  drop_na() %>%      # <- note no columns supplied to drop_na()
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  drop_na() # <- note no columns supplied to drop_na()
 ```
 
 `drop_na()` with no columns specified is convenient but risky: in a data frame with many columns, a participant can be dropped because of a missing value in a column you don't care about. As with `select()` and `filter()`, it is usually better to be explicit and name the columns.
@@ -292,8 +274,6 @@ dat_gender_tidier_counts %>%
 The rest of this chapter uses a small made-up survey data set. Each row is a participant. Missing responses are coded as `-99`, which is very common in data exported from survey software and in older data sets. Each participant completed a 4-item anxiety scale (`anx_`, 1-5) where items 2 and 4 are reverse-keyed, and a 3-item depression scale (`dep_`, 1-5).
 
 ```{r}
-library(tibble) # for tribble()
-
 dat_survey <- tribble(
   ~id, ~age, ~condition,     ~anx_1, ~anx_2, ~anx_3, ~anx_4, ~dep_1, ~dep_2, ~dep_3,
   1,   23,   "control",      2,      4,      3,      5,      1,      2,      1,
@@ -304,9 +284,7 @@ dat_survey <- tribble(
   6,   19,   "intervention", 2,      4,      1,      5,      1,      1,      1
 )
 
-dat_survey %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+dat_survey
 ```
 
 If we calculated the mean age of the sample without dealing with the `-99`, the result would be wrong but R would give no error or warning. Missing data codes need to be converted to `NA`, R's special value for missing data, before doing anything else.
@@ -315,21 +293,23 @@ You already know how to do this with `if_else()`:
 
 ```{r}
 dat_survey %>%
-  mutate(age = if_else(age == -99, NA_real_, age)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  mutate(age = if_else(age == -99, NA_real_, age))
 ```
 
 This is so common that {dplyr} has a shortcut: `na_if(x, y)` returns `NA` wherever `x` equals `y`, and `x` everywhere else.
 
 ```{r}
 dat_survey %>%
+<<<<<<< HEAD
   mutate(age = if_else(age == -99, NA, age))
 # same
 dat_survey %>%
   mutate(age = na_if(age, -99)) %>%
   kable() %>%
   kable_classic(full_width = FALSE)
+=======
+  mutate(age = na_if(age, -99))
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 ```
 
 ### The reverse: `replace_na()`
@@ -350,14 +330,12 @@ dat_smoking <- tribble(
 
 dat_smoking %>%
   mutate(cigarettes_per_day_replace_na = replace_na(cigarettes_per_day, 0),
-         cigarettes_per_day_if_else = if_else(smoker == "no", 0, cigarettes_per_day)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+         cigarettes_per_day_if_else = if_else(smoker == "no", 0, cigarettes_per_day))
 ```
 
 Notice participant 4. They smoke but did not answer the question. `replace_na()` blindly set them to 0, which is wrong: they are a smoker with a genuinely missing answer. The `if_else()` version only sets non-smokers to 0, and leaves participant 4 as `NA`. Being specific about *why* a value should be replaced usually leads to code that is more correct.
 
-### Exercise
+#### Exercise
 
 Write code that takes 'dat_survey' and converts the `-99` values to `NA` in the 'age' column and in the 'anx_3' column, using `na_if()`.
 
@@ -365,6 +343,7 @@ Write code that takes 'dat_survey' and converts the `-99` values to `NA` in the 
 #| include: false
 
 
+<<<<<<< HEAD
 dat_survey %>% 
   mutate(age = na_if(age, -99),
          anx_3 = na_if(anx_3, -99)) %>% 
@@ -376,6 +355,8 @@ dat_survey %>%
 
 
 
+=======
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -383,9 +364,7 @@ dat_survey %>%
 ```{r}
 dat_survey %>%
   mutate(age = na_if(age, -99),
-         anx_3 = na_if(anx_3, -99)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+         anx_3 = na_if(anx_3, -99))
 ```
 
 This works, but imagine doing this for a data set with 100 item columns. The next section shows how to do this more easily.
@@ -403,17 +382,22 @@ Very often we want to do the same thing to many columns. Writing out a separate 
 For example, to convert `-99` to `NA` in all the anxiety and depression items:
 
 ```{r}
+<<<<<<< HEAD
 # same as across -> its for mutate across several columnds -> not important fot the oral exams in detail, only conceptualy
 #dat_survey %>% 
 #  mutate(anx_1 = na.if(anx_1, -99),
 #         anx_2 = na.if(anx_2, -99)
 #         anx_3 = na.if(anx_3, -99))
+=======
+dat_survey %>%
+  mutate(anx_1 = na_if(anx_1, -99),
+         anx_2 = na_if(anx_2, -99),
+         anx_3 = na_if(anx_3, -99))
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 dat_survey %>%
   mutate(across(.cols = c(starts_with("anx_"), starts_with("dep_")),
-                .fns = ~ na_if(.x, -99))) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+                .fns = ~ na_if(.x, -99)))
 ```
 
 The syntax `~ na_if(.x, -99)` probably looks strange. The `~` (tilde) means "here is a function I am writing on the fly". `.x` is a placeholder that stands for "the current column". So `across()` takes each of the selected columns in turn and runs `na_if(anx_1, -99)`, then `na_if(anx_2, -99)`, and so on.
@@ -431,9 +415,7 @@ dat_survey_na <- dat_survey %>%
   mutate(across(.cols = where(is.numeric),
                 .fns = ~ na_if(.x, -99)))
 
-dat_survey_na %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+dat_survey_na
 ```
 
 This also dealt with the `-99` in the 'age' column. It also applied `na_if()` to the 'id' column. That happens to be harmless here, as no one has the id -99, but it's a good example of how broad selections like `where(is.numeric)` or `everything()` can affect columns you didn't intend. As with `select()`, it's usually safer to specify the columns you *do* want.
@@ -451,9 +433,7 @@ dat_survey_reversed <- dat_survey_na %>%
                 .names = "{.col}_reversed"))
 
 dat_survey_reversed %>%
-  select(id, starts_with("anx_")) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, starts_with("anx_"))
 ```
 
 Keeping both the original and the reverse-scored columns, with clear names, makes it much easier to check that the reverse scoring was done correctly. It also avoids a common and serious error: if you overwrite 'anx_2' with its reversed scores and then accidentally run the code a second time, it will be reversed back again, and nothing in the column name will tell you.
@@ -471,14 +451,12 @@ For example, to flag participants who have at least one missing anxiety response
 dat_survey_na %>%
   mutate(any_anx_missing = if_any(.cols = starts_with("anx_"), .fns = ~ is.na(.x)),
          all_anx_complete = if_all(.cols = starts_with("anx_"), .fns = ~ !is.na(.x))) %>%
-  select(id, starts_with("anx_"), any_anx_missing, all_anx_complete) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, starts_with("anx_"), any_anx_missing, all_anx_complete)
 ```
 
 These are also very useful inside `filter()`, e.g., `filter(if_all(starts_with("anx_"), ~ .x >= 1 & .x <= 5))` keeps only participants whose responses are all within the possible range of the scale.
 
-### Exercise
+#### Exercise
 
 Using 'dat_survey', write code that:
 
@@ -492,6 +470,7 @@ Using 'dat_survey', write code that:
 
 
 
+<<<<<<< HEAD
 dat_survey %>% 
   mutate(across(.cols = c(age, ends_with(c("_1", "_2", "_3", "_4"))),
                 .fns = ~ na_if(.x, -99))) %>% 
@@ -508,6 +487,8 @@ dat_survey %>%
 
 
 
+=======
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 ```
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -518,13 +499,11 @@ dat_survey %>%
   mutate(across(.cols = c(anx_2, anx_4),
                 .fns = ~ 6 - .x,
                 .names = "{.col}_reversed")) %>%
-  mutate(dep_missing = if_any(.cols = starts_with("dep_"), .fns = ~ is.na(.x))) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  mutate(dep_missing = if_any(.cols = starts_with("dep_"), .fns = ~ is.na(.x)))
 ```
 :::
 
-### Exercise
+#### Exercise
 
 What will this code do? Predict first, then run it to check.
 
@@ -555,9 +534,7 @@ You might expect this to work:
 ```{r}
 dat_survey_reversed %>%
   mutate(anx_sum = sum(anx_1, anx_2_reversed, anx_3, anx_4_reversed, na.rm = TRUE)) %>%
-  select(id, anx_1, anx_2_reversed, anx_3, anx_4_reversed, anx_sum) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, anx_1, anx_2_reversed, anx_3, anx_4_reversed, anx_sum)
 ```
 
 It doesn't. Every participant has the same, implausibly large, sum score. This is because `sum()` sums *everything* you give it: all the values in all four columns, across all rows, producing a single number (`na.rm = TRUE` tells it to ignore the missing values when doing so). That single value is then repeated down every row. Functions like `sum()`, `mean()`, and `sd()` are "*aggregating*" functions: they reduce many values to one. We'll learn how to use them properly in the next chapter.
@@ -567,9 +544,7 @@ One option that does work is simple arithmetic, because `+` works element by ele
 ```{r}
 dat_survey_reversed %>%
   mutate(anx_sum = anx_1 + anx_2_reversed + anx_3 + anx_4_reversed) %>%
-  select(id, anx_1, anx_2_reversed, anx_3, anx_4_reversed, anx_sum) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, anx_1, anx_2_reversed, anx_3, anx_4_reversed, anx_sum)
 ```
 
 This works, and participant 2, who has a missing response, gets a sum score of `NA`. However, it becomes tedious with long scales.
@@ -583,9 +558,7 @@ dat_survey_scored <- dat_survey_reversed %>%
          dep_mean = rowMeans(pick(starts_with("dep_"))))
 
 dat_survey_scored %>%
-  select(id, anx_sum, anx_mean, dep_mean) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, anx_sum, anx_mean, dep_mean)
 ```
 
 Note that the anxiety scores must be calculated from the reverse-scored items. `pick(starts_with("anx_"))` would have included both the original *and* the reversed versions of items 2 and 4, producing scores that are silently wrong. Always check which columns your selection actually picks up, e.g., with `select(starts_with("anx_")) %>% colnames()`.
@@ -600,9 +573,7 @@ By default, `rowSums()` and `rowMeans()` return `NA` if any of the values are `N
 dat_survey_reversed %>%
   mutate(anx_sum_na_rm = rowSums(pick(anx_1, anx_2_reversed, anx_3, anx_4_reversed), na.rm = TRUE),
          anx_mean_na_rm = rowMeans(pick(anx_1, anx_2_reversed, anx_3, anx_4_reversed), na.rm = TRUE)) %>%
-  select(id, anx_1, anx_2_reversed, anx_3, anx_4_reversed, anx_sum_na_rm, anx_mean_na_rm) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, anx_1, anx_2_reversed, anx_3, anx_4_reversed, anx_sum_na_rm, anx_mean_na_rm)
 ```
 
 Participant 2's sum score with `na.rm = TRUE` is the sum of only three items, so it is not comparable to everyone else's sum of four items. It is effectively treating the missing response as a 0, which is not even a possible response on a 1-5 scale. Their mean score is calculated from three items, which is at least on the same scale as everyone else's.
@@ -620,9 +591,7 @@ dat_survey_missingness <- dat_survey_reversed %>%
          complete_data = anx_n_missing == 0 & dep_n_missing == 0)
 
 dat_survey_missingness %>%
-  select(id, anx_n_missing, anx_prop_missing, dep_n_missing, dep_prop_missing, complete_data) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, anx_n_missing, anx_prop_missing, dep_n_missing, dep_prop_missing, complete_data)
 ```
 
 Notice that the depression items are listed by name here, rather than with `pick(starts_with("dep_"))`. Within a single `mutate()`, each new column is available to the lines below it. Once 'dep_n_missing' has been created, `starts_with("dep_")` would pick it up too, and the proportion on the next line would be calculated from four columns rather than three, without any error or warning. Naming new columns so that they don't match your item selections (e.g., 'n_missing_dep' rather than 'dep_n_missing'), or listing the item columns explicitly, avoids this.
@@ -632,14 +601,10 @@ Notice that the depression items are listed by name here, rather than with `pick
 Because exploring missing data is such a common task, there are packages designed specifically for it. {naniar} provides functions to quantify and visualize missingness. Many of them are wrappers for the logic above, e.g., `add_n_miss()` and `add_prop_miss()` add columns containing the number and proportion of missing values in each row:
 
 ```{r}
-library(naniar)
-
 dat_survey_na %>%
   select(id, starts_with("anx_"), starts_with("dep_")) %>%
   add_n_miss(starts_with("anx_"), starts_with("dep_")) %>%
-  add_prop_miss(starts_with("anx_"), starts_with("dep_")) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  add_prop_miss(starts_with("anx_"), starts_with("dep_"))
 ```
 
 {naniar} can also summarize missingness by participant (`miss_case_summary()`) or by item (`miss_var_summary()`). Note that the 'case' column returned by `miss_case_summary()` is the *row number*, not the participant's id, so be careful when interpreting it.
@@ -647,9 +612,7 @@ dat_survey_na %>%
 ```{r}
 dat_survey_na %>%
   select(starts_with("anx_"), starts_with("dep_")) %>%
-  miss_var_summary() %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  miss_var_summary()
 ```
 
 Its visualizations are often the quickest way to get an overview of the missingness in a data set. `vis_miss()` plots each cell of the data frame, with participants as rows and items as columns, showing which values are missing:
@@ -672,9 +635,7 @@ A common rule, which should ideally be stated in your preregistration, is to cal
 dat_survey_missingness %>%
   mutate(anx_mean = rowMeans(pick(anx_1, anx_2_reversed, anx_3, anx_4_reversed)),
          anx_mean = if_else(anx_n_missing == 0, anx_mean, NA_real_)) %>%
-  select(id, anx_n_missing, anx_mean) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, anx_n_missing, anx_mean)
 ```
 
 This is simple and transparent, but it can throw away a lot of data: a participant who answered 19 of 20 items gets no score at all. There are two common alternatives.
@@ -688,9 +649,7 @@ dat_survey_missingness %>%
          # only calculate scores for participants missing no more than one item
          anx_mean_imputed = if_else(anx_n_missing <= 1, anx_mean_imputed, NA_real_),
          anx_sum_imputed = if_else(anx_n_missing <= 1, anx_sum_imputed, NA_real_)) %>%
-  select(id, anx_n_missing, anx_mean_imputed, anx_sum_imputed) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, anx_n_missing, anx_mean_imputed, anx_sum_imputed)
 ```
 
 This is often defensible: if the items of a scale measure the same thing, a participant's responses to the items they answered are a reasonable estimate of what they would have answered on the item they skipped.
@@ -708,9 +667,6 @@ Everything in this section, i.e., setting impossible values to `NA`, reverse sco
 Note that it is applied to the raw 'dat_survey' data: the `-99` codes are outside the 1-5 range of the scale (`min` and `max`), so they are treated as impossible values and set to `NA`.
 
 ```{r}
-# install.packages("devtools"); devtools::install_github("ianhussey/truffle")
-library(truffle)
-
 dat_survey %>%
   snuffle_sum_scores(scale_identifier = "anx_", # the prefix of the scale's item columns
                      min = 1, # lowest possible response
@@ -718,16 +674,14 @@ dat_survey %>%
                      reverse = c("anx_2", "anx_4"), # reverse-keyed items
                      impute = TRUE, # impute sum scores from each participant's mean
                      id_col = "id") %>% # checks that there are no duplicate ids
-  select(id, starts_with("anx_")) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, starts_with("anx_"))
 ```
 
 The 'anx_sumscore' column matches the 'anx_sum_imputed' column calculated by hand above. It also returns columns that help you check what it did, e.g., how many items were present for each participant ('anx_nonmissing_n'), how many impossible values were found ('anx_impossible_n'), and which items were reversed ('anx_items_reversed').
 
 Two things to note. First, `impute = TRUE` imputes sum scores for participants missing *any* number of items, so you would still need to apply your own rule about how many missing items are acceptable, e.g., using 'anx_nonmissing_n'. Second, it overwrites the reverse-keyed item columns with their reversed scores, which, as discussed above, makes it harder to check that reversing was done correctly. As with any wrapper, it's worth understanding the logic it implements, which you now do, so that you can check that it does what you need.
 
-### Exercise
+#### Exercise
 
 Using 'dat_survey_na' (where the `-99`s have already been converted to `NA`), write code that:
 
@@ -740,6 +694,7 @@ Using 'dat_survey_na' (where the `-99`s have already been converted to `NA`), wr
 #| include: false
 
 
+<<<<<<< HEAD
 dat_survey_na %>% 
   mutate(dep_mean = rowMeans(pick(dep_1, dep_2, dep_3), na.rm = TRUE),
          dep_miss = rowSums(is.na(pick(dep_1, dep_2, dep_3))),
@@ -754,6 +709,8 @@ dat_survey_na %>%
 
 
 
+=======
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -763,9 +720,7 @@ dat_survey_na %>%
   mutate(dep_mean_na_rm = rowMeans(pick(dep_1, dep_2, dep_3), na.rm = TRUE),
          dep_n_missing = rowSums(is.na(pick(dep_1, dep_2, dep_3))),
          dep_mean_final = if_else(dep_n_missing <= 1, dep_mean_na_rm, NA_real_)) %>%
-  select(id, dep_mean_na_rm, dep_n_missing, dep_mean_final) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  select(id, dep_mean_na_rm, dep_n_missing, dep_mean_final)
 ```
 
 Participant 4 is missing two of the three depression items, so their final score is `NA`, even though `rowMeans(..., na.rm = TRUE)` calculated a score from their single remaining response.
@@ -796,9 +751,7 @@ dat_trials <- tribble(
 dat_trials %>%
   mutate(rt_previous = lag(rt),
          rt_next = lead(rt),
-         correct_previous = lag(correct)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+         correct_previous = lag(correct))
 ```
 
 The first row has no previous row, so `lag()` returns `NA` there. Likewise, the last row has no next row, so `lead()` returns `NA`.
@@ -807,9 +760,7 @@ A well-known phenomenon in reaction time tasks is "post-error slowing": people t
 
 ```{r}
 dat_trials %>%
-  mutate(after_error = if_else(lag(correct) == 0, "post-error", "post-correct")) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  mutate(after_error = if_else(lag(correct) == 0, "post-error", "post-correct"))
 ```
 
 Trials 4 and 7 came after an error, and indeed have longer RTs. Trial 1 is `NA` as it has no previous trial.
@@ -824,9 +775,7 @@ dat_trials %>%
   arrange(desc(rt)) %>%
   # arrange by trial before using lag()
   arrange(trial) %>%
-  mutate(correct_previous = lag(correct)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  mutate(correct_previous = lag(correct))
 ```
 
 ### Watch out when there are multiple participants
@@ -846,9 +795,7 @@ dat_trials_two_participants <- tribble(
 
 dat_trials_two_participants %>%
   arrange(id, trial) %>%
-  mutate(correct_previous = lag(correct)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  mutate(correct_previous = lag(correct))
 ```
 
 Participant 2's first trial should be `NA`, but it has been given the value of participant 1's last trial. In the next chapter, you'll learn about `group_by()`, which solves this problem by making functions like `lag()` operate separately within each participant.
@@ -863,12 +810,10 @@ Two other functions that depend on row order are also useful here:
 ```{r}
 dat_trials %>%
   mutate(row = row_number(),
-         n_errors_so_far = cumsum(correct == 0)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+         n_errors_so_far = cumsum(correct == 0))
 ```
 
-### Exercise
+#### Exercise
 
 Using 'dat_trials', write code that creates:
 
@@ -879,6 +824,7 @@ Using 'dat_trials', write code that creates:
 #| include: false
 
 
+<<<<<<< HEAD
 dat_trials %>% 
   arrange(trial) %>% 
   mutate(rt_change = rt - lag(rt),
@@ -891,6 +837,8 @@ dat_trials %>%
 
 
 
+=======
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -899,9 +847,7 @@ dat_trials %>%
 dat_trials %>%
   arrange(trial) %>%
   mutate(rt_change = rt - lag(rt),
-         next_trial_error = lead(correct) == 0) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+         next_trial_error = lead(correct) == 0)
 ```
 :::
 
@@ -922,9 +868,7 @@ dat_excel <- tribble(
   NA,  NA,         2,      655
 )
 
-dat_excel %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+dat_excel
 ```
 
 This is easy for a human to read but makes the data much harder to work with in R. For example, `filter(id == 2)` would return only one row.
@@ -933,16 +877,14 @@ This is easy for a human to read but makes the data much harder to work with in 
 
 ```{r}
 dat_excel %>%
-  fill(id, block) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  fill(id, block)
 ```
 
 By default `fill()` fills downwards. You can change this with the `.direction` argument, e.g., `.direction = "up"` if the value is written on the last row of each set rather than the first.
 
 `fill()` should only be used when you know that `NA` means "same as the row above". If a value is genuinely missing, e.g., participant 2's first block label was never recorded, `fill()` would silently give it participant 1's block label. As with `lag()`, `fill()` doesn't know about participants on its own; `group_by()`, covered in the next chapter, can be used to make it fill within each participant only.
 
-### Exercise
+#### Exercise
 
 The following data has one row per item of a questionnaire, but the 'scale' column is only filled in on the last row of each scale. Use `fill()` to fill in the 'scale' column correctly.
 
@@ -962,6 +904,7 @@ dat_items <- tribble(
 
 #| include: false
 
+<<<<<<< HEAD
 dat_items %>% 
   fill(scale, .direction = "up") %>% 
   kable() %>% 
@@ -971,6 +914,8 @@ dat_items %>%
 
 
 
+=======
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 
 ```
@@ -978,9 +923,7 @@ dat_items %>%
 ::: {.callout-note collapse="true" title="Click to show answer"}
 ```{r}
 dat_items %>%
-  fill(scale, .direction = "up") %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  fill(scale, .direction = "up")
 ```
 :::
 
@@ -992,9 +935,58 @@ The opposite task is combining several columns into one, e.g., when age was save
 
 Both are covered in the [Reshaping and pivots](11_reshaping_and_pivots.qmd) chapter, as they are about changing the structure of the data rather than just its contents.
 
+## Key functions
+
+The main functions covered in this chapter:
+
+| Function | Package | What it does |
+|----------|---------|--------------|
+| `arrange()` | {dplyr} | Changes the order of the rows, by one or more columns. |
+| `desc()` | {dplyr} | Used inside `arrange()` to sort in descending order. |
+| `slice_head()`, `slice_tail()` | {dplyr} | Keeps the first or last n rows. |
+| `slice_min()`, `slice_max()` | {dplyr} | Keeps the rows with the lowest or highest values of a column (ties are kept by default). |
+| `slice_sample()` | {dplyr} | Keeps a random sample of rows. |
+| `set.seed()` | {base} | Makes random processes, such as `slice_sample()`, reproducible. |
+| `is.na()` | {base} | Tests whether each value is `NA`. |
+| `drop_na()` | {tidyr} | Drops rows with `NA` in the named columns (or in any column, if none are named). |
+| `na_if()` | {dplyr} | Converts a specific value, e.g., a missing data code like `-99`, to `NA`. |
+| `replace_na()` | {tidyr} | Replaces `NA` with a specific value. |
+| `across()` | {dplyr} | Applies the same function to many columns inside `mutate()`. |
+| `if_any()`, `if_all()` | {dplyr} | Tests whether a condition is TRUE in any or all of a set of columns. |
+| `pick()` | {dplyr} | Selects a set of columns inside `mutate()`, e.g., to pass to `rowMeans()`. |
+| `rowSums()`, `rowMeans()` | {base} | Calculates the sum or mean of each row, across columns. |
+| `add_n_miss()`, `add_prop_miss()` | {naniar} | Adds columns with the number or proportion of missing values in each row. |
+| `miss_var_summary()` | {naniar} | Summarizes the missingness in each column. |
+| `vis_miss()` | {naniar} | Plots which cells of a data frame are missing. |
+| `snuffle_sum_scores()` | {truffle} | Wrapper that cleans, reverse scores, and calculates sum scores for a scale. |
+| `lag()`, `lead()` | {dplyr} | Returns the value from the previous or next row. |
+| `row_number()` | {dplyr} | Returns the row number. |
+| `cumsum()` | {base} | Returns the cumulative (running) sum. |
+| `fill()` | {tidyr} | Fills `NA`s with the last non-missing value above (or below). |
+
 ## Exercises
 
-### `arrange()` and missing values
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
+
+### Check your understanding
+
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
+
+1.  Which function returns a random 5% of the rows of a data frame? `r webexercises::mcq(c("slice_head()", "slice_max()", answer = "slice_sample()", "filter()"))`
+2.  Which function would you use to give each trial the value of 'correct' from the trial before it? `r webexercises::mcq(c(answer = "lag()", "lead()", "cumsum()", "fill()"))`
+3.  By default, `rowMeans(pick(item_1, item_2, item_3))` returns `NA` for a participant who is missing one of the three items. `r webexercises::torf(TRUE)`
+4.  By default, `fill()` fills each `NA` with the value from the row below it. `r webexercises::torf(FALSE)`
+5.  A character column contains the values "9", "25", and "100". In what order does `arrange()` put them? `r webexercises::mcq(c("9, 25, 100", answer = "100, 25, 9", "25, 9, 100", "It throws an error"))`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  `slice_sample(prop = .05)` returns a random 5% of the rows. Use `set.seed()` first to make the result reproducible. `slice_head()` and `slice_max()` return rows based on their position or values, not at random.
+2.  `lag()` returns the value from the previous row. `lead()` returns the value from the next row.
+3.  True. `rowSums()` and `rowMeans()` return `NA` if any of the values are `NA`, unless you set `na.rm = TRUE`.
+4.  False. `fill()` fills downwards by default, i.e., with the last non-missing value *above*. Use `.direction = "up"` to fill from below.
+5.  Character columns are sorted alphabetically, character by character, so "100" comes before "25", which comes before "9". Convert the column to numeric first if you want numerical order.
+:::
 
 When you use `arrange(desc(x))` on a column containing `NA`s, where do the `NA`s go?
 
@@ -1002,15 +994,11 @@ When you use `arrange(desc(x))` on a column containing `NA`s, where do the `NA`s
 At the end. `arrange()` always puts `NA`s last, whether the order is ascending or descending.
 :::
 
-### `slice_max()` and ties
-
 You run `slice_max(score, n = 3)` and get four rows back. Why?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
 Two or more rows are tied for third place. By default, `slice_min()` and `slice_max()` keep ties (`with_ties = TRUE`).
 :::
-
-### `drop_na()`
 
 What is the difference between `drop_na()` and `drop_na(age)`? Which should you usually use and why?
 
@@ -1018,15 +1006,11 @@ What is the difference between `drop_na()` and `drop_na(age)`? Which should you 
 `drop_na()` drops every row with an `NA` in *any* column. `drop_na(age)` drops only rows where 'age' is `NA`. It's usually better to be explicit and name the column(s), so that rows aren't dropped because of missing values in columns that aren't relevant to your analysis.
 :::
 
-### Missing data codes
-
 What functions could you use to convert a missing data code like `-99` into `NA`? Why must this be done before any calculations?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
 `if_else(x == -99, NA_real_, x)` or the shortcut `na_if(x, -99)`. If it isn't done, R treats `-99` as a real number, and calculations like means will be wrong without any error or warning.
 :::
-
-### `across()`
 
 What are the two main arguments of `across()`, and what does each one do? What do `~` and `.x` mean?
 
@@ -1043,8 +1027,6 @@ How would you use `across()` to create new columns rather than overwriting the e
 With the `.names` argument, e.g., `.names = "{.col}_reversed"`, where `{.col}` is replaced with the name of the original column.
 :::
 
-### Scores across columns
-
 Why does `mutate(total = sum(item_1, item_2, item_3))` not calculate each participant's total score? What could you use instead?
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -1057,8 +1039,6 @@ Why can using `rowSums(..., na.rm = TRUE)` be problematic for calculating sum sc
 It sums only the items that are present, which effectively treats missing responses as 0. Participants with missing responses will have artificially low scores that are not comparable with participants with complete data.
 :::
 
-### `lag()` and `lead()`
-
 What do `lag()` and `lead()` do? Name two things that can make their results silently wrong.
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
@@ -1067,8 +1047,6 @@ What do `lag()` and `lead()` do? Name two things that can make their results sil
 - The rows are not in the right order, e.g., not arranged by trial number. Use `arrange()` first.
 - The data frame contains multiple participants, so the first row of one participant is given values from the last row of the previous participant. This can be solved with `group_by()`, covered in the next chapter.
 :::
-
-### `fill()`
 
 When is it appropriate to use `fill()`, and when is it not?
 
@@ -1082,10 +1060,11 @@ Complete the interactive exercises for:
 
 - [`across()`](https://errors.shinyapps.io/dplyr-learnr/#section-dplyracross)
 
-### Practice data transformation using multiple functions
+### Practice
 
-In your local version of this .qmd file:
+In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
 
+<<<<<<< HEAD
 - Use 'dat_survey' to create a new data frame called 'dat_survey_processed'.
 - Convert all `-99`s to `NA`, without modifying the 'id' column.
 - Reverse score anxiety items 2 and 4 into new columns.
@@ -1094,6 +1073,20 @@ In your local version of this .qmd file:
 - Keep only the 'id', 'age', 'condition' columns and the final score columns.
 - Arrange the data frame from the highest to the lowest anxiety score.
 - Print the data frame as a table.
+=======
+-   Use 'dat_survey' to create a new data frame called 'dat_survey_processed'.
+-   Convert all `-99`s to `NA`, without modifying the 'id' column.
+-   Reverse score anxiety items 2 and 4 into new columns.
+-   Calculate each participant's mean anxiety score and mean depression score, and the number of missing items for each scale.
+-   Set each mean score to `NA` if the participant was missing more than one item on that scale.
+-   Keep only the 'id', 'age', 'condition' columns and the final score columns.
+-   Arrange the data frame from the highest to the lowest anxiety score.
+-   Print the data frame.
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+Work through it one step at a time, checking the output after each step. Use `across()` with `na_if()` for the `-99`s and `across()` with `.names` for the reverse scoring. For the scores, combine `rowMeans()` or `rowSums()` with `pick()`, and `is.na()` to count missing items. Make sure the anxiety scores use the reversed items, not the originals, and watch out for new columns being picked up by `starts_with()`.
+:::
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```{r}
 #| include: false

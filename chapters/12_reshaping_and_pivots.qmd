@@ -3,27 +3,47 @@
 ```{r}
 #| include: false
 
-# settings, placed in a chunk that will not show in the .html file (because include=FALSE) 
+# settings, placed in a chunk that will not show in the .html file (because include=FALSE)
 
 # disables scientific notation so that small numbers appear as eg "0.00001" rather than "1e-05"
-options(scipen = 999)  
+options(scipen = 999)
 
 ```
 
-## Tidy data explainer
+The same data can be arranged in different shapes. Questionnaire data, for example, can have one row per participant with one column per item ("wide" data), or one row per participant per item ("long" data). Neither shape is correct in general, but different tasks are much easier in one shape than the other: calculating Cronbach's alpha needs wide data, whereas calculating mean scores for many scales, or plotting many items at once, is easiest with long data.
 
-'Tidy Data' is a set of technical ideas about how data should be structured [@wickham2014]. The original article is very much worth reading, as it emphasizes that data processing is part of the data analysis workflow - not only in a procedural sense, but in the cognitive sense that data processing and shaping is a representation of what research questions and analyses can be conducted.
+Reshaping data between these shapes is called pivoting. This chapter covers the ideas behind how data should be structured (Tidy Data), the two main functions for reshaping data, `pivot_longer()` and `pivot_wider()` from the {tidyr} package, and related functions for splitting and combining columns.
 
-There are three rules that make a dataset tidy according to the [Tidy Data chapter](https://r4ds.hadley.nz/data-tidy.html#sec-tidy-data) of R for Data Science [@wickham2023r4ds]:
+```{r}
+library(dplyr) # for %>%, mutate(), select(), group_by(), summarize(), coalesce()
+library(tidyr) # for pivot_longer(), pivot_wider(), separate(), unite()
+library(tibble) # for tribble(), as_tibble()
+library(stringr) # for str_remove()
+library(readr) # for read_csv()
+library(ggplot2) # for plotting
+library(roundwork) # for round_up()
 
-- Each variable is a column; each column is a variable.
-- Each observation is a row; each row is an observation.
-- Each value is a cell; each cell is a single value.
+# devtools::install_github("ianhussey/truffle")
+library(truffle) # for simulating data
+```
+
+## Tidy data
+
+### The three rules
+
+'Tidy Data' is a set of ideas about how data should be structured [@wickham2014]. The original article is very much worth reading. It emphasizes that data processing is part of data analysis, not only in a procedural sense, but also because how the data is shaped determines which research questions and analyses are easy to conduct.
+
+There are three rules that make a dataset tidy, according to the [Tidy Data chapter](https://r4ds.hadley.nz/data-tidy.html#sec-tidy-data) of R for Data Science [@wickham2023r4ds]:
+
+-   Each variable is a column; each column is a variable.
+-   Each observation is a row; each row is an observation.
+-   Each value is a cell; each cell is a single value.
 
 Read [Wickham's chapter on Tidy Data](https://r4ds.hadley.nz/data-tidy.html#sec-tidy-data) in the second edition of R4DS. His visualizations are useful, but unfortunately the license he uses means I can't directly include them in this book.
 
-Alison Horst has created some infographics that explain its simplest elements well:
+The illustrations below, by [Julia Lowndes and Allison Horst](https://allisonhorst.com/other-r-fun), explain its simplest elements well. They come from the Openscapes blog post [Tidy data for efficiency, reproducibility, and collaboration](https://openscapes.org/blog/2020-10-12-tidy-data/), which is a short and very readable introduction to the ideas in this section. Allison Horst's [other artwork](https://allisonhorst.com/) on R and data science is also well worth browsing.
 
+<<<<<<< HEAD
 ![](../images/tidy%20data%201.jpg)
 
 ![](../images/tidy%20data%202.jpg)
@@ -31,33 +51,33 @@ Alison Horst has created some infographics that explain its simplest elements we
 ![](../images/tidy%20data%203.jpg)
 
 ![](../images/tidy%20data%204.jpg)
+=======
+![Tidy data: each variable forms a column, each observation forms a row, and each cell is a single measurement.](../images/tidy data 1.jpg){fig-alt="Overview of Tidy Data, with a quote from Hadley Wickham and an example table of cats with the columns id, name, and color."}
 
-## Examples of more and less Tidy Data
+![Tidy datasets are all alike, but every messy dataset is messy in its own way.](../images/tidy data 2.jpg){fig-alt="Three smiling rectangular data tables whose columns are variables and rows are observations, next to four ragged, worried-looking tables, each messy in a different way."}
 
-`table1` is tidiest, and therefore easiest to work with within many workflows, because it adheres to the above rules. To see this in action, try to calculate a percentage prevalence (cases/population) using each dataset.
+![With tidy data, the same tools can be used in similar ways for different datasets.](../images/tidy data 3.jpg){fig-alt="A happy monster using a well-fitting tool on a rectangular data frame at a tidy workbench, next to a frustrated monster using duct tape to tie untidy tables together at a cluttered workbench."}
+
+![Tidy data makes it easier to build workflows that can be reused.](../images/tidy data 4.jpg){fig-alt="Monsters putting tidy data tables on a conveyor belt that passes through stations labeled wrangle, visualize, and model, ending with a complete analysis."}
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
+
+Illustrations from the Openscapes blog [Tidy Data for reproducibility, efficiency, and collaboration](https://openscapes.org/blog/2020-10-12-tidy-data/) by Julia Lowndes and Allison Horst.
+
+### More and less tidy data
+
+{tidyr} includes several versions of the same data: the number of tuberculosis cases and the population of three countries in two years. `table1` is the tidiest, and therefore the easiest to work with in most workflows, because it follows all three rules.
 
 ```{r}
+table1
 
-library(tidyverse)
-library(knitr)
-library(kableExtra)
+table2
 
-table1 %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
-
-table2 %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
-
-table3 %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
-
+table3
 ```
 
-#### Check your learning
+#### Exercise
 
+<<<<<<< HEAD
 Why do table2 and table3 not as Tidy as table1?
 
 ## Non-tidy data
@@ -91,20 +111,56 @@ This gif helps illustrate what's happening when you pivot data to be wider or lo
 ## Example
 
 ### Simulate data in wide format
+=======
+Calculate the rate of tuberculosis per 10,000 people (cases / population \* 10000) for each country and year using `table1`. Then think about how you would do it with `table2` and `table3`. Which rules of Tidy Data do `table2` and `table3` break?
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```{r}
 #| include: false
 
-library(tidyverse)
-library(janitor)
-library(knitr)
-library(kableExtra)
 
-# generate some messy demographics data with a larger N
-# devtools::install_github("ianhussey/truffle")
-library(truffle)
 
-dat_likert_wide <- 
+```
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+```{r}
+table1 %>%
+  mutate(rate = cases / population * 10000)
+```
+
+With `table1`, it is a single `mutate()`, because cases and population are separate columns in the same row.
+
+`table2` breaks the first rule: the 'count' column contains two different variables, cases and population, distinguished by the 'type' column. The two numbers you need are in different rows, so you can't simply divide one column by another.
+
+`table3` breaks the third rule: the 'rate' column contains two values in each cell (e.g., "745/19987071"), stored as text. You would need to split it into two numeric columns first.
+:::
+
+### Non-tidy is not the same as messy
+
+There are many forms of data that are non-tidy without being messy or wrong, e.g., data structured for a specific statistical function, or for efficient storage. A proper understanding of Tidy Data requires that you understand this distinction. See [Wickham's description](https://r4ds.had.co.nz/tidy-data.html#non-tidy-data) in the first edition of R4DS.
+
+### There is no one tidy shape
+
+The same data can be represented in more than one way and still be tidy: it can be wider or longer. For example, `table2` can be pivoted to a wider format to create `table1`:
+
+```{r}
+table2 %>%
+  pivot_wider(names_from = type,
+              values_from = count)
+```
+
+What counts as a single observation depends on your question. If you are interested in each country in each year, `table1` is tidy. If you are interested in how cases and population compare as measures, `table2` might be more useful.
+
+This animation illustrates what happens when you pivot data to be wider or longer ([source](https://github.com/gadenbuie/tidyexplain?tab=readme-ov-file#pivot-wider-and-longer)):
+
+![](../images/pivot longer.gif)
+
+## Example data
+
+The rest of the chapter uses simulated data from participants who completed two depression scales on a 1 to 7 Likert scale: 'depression1' has 10 items and 'depression2' has 7 items. The data is in wide format: one row per participant and one column per item, which is how most survey software exports data.
+
+```{r}
+dat_likert_wide <-
   truffle_likert(study_design = "crosssectional",
                  n_per_condition = 50,
                  factors  = c("X1_latent", "X2_latent"),
@@ -113,42 +169,48 @@ dat_likert_wide <-
                  n_items = c(10, 7),
                  n_levels = 7,
                  r_among_outcomes = 0.80,
-                 seed = 42) %>% 
+                 seed = 42) %>%
   truffle_demographics()
+
+dat_likert_wide %>%
+  head()
 ```
 
-### Cronbach's alpha
-
-Wide data like this is a) common and b) useful for calculating metrics like internal consistency.
+Wide data like this is useful for some analyses, e.g., calculating internal consistency, which needs each item in its own column:
 
 ```{r}
-
 res_alpha_depression1 <- dat_likert_wide %>%
   select(starts_with("depression1_")) %>%
   psych::alpha()
-
-cronbachs_depression1_alpha <- res_alpha_depression1$total$raw_alpha |>
-  round_half_up(digits = 2)
-
 
 res_alpha_depression2 <- dat_likert_wide %>%
   select(starts_with("depression2_")) %>%
   psych::alpha()
 
-cronbachs_depression2_alpha <- res_alpha_depression2$total$raw_alpha |>
-  round_half_up(digits = 2)
-
+alpha_depression1 <- round_up(res_alpha_depression1$total$raw_alpha, digits = 2)
+alpha_depression2 <- round_up(res_alpha_depression2$total$raw_alpha, digits = 2)
 ```
 
+<<<<<<< HEAD
 Cronbach's $\alpha$s:
+=======
+Cronbach's $\alpha$:
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
-- Depression1 scale: `r cronbachs_depression1_alpha`
-- Depression1 scale: `r cronbachs_depression2_alpha`
+-   depression1 scale: `r alpha_depression1`
+-   depression2 scale: `r alpha_depression2`
 
-### Plot simulated data
+But for many other tasks, wide data makes us repeat ourselves.
+
+## `pivot_longer()`
+
+### Why make data longer?
+
+Imagine you want to plot the distribution of responses to each item. With wide data, you need a separate plot for each column:
 
 ```{r}
-
+#| fig-height: 3
+#| fig-width: 4
 ggplot(dat_likert_wide, aes(x = depression1_item1)) +
   geom_histogram(binwidth = 1, boundary = -0.5) +
   theme_linedraw()
@@ -161,158 +223,159 @@ ggplot(dat_likert_wide, aes(x = depression1_item3)) +
   geom_histogram(binwidth = 1, boundary = -0.5) +
   theme_linedraw()
 
-ggplot(dat_likert_wide, aes(x = depression1_item4)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression1_item5)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression1_item6)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression1_item7)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression1_item8)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression1_item9)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression1_item10)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-
-ggplot(dat_likert_wide, aes(x = depression2_item1)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression2_item2)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression2_item3)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression2_item4)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression2_item5)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression2_item6)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
-ggplot(dat_likert_wide, aes(x = depression2_item7)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw()
-
+# ... and another 14 almost identical plots for the other items
 ```
 
+<<<<<<< HEAD
 - These plots repeat the mortal coding sin of repeating ourselves. If we reshaped the data to 'long' format we could use just one ggplot() call that includes facet_wrap().
+=======
+This commits the coding sin of repeating ourselves: it is long, tedious to write, and every copy is a chance to make a mistake, such as changing the column name but forgetting to change the plot title.
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
-### `pivot_longer()`
-
-Using `pivot_longer()`.
+If the data were long, with one row per participant per item, we could make all the plots with a single `ggplot()` call that uses `facet_wrap()` to create one panel per item. `pivot_longer()` does this:
 
 ```{r}
+#| fig-height: 8
+#| fig-width: 8
 dat_likert_long <- dat_likert_wide %>%
   pivot_longer(cols = starts_with("depression"),
                names_to = "scale_item",
                values_to = "response")
 
+head(dat_likert_long)
+
 ggplot(dat_likert_long, aes(x = response)) +
   geom_histogram(binwidth = 1, boundary = -0.5) +
   theme_linedraw() +
   facet_wrap(~ scale_item)
 ```
 
-What other ways could you specify this `pivot_longer()`'s `cols` argument through negative selection?
+`pivot_longer()` has three main arguments:
+
+-   `cols`: the columns to be stacked into rows.
+-   `names_to`: the name of a new column that will contain the names of those columns.
+-   `values_to`: the name of a new column that will contain their values.
+
+All the other columns ('id', 'gender', and 'age') are repeated in each new row. The data went from `r nrow(dat_likert_wide)` rows and `r ncol(dat_likert_wide)` columns to `r nrow(dat_likert_long)` rows (`r nrow(dat_likert_wide)` participants x 17 items) and `r ncol(dat_likert_long)` columns.
+
+### Selecting columns to pivot
+
+The `cols` argument uses the same helpers as `select()`, so there are several ways to specify the same columns, e.g., `starts_with("depression")`, a range such as `depression1_item1:depression2_item7`, or negative selection.
+
+#### Exercise
+
+Rewrite the `pivot_longer()` above using negative selection, i.e., by specifying the columns that should *not* be pivoted.
 
 ```{r}
-#| eval: false
 #| include: false
 
-# negative selection
-## write your pivot code here  
-
-
-# use the same plotting code:
-ggplot(dat_likert_long, aes(x = response)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw() +
-  facet_wrap(~ scale_item)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ```
 
+::: {.callout-note collapse="true" title="Click to show answer"}
 ```{r}
-# answer: negative selection
-dat_likert_long <- dat_likert_wide %>%
+dat_likert_wide %>%
   pivot_longer(cols = c(-id, -gender, -age),
                names_to = "scale_item",
-               values_to = "response")
-
-ggplot(dat_likert_long, aes(x = response)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw() +
-  facet_wrap(~ scale_item)
+               values_to = "response") %>%
+  head()
 ```
 
-#### Check your learning
+`cols = !c(id, gender, age)` does the same thing. Note that the columns you pivot must all be of compatible types, because their values all go into the single 'response' column. If you selected 'gender' (character) along with the numeric items, `pivot_longer()` would throw an error.
+:::
 
-Why is dat_likert_long not as tidy as it could be?
+#### Exercise
 
-```{r}
+Why is `dat_likert_long` still not as tidy as it could be?
 
-dat_likert_long 
+::: {.callout-note collapse="true" title="Click to show answer"}
+The 'scale_item' column contains two variables in each cell: which scale the item belongs to (e.g., "depression1") and the item number (e.g., "item1"). This also causes the facets in the plot above to be in the wrong order: "item1", "item10", "item2", ..., because they are sorted alphabetically as text. The next section shows how to split them.
+:::
 
-```
+## Cleaning up column names after pivoting
 
-### `seperate()`
+Column names often contain more than one piece of information, e.g., the scale and the item number, or the measure and the timepoint. After pivoting, this information ends up in a single column, which usually needs to be split or cleaned.
+
+### `separate()`
+
+`separate()` splits one column into several, using a separator:
 
 ```{r}
 #| fig-height: 8
 #| fig-width: 6
-library(tidyr)
+dat_likert_long_separated <- dat_likert_long %>%
+  separate(scale_item, into = c("scale", "item"), sep = "_")
 
+head(dat_likert_long_separated)
+
+ggplot(dat_likert_long_separated, aes(x = response)) +
+  geom_histogram(binwidth = 1, boundary = -0.5) +
+  theme_linedraw() +
+  facet_grid(item ~ scale)
+```
+
+Note that newer versions of {tidyr} also have `separate_wider_delim()`, which does the same job and gives more informative errors when the column can't be split as expected. You will see both in other people's code.
+
+The items are still sorted alphabetically, because 'item' contains text like "item10".
+
+#### Exercise
+
+Use `mutate()` and {stringr} functions from the [Strings and factors](11_strings_and_factors.qmd) chapter to remove "item" from the 'item' column and convert it to a number, so that the items are plotted in the correct order.
+
+```{r}
+#| include: false
+
+
+
+```
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+```{r}
+#| fig-height: 8
+#| fig-width: 6
+dat_likert_long_separated %>%
+  mutate(item = str_remove(item, "item"),
+         item = as.integer(item)) %>%
+  ggplot(aes(x = response)) +
+  geom_histogram(binwidth = 1, boundary = -0.5) +
+  theme_linedraw() +
+  facet_grid(item ~ scale)
+```
+
+Numbers sort numerically, so items 1 to 10 are now in the correct order.
+:::
+
+### Splitting names inside the pivot
+
+Splitting is so common that `pivot_longer()` can do it directly. Give `names_to` more than one name, and say where to split with `names_sep`:
+
+```{r}
+dat_likert_wide %>%
+  pivot_longer(cols = starts_with("depression"),
+               names_to = c("scale", "item"),
+               names_sep = "_",
+               values_to = "response") %>%
+  head()
+```
+
+`names_prefix` removes text from the start of every name, e.g., `names_prefix = "wellbeing_"` turns "wellbeing_baseline" into "baseline".
+
+### `names_pattern` and `names_transform`
+
+For more complex names, `names_pattern` uses a regular expression (see the [Strings and factors](11_strings_and_factors.qmd) chapter) to say which parts of each name to keep. Each part in brackets goes into one of the `names_to` columns. `names_transform` then converts the new columns to another type, e.g., integer:
+
+```{r}
+#| fig-height: 8
+#| fig-width: 6
 dat_likert_long_tidy <- dat_likert_wide %>%
   pivot_longer(cols = starts_with("depression"),
-               names_to = "scale_item",
-               values_to = "response") %>%
-  separate(scale_item, into = c("scale", "item"), sep = "_")
+               names_to = c("scale", "item"),
+               names_pattern = "(depression\\d+)_item(\\d+)",
+               names_transform = list(item = as.integer),
+               values_to = "response")
+
+head(dat_likert_long_tidy)
 
 ggplot(dat_likert_long_tidy, aes(x = response)) +
   geom_histogram(binwidth = 1, boundary = -0.5) +
@@ -320,13 +383,334 @@ ggplot(dat_likert_long_tidy, aes(x = response)) +
   facet_grid(item ~ scale)
 ```
 
-### `coalesce()`
+`"(depression\\d+)_item(\\d+)"` means: "depression" followed by one or more digits, which goes into 'scale'; then "_item", which is dropped; then one or more digits, which go into 'item'. This does everything in the previous section in a single step, and the data is now fully tidy: one row per participant per item, with the scale and item in separate columns.
 
-`separate()` splits one column into several. Sometimes we need the opposite: combining several columns into one. For example, if a survey was changed partway through data collection and age was saved in a different column in each version:
+## Calculating scores from long data
+
+Long data makes it much easier to calculate summaries for many variables at once. For example, to calculate the mean and SD of each item in wide format, you would have to write out every column:
 
 ```{r}
-library(tibble) # for tribble()
+#| eval: false
+dat_likert_wide %>%
+  summarize(mean_depression1_item1 = mean(depression1_item1),
+            mean_depression1_item2 = mean(depression1_item2),
+            mean_depression1_item3 = mean(depression1_item3),
+            # ... 14 more means, then 17 more SDs
+            sd_depression2_item7 = sd(depression2_item7))
+```
 
+In long format, it is a `group_by()` and a `summarize()`, however many items there are:
+
+```{r}
+dat_likert_long_tidy %>%
+  group_by(scale, item) %>%
+  summarize(mean = mean(response),
+            sd = sd(response),
+            .groups = "drop") %>%
+  head()
+```
+
+The same approach calculates each participant's score on each scale, without writing out `item1 + item2 + item3 ...`.
+
+#### Exercise
+
+Using `dat_likert_long_tidy`:
+
+1.  Calculate each participant's mean score on each scale, and save it as `dat_likert_meanscored_long`. Keep the 'gender' and 'age' columns, because we'll need them later.
+2.  Calculate the sample's mean and SD on each scale.
+3.  Plot the distribution of participants' mean scores on each scale.
+
+```{r}
+#| include: false
+
+
+
+```
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+```{r}
+dat_likert_meanscored_long <- dat_likert_long_tidy %>%
+  group_by(id, gender, age, scale) %>%
+  summarize(mean_score = mean(response),
+            .groups = "drop")
+
+head(dat_likert_meanscored_long)
+
+dat_likert_meanscored_long %>%
+  group_by(scale) %>%
+  summarize(mean = mean(mean_score),
+            sd = sd(mean_score))
+
+ggplot(dat_likert_meanscored_long, aes(x = mean_score)) +
+  geom_histogram(binwidth = 0.5, boundary = 0) +
+  theme_linedraw() +
+  facet_wrap(~ scale)
+```
+
+Adding 'gender' and 'age' to `group_by()` keeps them in the summarized data. This works because they have only one value per participant.
+:::
+
+## `pivot_wider()`
+
+### Making data wider
+
+`pivot_wider()` is the opposite of `pivot_longer()`. Some tasks are easier with wide data, e.g., correlating the two scales or calculating a difference score, because these need the values to be in separate columns of the same row.
+
+```{r}
+dat_likert_meanscored_wide <- dat_likert_meanscored_long %>%
+  pivot_wider(names_from = scale,
+              values_from = mean_score)
+
+head(dat_likert_meanscored_wide)
+
+cor(dat_likert_meanscored_wide$depression1,
+    dat_likert_meanscored_wide$depression2)
+```
+
+`pivot_wider()` has two main arguments:
+
+-   `names_from`: the column whose values become the new column names.
+-   `values_from`: the column whose values fill the new columns.
+
+`names_prefix` adds text to the start of each new column name, which is useful when the values are numbers or short labels, e.g., `names_prefix = "meanscore_"` would create 'meanscore_depression1' and 'meanscore_depression2'.
+
+### Identifying rows with `id_cols`
+
+`pivot_wider()` needs to know which rows belong together, i.e., which rows should be combined into one row of the wider data. By default, it uses all the columns not named in `names_from` or `values_from`. Above, these were 'id', 'gender', and 'age', which all have one value per participant, so this worked.
+
+If one of these other columns varies within a participant, rows are not combined correctly. {tidyr}'s built-in `cms_patient_experience` dataset has one row per organization per measure. 'measure_title' differs between rows of the same organization:
+
+```{r}
+head(cms_patient_experience)
+
+# without id_cols: measure_title differs between rows, so rows aren't combined
+cms_patient_experience %>%
+  pivot_wider(names_from = measure_cd,
+              values_from = prf_rate) %>%
+  head()
+
+# with id_cols: one row per organization
+cms_patient_experience %>%
+  pivot_wider(id_cols = starts_with("org"),
+              names_from = measure_cd,
+              values_from = prf_rate) %>%
+  head()
+```
+
+Without `id_cols`, the result has a "staircase" of mostly `NA` rows, because each measure is treated as a separate observation.
+
+### Missing combinations and `values_fill`
+
+When a combination of `id_cols` and `names_from` doesn't exist in the long data, `pivot_wider()` fills it with `NA`. Sometimes a different value is correct. For example, counting how often each participant used each response option on the depression1 scale, as a check for response styles such as always choosing the middle option:
+
+```{r}
+dat_likert_long_tidy %>%
+  filter(scale == "depression1") %>%
+  count(id, response) %>%
+  arrange(response) %>%
+  pivot_wider(names_from = response,
+              names_prefix = "n_response_",
+              values_from = n,
+              values_fill = 0) %>%
+  arrange(id) %>%
+  head()
+```
+
+`count()` only creates rows for responses that were used, so a participant who never chose a given response has no row for it. Here, a missing combination means the count is 0, so `values_fill = 0` is correct. Only use `values_fill` when you know what a missing combination means.
+
+### Duplicates and `values_fn`
+
+If more than one row has the same combination of `id_cols` and `names_from`, `pivot_wider()` can't put a single value in the cell. For example, reaction time data with several trials per condition:
+
+```{r}
+dat_rt <- tribble(
+  ~id, ~condition,    ~rt,
+  1,   "congruent",   512,
+  1,   "congruent",   498,
+  1,   "incongruent", 601,
+  1,   "incongruent", 640,
+  2,   "congruent",   455,
+  2,   "congruent",   470,
+  2,   "incongruent", 530,
+  2,   "incongruent", 562
+)
+
+dat_rt %>%
+  pivot_wider(names_from = condition,
+              values_from = rt)
+```
+
+{tidyr} warns that the values are not uniquely identified, and creates list-columns containing several values per cell. You could use `values_fn = mean` to summarize the duplicates during the pivot, but it is usually clearer to summarize first and then pivot:
+
+```{r}
+dat_rt %>%
+  group_by(id, condition) %>%
+  summarize(mean_rt = mean(rt),
+            .groups = "drop") %>%
+  pivot_wider(names_from = condition,
+              values_from = mean_rt) %>%
+  mutate(congruence_effect = incongruent - congruent)
+```
+
+If you didn't expect duplicates, the warning is telling you something important about your data, e.g., that a participant completed the study twice. Check with `count(id, condition) %>% filter(n > 1)` rather than summarizing them away.
+
+## More complex pivots
+
+### Several variables in the column names: `.value`
+
+Sometimes column names contain both the name of a variable and the value of another variable. For example, in this meta-analysis data, each study has columns for the mean, SD, and sample size of the treatment ('trt') and control ('ctrl') conditions:
+
+```{r}
+dat_meta <- read_csv("../data/processed/dat_meta.csv", show_col_types = FALSE) %>%
+  select(study, mean_trt, sd_trt, n_trt, mean_ctrl, sd_ctrl, n_ctrl)
+
+head(dat_meta)
+```
+
+We want one row per study per condition, with columns 'mean', 'sd', and 'n'. The special name `".value"` in `names_to` tells `pivot_longer()` that this part of each column name is the name of a new column, rather than a value:
+
+```{r}
+dat_meta_long <- dat_meta %>%
+  pivot_longer(cols = -study,
+               names_to = c(".value", "condition"),
+               names_sep = "_")
+
+head(dat_meta_long)
+```
+
+"mean_trt" was split into "mean", which became the column name, and "trt", which went into 'condition'. Without `.value`, you would have to select and rename the columns for each condition separately and stack them with `bind_rows()` (see the [Binding and joining](13_binding_and_joining.qmd) chapter).
+
+{tidyr}'s built-in `household` data has the same structure, with each family's children's dates of birth and names in separate columns. `values_drop_na = TRUE` drops the rows for children that don't exist:
+
+```{r}
+household
+
+household %>%
+  pivot_longer(cols = !family,
+               names_to = c(".value", "child"),
+               names_sep = "_",
+               values_drop_na = TRUE)
+```
+
+### Several value columns in `pivot_wider()`
+
+The reverse also works: `values_from` can take several columns. Each one is combined with each value of `names_from`. `names_glue` controls how the new names are built, using `{.value}` for the name of the value column:
+
+```{r}
+dat_meta_long %>%
+  pivot_wider(names_from = condition,
+              values_from = c(mean, sd, n),
+              names_glue = "{.value}_{condition}") %>%
+  head()
+```
+
+This recreates the original columns (in a slightly different order), which is the most convenient layout for calculating an effect size for each study, because all the values for both conditions are in the same row.
+
+### Items measured at several timepoints
+
+Repeated measures questionnaire data often has column names that combine the item and the timepoint, e.g., 'phq1_t1'. Pivoting longer with two `names_to` columns separates them, which makes it easy to calculate a mean score at each timepoint:
+
+```{r}
+dat_repeated <- tribble(
+  ~id, ~phq1_t1, ~phq2_t1, ~phq3_t1, ~phq1_t2, ~phq2_t2, ~phq3_t2,
+  1,   2,        3,        2,        1,        1,        2,
+  2,   3,        3,        2,        3,        2,        3,
+  3,   1,        2,        1,        0,        1,        0
+)
+
+dat_repeated_scored <- dat_repeated %>%
+  # one row per participant per item per timepoint
+  pivot_longer(cols = -id,
+               names_to = c("item", "timepoint"),
+               names_sep = "_",
+               values_to = "response") %>%
+  # mean score per participant per timepoint
+  group_by(id, timepoint) %>%
+  summarize(phq_mean = mean(response),
+            .groups = "drop") %>%
+  # one row per participant, to calculate change
+  pivot_wider(names_from = timepoint,
+              names_prefix = "phq_mean_",
+              values_from = phq_mean) %>%
+  mutate(phq_change = phq_mean_t2 - phq_mean_t1)
+
+dat_repeated_scored
+```
+
+This "longer, summarize, wider" sequence is one of the most common patterns in processing psychology data.
+
+### A table of descriptive statistics
+
+Pivots are also useful for building tables for reports. `summarize()` with `across()` calculates several statistics for several variables at once, but returns them as a single very wide row:
+
+```{r}
+dat_descriptives_wide <- dat_likert_meanscored_wide %>%
+  summarize(across(c(age, depression1, depression2),
+                   list(mean = mean, sd = sd)))
+
+dat_descriptives_wide
+```
+
+Pivoting longer with `.value` turns this into a table with one row per variable:
+
+```{r}
+dat_descriptives_wide %>%
+  pivot_longer(cols = everything(),
+               names_to = c("variable", ".value"),
+               names_sep = "_") %>%
+  mutate(across(c(mean, sd), \(x) round_up(x, digits = 2)))
+```
+
+Note that this relies on the variable names not containing an underscore themselves. If they did, e.g., 'depression_total', you would need `names_pattern` instead, e.g., `"(.*)_(mean|sd)"`.
+
+### A correlation matrix as a long table
+
+`cor()` returns a matrix: a wide structure with one row and one column per variable. Converting it to a data frame and pivoting it longer gives one row per pair of variables, which can be filtered, sorted, or plotted:
+
+```{r}
+#| fig-height: 4
+#| fig-width: 5
+dat_cor_long <- dat_likert_meanscored_wide %>%
+  select(age, depression1, depression2) %>%
+  cor() %>%
+  as_tibble(rownames = "variable_1") %>%
+  pivot_longer(cols = -variable_1,
+               names_to = "variable_2",
+               values_to = "r")
+
+dat_cor_long
+
+ggplot(dat_cor_long, aes(x = variable_1, y = variable_2, fill = r)) +
+  geom_tile() +
+  geom_text(aes(label = round_up(r, digits = 2))) +
+  scale_fill_gradient2(limits = c(-1, 1)) +
+  theme_linedraw()
+```
+
+The long table contains each pair of variables twice (e.g., age with depression1, and depression1 with age), plus each variable with itself. For a table of correlations, keep each pair once:
+
+```{r}
+dat_cor_long %>%
+  filter(variable_1 < variable_2)
+```
+
+## Combining columns
+
+### `unite()`
+
+`unite()` is the opposite of `separate()`: it combines several columns into one, e.g., to recreate the original column names before pivoting wider:
+
+```{r}
+dat_likert_long_tidy %>%
+  unite(col = "scale_item", scale, item, sep = "_item") %>%
+  head()
+```
+
+### `coalesce()`
+
+`unite()` pastes several values together. Sometimes we instead need to combine several columns that each contain *part* of the values. For example, if a survey was changed partway through data collection, and age was saved in a different column in each version:
+
+```{r}
 dat_versions <- tribble(
   ~id, ~age_v1, ~age_v2,
   1,   23,      NA,
@@ -336,9 +720,7 @@ dat_versions <- tribble(
   5,   NA,      NA
 )
 
-dat_versions %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+dat_versions
 ```
 
 We want a single 'age' column. You already know how to do this with `mutate()` and `if_else()`: "if 'age_v1' is not missing, use it; otherwise, use 'age_v2'".
@@ -347,9 +729,7 @@ We want a single 'age' column. You already know how to do this with `mutate()` a
 dat_versions %>%
   mutate(age = if_else(condition = !is.na(age_v1), # the logical test applied: is age_v1 not missing?
                        true = age_v1, # if so, use age_v1
-                       false = age_v2)) %>% # if not, use age_v2 (which may itself be NA)
-  kable() %>%
-  kable_classic(full_width = FALSE)
+                       false = age_v2)) # if not, use age_v2 (which may itself be NA)
 ```
 
 This works, but it gets clumsy quickly. If there were a third version of the survey, you would need to nest one `if_else()` inside another, or write a `case_when()`:
@@ -367,9 +747,7 @@ Because this is such a common task, {dplyr} provides `coalesce()`, which does ex
 
 ```{r}
 dat_versions %>%
-  mutate(age = coalesce(age_v1, age_v2)) %>%
-  kable() %>%
-  kable_classic(full_width = FALSE)
+  mutate(age = coalesce(age_v1, age_v2))
 ```
 
 The result is identical to the `if_else()` version, and `coalesce(age_v1, age_v2, age_v3)` would extend to a third column without any extra logic.
@@ -378,7 +756,9 @@ Participant 5 has no age in either column, so their age remains `NA`.
 
 Note that if a participant had values in *both* columns, `coalesce()` would silently use the first one. It's worth checking whether this ever happens, e.g., with `filter(!is.na(age_v1) & !is.na(age_v2))`, before relying on it.
 
-This is a general pattern worth noticing. Many {tidyverse} functions are "*wrappers*": shortcuts for logic that you could already write yourself with more general functions. You have already seen several in the [Data transformation I](06_data_transformation_1.qmd) and [Data transformation II](07_data_transformation_2.qmd) chapters:
+### Wrappers
+
+`coalesce()` illustrates a general pattern worth noticing. Many {tidyverse} functions are "*wrappers*": shortcuts for logic that you could already write yourself with more general functions. You have already seen several in the [Data transformation I](06_data_transformation_1.qmd) and [Data transformation II](07_data_transformation_2.qmd) chapters:
 
 - Renaming and relocating columns inside `select()` does the work of `rename()` and `relocate()`.
 - `na_if(age, -99)` is a shortcut for `if_else(age == -99, NA, age)`.
@@ -388,13 +768,66 @@ This is a general pattern worth noticing. Many {tidyverse} functions are "*wrapp
 
 Wrappers make code shorter and easier to read, and are often less error-prone. But it is useful to understand the logic they wrap: it helps you know exactly what a function will do in unusual cases (e.g., what happens when both columns contain a value), and when no wrapper exists for your problem, you can fall back on writing the logic yourself with `mutate()`, `if_else()`, and `case_when()`.
 
-## Practice `mutate()`
+## Key functions
 
-The above plot does not order the items correctly (item1, item10, item2, etc).
+The main functions covered in this chapter:
 
-Use `mutate()` to remove 'depression' and 'item' from the column contents and plot it again.
+| Function | Package | What it does |
+|----------|---------|--------------|
+| `pivot_longer()` | {tidyr} | Makes data longer: stacks several columns into rows. |
+| `separate()` | {tidyr} | Splits one column into several, using a separator. |
+| `separate_wider_delim()` | {tidyr} | A newer alternative to `separate()` with more informative errors. |
+| `pivot_wider()` | {tidyr} | Makes data wider: spreads rows into several columns. |
+| `as_tibble(rownames = )` | {tibble} | Converts a matrix, e.g., from `cor()`, to a tibble, keeping the row names as a column. |
+| `unite()` | {tidyr} | Combines several columns into one by pasting their values together. |
+| `coalesce()` | {dplyr} | Returns, for each row, the first value that is not `NA` across several columns. |
+
+## Exercises
+
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
+
+### Check your understanding
+
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
+
+1.  Which function splits one column into several columns using a separator? `r webexercises::mcq(c("unite()", "coalesce()", answer = "separate()", "pivot_wider()"))`
+2.  A wide data frame has 50 rows: one per participant, with an 'id' column and 17 item columns. After pivoting the 17 item columns longer, how many rows does it have? `r webexercises::mcq(c("17", "50", "67", answer = "850"))`
+3.  The `cols` argument of `pivot_longer()` accepts the same helpers as `select()`, such as `starts_with()`. `r webexercises::torf(TRUE)`
+4.  Which `pivot_wider()` argument replaces missing combinations with a value of your choice, e.g., 0? `r webexercises::mcq(c("id_cols", "values_fn", answer = "values_fill", "names_prefix"))`
+5.  `coalesce(age_v1, age_v2)` returns `NA` only when both 'age_v1' and 'age_v2' are `NA`. `r webexercises::torf(TRUE)`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  `separate()` splits one column into several, e.g., "depression1_item1" into "depression1" and "item1". `unite()` does the opposite.
+2.  850. Each participant gets one row per item: 50 participants x 17 items = 850 rows. The 'id' column is repeated in each row.
+3.  True. You can use `starts_with()`, ranges such as `depression1_item1:depression2_item7`, or negative selection such as `-id`.
+4.  `values_fill`. Only use it when you know what a missing combination means, e.g., that a count is 0.
+5.  True. `coalesce()` returns the first non-missing value in each row, so the result is only `NA` if every column is `NA` in that row.
+:::
+
+What are the three rules of Tidy Data? Which one does `table3` break, and which does `table2` break?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+Each variable is a column, each observation is a row, and each value is a cell. `table3` breaks the third rule: the 'rate' column stores two values, cases and population, in a single cell (e.g., "745/19987071"). `table2` breaks the first rule: the 'count' column contains two different variables, cases and population, distinguished by the 'type' column.
+:::
+
+Is long data tidier than wide data?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+Not necessarily. Both can be tidy, and the same data can be tidy in more than one shape. What counts as one observation depends on the question you are asking. Item-level wide data (one row per participant) is the right shape for calculating Cronbach's alpha, whereas long data (one row per participant per item) is the right shape for calculating mean scores per participant with `group_by()` and `summarize()`, or for plotting all items with `facet_wrap()`. Pivoting lets you move between them as needed.
+:::
+
+What do the `cols`, `names_to`, and `values_to` arguments of `pivot_longer()` do?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+`cols` selects the columns to be stacked into rows. Their names go into a new column named by `names_to`, and their values go into a new column named by `values_to`. All other columns are repeated for each new row.
+:::
+
+Why does this code throw an error? How could you fix it?
 
 ```{r}
+<<<<<<< HEAD
 #| fig-height: 8
 #| fig-width: 6
 library(tidyr)
@@ -420,128 +853,101 @@ dat_likert_long_tidy3 <- dat_likert_wide %>%
                names_to = c("scale", "scale_num", "item"),
                names_pattern = "(depression)(\\d+)_item(\\d+)",
                names_transform = list(item = as.integer),
+=======
+#| eval: false
+dat_likert_wide %>%
+  pivot_longer(cols = -id,
+               names_to = "scale_item",
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
                values_to = "response")
-
-ggplot(dat_likert_long_tidy3, aes(x = response)) +
-  geom_histogram(binwidth = 1, boundary = -0.5) +
-  theme_linedraw() +
-  facet_grid(item ~ scale_num)
 ```
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+`cols = -id` selects every column except 'id', including 'gender' (character) and 'age' (numeric). All the values have to go into a single 'response' column, and a column can only contain one type, so they can't be combined. Select only the item columns, e.g., `cols = starts_with("depression")` or `cols = c(-id, -gender, -age)`.
+:::
+
+What problem does `names_transform = list(item = as.integer)` solve?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+Item numbers extracted from column names are text, so they sort alphabetically: "1", "10", "2", .... Converting them to integers makes them sort, and appear in plots, in numerical order.
+:::
+
+What does `".value"` do in `names_to`? When do you need it?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+It tells `pivot_longer()` that part of each column name is the name of a new column, rather than a value to be stored. You need it when the column names contain both a variable name and the value of another variable, e.g., 'mean_trt', 'sd_trt', 'mean_ctrl', and 'sd_ctrl', where you want columns 'mean' and 'sd' and a 'condition' column.
+:::
+
+What is the role of `id_cols` in `pivot_wider()`? What happens if you leave it out and the data contains a column that differs between rows from the same participant, e.g., the time each response was made?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+`id_cols` defines which columns identify a row in the wider data, i.e., which rows belong together. By default it uses every column not named in `names_from` or `values_from`. If one of these differs between rows from the same participant, those rows are treated as different observations, and you get a "staircase" of rows full of `NA`s rather than one row per participant. Either remove such columns before pivoting or name the identifying columns in `id_cols`.
+:::
+
+What happens when `pivot_wider()` finds more than one value for the same cell, e.g., because a participant completed the same timepoint twice?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+It warns that the values are not uniquely identified and creates list-columns containing all the values in each cell, rather than single values. This is almost always a sign that the data has duplicates you need to deal with first (e.g., with `distinct()` or by deciding which attempt to keep). Check with, e.g., `count(id, timepoint) %>% filter(n > 1)`.
+:::
+
+What does `coalesce(x, y)` return when both 'x' and 'y' contain a value? Why is that worth checking?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+It returns 'x', the first non-missing value, and silently ignores 'y'. If the two values disagree, this hides a problem in the data that you would probably want to know about, so check whether any rows have values in both columns first.
+:::
+
+### Practice
+
+In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
+
+#### Self-report data
+
+-   Load 'data_selfreport_raw.csv' from `../data/raw/`.
+-   Keep only the 'subject', 'trialcode', and 'response' columns, and remove the instructions trials.
+-   Convert 'response' to numeric, setting any non-numeric responses to `NA`.
+-   Use `pivot_wider()` to create a data frame with one row per participant and one column for each item ('like', 'positive', 'prefer').
+-   How many participants are missing at least one item? Did the pivot create any missing values that weren't in the long data? Why?
+-   Calculate each participant's mean score across the three items, for participants with complete data only.
+-   Then do the same calculation again, starting from the long data and without pivoting. Which approach do you find easier, and why?
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+`as.numeric()` turns text that isn't a number into `NA` (with a warning). In `pivot_wider()`, the item names come from 'trialcode' and the values from 'response'. Compare the number of rows for each item in the long data with `count(trialcode)`: not every participant has a row for every item. To calculate the score without pivoting, use `group_by(subject)` and `summarize()`, and think about how to check that a participant has all three items.
+:::
 
 ```{r}
-
-dat_meta <- readr::read_csv("../data/processed/dat_meta.csv") |>
-  select(-comparison, -score_range, -min, -max)
-
-dat_meta
-
-dat_meta |>
-  pivot_longer(
-    cols = c(mean_trt, sd_trt, n_trt, mean_ctrl, sd_ctrl, n_ctrl),
-    names_to = c(".value", "condition"),
-    names_pattern = "(mean|sd|n)_(trt|ctrl)"
-  )
+#| include: false
 
 
-dat_meta_trt <- dat_meta |>
-  select(study, mean = mean_trt, sd = sd_trt, n = n_trt) |>
-  mutate(condition = "trt")
-
-dat_meta_ctrl <- dat_meta |>
-  select(study, mean = mean_ctrl, sd = sd_ctrl, n = n_ctrl) |>
-  mutate(condition = "ctrl")
-
-dat_binded <- bind_rows(
-  dat_meta_trt,
-  dat_meta_ctrl
-) |>
-  arrange(study)
-
-dat_binded |>
-  count(study, name = "conditions_per_study") |>
-  count(conditions_per_study) |>
-  arrange(desc(n))
-
-check1 <- dat_binded |>
-  group_by(study) |>
-  summarize(conditions_per_study = n()) |>
-  mutate(check = conditions_per_study == 2) |>
-  summarize(all_ok = mean(check)) |>
-  pull(all_ok)
-
-  #summarize(check = mean(conditions_per_study == 2))
-
-full_join(
-  dat_meta_trt,
-  dat_meta_ctrl,
-  by = c("study", "mean", "sd", "n", "condition")
-)
 
 ```
 
-Do all studies have 2 conditions? `r as.logical(check1)`
+#### Demographics data
 
-### Practice `pivot_longer()` and other functions to calculate sum scores
+In the [Data transformation](06_data_transformation_1.qmd) chapters, we processed the age and gender data in 'data_demographics_raw.csv' separately, using `filter()`. This time, use a pivot:
 
+<<<<<<< HEAD
 Calculate the mean and SD of each item. Do not repeat your code: use pivot_longer and other functions.
+=======
+-   Load 'data_demographics_raw.csv' from `../data/raw/`.
+-   Keep only the 'subject', 'trialcode', and 'response' columns, and pivot the data so that there is one row per participant with an 'age' column and a 'gender' column.
+-   Clean both columns, as in previous chapters.
+-   Calculate the sample size, the mean and SD of age, and the number of participants of each gender.
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+Use `pivot_wider()` with `names_from = trialcode` and `values_from = response`. After the pivot, the cleaning code from the [Data transformation](06_data_transformation_1.qmd) chapters works on the new 'age' and 'gender' columns with `mutate()`, without needing `filter()` to separate them first.
+:::
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```{r}
+#| include: false
 
-dput(colnames(dat_likert_wide))
 
-dat_likert_wide %>%
-summarize(
-mean_depression1_item1 = mean(depression1_item1),
-mean_depression1_item2 = mean(depression1_item2),
-mean_depression1_item3 = mean(depression1_item3),
-mean_depression1_item4 = mean(depression1_item4),
-mean_depression1_item5 = mean(depression1_item5),
-mean_depression1_item6 = mean(depression1_item6),
-mean_depression1_item7 = mean(depression1_item7),
-mean_depression1_item8 = mean(depression1_item8),
-mean_depression1_item9 = mean(depression1_item9),
-mean_depression1_item10 = mean(depression1_item10),
-mean_depression2_item1 = mean(depression2_item1),
-mean_depression2_item2 = mean(depression2_item2),
-mean_depression2_item3 = mean(depression2_item3),
-mean_depression2_item4 = mean(depression2_item4),
-mean_depression2_item5 = mean(depression2_item5),
-mean_depression2_item6 = mean(depression2_item6),
-mean_depression2_item7 = mean(depression2_item7),
-
-sd_depression1_item1 = sd(depression1_item1),
-sd_depression1_item2 = sd(depression1_item2),
-sd_depression1_item3 = sd(depression1_item3),
-sd_depression1_item4 = sd(depression1_item4),
-sd_depression1_item5 = sd(depression1_item5),
-sd_depression1_item6 = sd(depression1_item6),
-sd_depression1_item7 = sd(depression1_item7),
-sd_depression1_item8 = sd(depression1_item8),
-sd_depression1_item9 = sd(depression1_item9),
-sd_depression1_item10 =sd(depression1_item10),
-sd_depression2_item1 = sd(depression2_item1),
-sd_depression2_item2 = sd(depression2_item2),
-sd_depression2_item3 = sd(depression2_item3),
-sd_depression2_item4 = sd(depression2_item4),
-sd_depression2_item5 = sd(depression2_item5),
-sd_depression2_item6 = sd(depression2_item6),
-sd_depression2_item7 = sd(depression2_item7)
-)
-
-dat_likert_wide %>%
-  pivot_longer(cols = starts_with("depression"),
-               names_to = c("scale", "scale_num", "item"),
-               names_pattern = "(depression)(\\d+)_item(\\d+)",
-               names_transform = list(item = as.integer),
-               values_to = "response") %>%
-  group_by(scale, item) |>
-summarize(mean = mean(response),
-sd = sd(response))
 
 ```
 
-Now calculate:
+#### Affect Misattribution Procedure data
 
+<<<<<<< HEAD
 1.  Each participant's mean score on each scale - **without** using item1+item2+item3 etc; use a pivot first.
 2.  The sample's mean and SD on each scale
 3.  Plot participants' mean-scores on each scale
@@ -686,10 +1092,29 @@ dat_amp_summary %>%
   kable() %>% 
   kable_classic(full_width = FALSE)
 
+=======
+The Affect Misattribution Procedure (AMP) claims to measure automatic evaluations of stimuli without the participant's intention or awareness [@payne2013]. Participants are asked to evaluate Chinese characters as pleasant or unpleasant, and to ignore the positive or negative images (primes) that are briefly presented before each character. The idea is that participants should evaluate only the Chinese characters, but the primes nonetheless influence their evaluations. The AMP effect is the difference between evaluations of the characters preceded by positive vs. negative primes.
+
+-   Load 'data_amp_raw.csv' from `../data/raw/`.
+-   Remove the instructions trials and the practice trials.
+-   Create an 'evaluation' variable. When 'trialcode' is "prime_positive", 'evaluation' is equal to 'correct'. When 'trialcode' is "prime_negative", 'evaluation' is 'correct' reverse scored.
+-   Calculate each participant's mean evaluation for each prime type (positive vs. negative).
+-   Pivot the data wider so that you have the columns 'mean_evaluation_positive' and 'mean_evaluation_negative'.
+-   Calculate each participant's 'amp_effect': the difference between their mean evaluations after positive vs. negative primes.
+-   Create a separate data frame with the mean and SD of 'amp_effect' in the sample. Is there an AMP effect, i.e., is the mean 'amp_effect' above 0?
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+Check which values 'trialcode' contains with `count(trialcode)`: the practice trials have their own trialcodes. 'correct' is 0 or 1, so reverse scoring it is `1 - correct`, which you can apply with `if_else()` or `case_when()`. Summarize with `group_by(subject, trialcode)`, then use `pivot_wider()`; to get the column names asked for, you may need to clean up the values of 'trialcode' first, e.g., with `str_remove()`, and use `names_prefix`.
+:::
+
+```{r}
+#| include: false
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 
 
 ```
+<<<<<<< HEAD
 
 ## Advanced `pivot_longer()`
 
@@ -710,3 +1135,5 @@ household |>
   )
 
 ```
+=======
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb

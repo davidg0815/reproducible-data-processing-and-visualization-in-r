@@ -258,6 +258,16 @@ Use `fct_reorder()` to order the levels of 'condition' from the highest to the l
 
 ```
 
+## Ordering by another variable
+
+Use `fct_reorder()` to order the levels of 'condition' from the highest to the lowest mean wellbeing, then calculate the mean wellbeing in each condition. When would this order be useful? Why would it be a bad way to choose the reference level for the regression model above?
+
+```{r}
+
+
+
+```
+
 ## Collapsing and lumping
 
 Using the 'education' column of `dat_survey`:

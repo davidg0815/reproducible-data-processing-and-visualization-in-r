@@ -140,8 +140,12 @@ dat_wellbeing_messy <- tribble(
 
 ```{r}
 
+<<<<<<< HEAD
 dat_wellbeing_sep <- dat_wellbeing_messy %>% 
   separate(baseline_post, into = c("baseline", "post"), sep = "_")
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -157,10 +161,14 @@ Pivot `dat_wellbeing_wide` to long format, with one row per participant per time
 
 ```{r}
 
+<<<<<<< HEAD
 dat_wellbeing_long <- dat_wellbeing_wide %>% 
   pivot_longer(cols = starts_with("wellbeing"),
                names_to = "wellbeeing",
                values_to = "response")
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -184,6 +192,7 @@ The 'timepoint' column contains "wellbeing_baseline", etc. Make it contain only 
 
 ```{r}
 
+<<<<<<< HEAD
 dat_wellbeing_long <- dat_wellbeing_wide %>% 
   pivot_longer(cols = starts_with("wellbeing"),
                names_to = "timepoint",
@@ -193,6 +202,9 @@ dat_wellbeing_long <- dat_wellbeing_wide %>%
   group_by(condition, timepoint) %>% 
   mutate(wellbeing_mean = mean(wellbeing)) %>% 
   ungroup()
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -202,6 +214,7 @@ How many rows does `dat_wellbeing_long` have? Now pivot again with `values_drop_
 
 ```{r}
 
+<<<<<<< HEAD
 dat_wellbeing_long_dropped <- dat_wellbeing_wide %>% 
   pivot_longer(cols = starts_with("wellbeing"),
                names_to = "timepoint",
@@ -213,6 +226,9 @@ dat_wellbeing_long_dropped <- dat_wellbeing_wide %>%
   mutate(wellbeing_mean = mean(wellbeing)) %>% 
   ungroup()
   
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -225,6 +241,7 @@ Pivot `dat_items` to long format, with separate columns for 'scale' and 'item', 
 
 ```{r}
 
+<<<<<<< HEAD
 dat_items_long <- dat_items %>% 
   pivot_longer(cols = -id,
                names_to = c("scale", "item"),
@@ -238,6 +255,9 @@ dat_items_long <- dat_items %>%
   geom_histogram(binwidth = 1, boundary = -0.5) +
   theme_linedraw() +
   facet_wrap(~ scale)
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -249,6 +269,7 @@ Pivot `dat_wellbeing_long` back to wide format, with one row per participant and
 
 ```{r}
 
+<<<<<<< HEAD
 dat_wellbeing_back_to_wide <- dat_wellbeing_long %>% 
   pivot_wider(id_cols = c(id, condition),
               names_from = timepoint,
@@ -257,6 +278,9 @@ dat_wellbeing_back_to_wide <- dat_wellbeing_long %>%
   group_by(condition) %>% 
   mutate(change_mean_condition = mean(change)) %>% 
   ungroup()
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -266,6 +290,7 @@ Use the `names_prefix` argument of `pivot_wider()` to recreate the original colu
 
 ```{r}
 
+<<<<<<< HEAD
 dat_wellbeing_back_to_wide <- dat_wellbeing_long %>% 
   pivot_wider(id_cols = c(id, condition),
               names_from = timepoint,
@@ -275,6 +300,9 @@ dat_wellbeing_back_to_wide <- dat_wellbeing_long %>%
   group_by(condition) %>% 
   mutate(change_mean_condition = mean(change)) %>% 
   ungroup()
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -295,11 +323,15 @@ Fix it so that there is one row per participant.
 
 ```{r}
 
+<<<<<<< HEAD
 dat_sessions %>%
   filter(id != 3) %>%
   pivot_wider(id_cols = id,
               names_from = timepoint,
               values_from = wellbeing)
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -309,6 +341,7 @@ Now run the fixed code on all of `dat_sessions`, including participant 3. What h
 
 ```{r}
 
+<<<<<<< HEAD
 dat_sessions %>%
   arrange(id, timepoint, date) %>%
   distinct(id, timepoint, .keep_all = TRUE) %>% 
@@ -316,6 +349,8 @@ dat_sessions %>%
               names_from = timepoint,
               values_from = wellbeing)
 
+=======
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 
 ```
@@ -339,7 +374,11 @@ Using `dat_meta_long`, calculate the total sample size of each study. Then think
 
 ```{r}
 
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -349,8 +388,12 @@ Create a single 'age' column from `dat_versions` using `coalesce()`. Before doin
 
 ```{r}
 
+<<<<<<< HEAD
 dat_versions %>% 
   mutate(Age = coalesce(age_v1, age_v2, age_v3))
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
@@ -359,6 +402,7 @@ dat_versions %>%
 This code is meant to calculate the mean change in wellbeing from baseline to post in each condition. It has (at least) four bugs. Find and fix them one at a time.
 
 ```{r}
+<<<<<<< HEAD
 
 dat_wellbeing_wide %>%
   pivot_longer(cols = starts_with("wellbeing"),
@@ -369,6 +413,18 @@ dat_wellbeing_wide %>%
               values_from = wellbeing) %>%
   mutate(change = post - baseline) %>%
   group_by(condition) %>% 
+=======
+#| eval: false
+
+dat_wellbeing_wide %>%
+  pivot_longer(cols = -id,
+               names_to = "timepoint",
+               values_to = "wellbeing",
+               names_prefix = "wellbeing") %>%
+  pivot_wider(names_from = wellbeing,
+              values_from = timepoint) %>%
+  mutate(change = post - baseline) %>%
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
   summarize(mean_change = mean(change))
 
 ```
@@ -381,6 +437,7 @@ Then calculate the sample's mean and SD on each scale, and the correlation betwe
 
 ```{r}
 
+<<<<<<< HEAD
 dat_scale_scores <- dat_items %>% 
   # pivot longer zum berechnen der scores
   pivot_longer(cols = -id,
@@ -403,6 +460,9 @@ dat_scale_scores %>%
             gad_sd = sd(gad, na.rm = TRUE),
             phq_sd = sd(phq),
             r = cor(gad, phq, use = "complete.obs"))
+=======
+
+>>>>>>> fecb6fd1efabe94d9d05dad0100c0808c84351fb
 
 ```
 
