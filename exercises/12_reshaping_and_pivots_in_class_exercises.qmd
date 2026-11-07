@@ -140,7 +140,8 @@ dat_wellbeing_messy <- tribble(
 
 ```{r}
 
-
+dat_wellbeing_sep <- dat_wellbeing_messy %>% 
+  separate(baseline_post, into = c("baseline", "post"), sep = "_")
 
 ```
 
@@ -156,7 +157,10 @@ Pivot `dat_wellbeing_wide` to long format, with one row per participant per time
 
 ```{r}
 
-
+dat_wellbeing_long <- dat_wellbeing_wide %>% 
+  pivot_longer(cols = starts_with("wellbeing"),
+               names_to = "wellbeeing",
+               values_to = "response")
 
 ```
 
@@ -180,7 +184,12 @@ The 'timepoint' column contains "wellbeing_baseline", etc. Make it contain only 
 
 ```{r}
 
-
+dat_wellbeing_long <- dat_wellbeing_wide %>% 
+  pivot_longer(cols = starts_with("wellbeing"),
+               names_to = "wellbeing",
+               values_to = "response")
+  mutate(wellbeing = str_remove(wellbeing, "wellbeing_")) %>% 
+  mutate(wellbeing = fct(wellbeing, levels = c("baseline", "followup", "post")))
 
 ```
 
