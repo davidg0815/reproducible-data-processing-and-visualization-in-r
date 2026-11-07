@@ -53,35 +53,23 @@ dat_likert_wide <-
 ```{r}
 
 
+dat_demographics <- dat_likert_wide %>% 
+  select(id, age, gender)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+dat_likert_scored <- dat_likert_wide %>% 
+  pivot_longer(cols = starts_with("depression"),
+               names_to = c("scale", "item"),
+               names_sep = "_",
+               names_prefix = "item",
+               values_to = "response") %>% 
+  group_by(id, scale) %>% 
+  summarize(participant_mean = mean(response)) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = scale,
+              values_from = participant_mean)
 
 
 ```
-
 
 ::: {.callout-note collapse="true" title="Click to show answer"}
 ```{r}
@@ -126,7 +114,7 @@ dat_likert_scored <- dat_likert_wide %>%
   pivot_wider(names_from = "scale",
               values_from = "mean_score") 
 ```
-::: 
+:::
 
 ## Combining datasets
 
@@ -180,7 +168,7 @@ dat_combined_bind_cols2 <- bind_cols(dat_demographics_shuffled2,
 head(dat_combined_bind_cols2, n = 8)
 ```
 
-#### More severe row mismatches throw errors 
+#### More severe row mismatches throw errors
 
 ```{r}
 # shuffle the rows and add duplicates or missingness
@@ -434,21 +422,21 @@ dat_full_join2 %>%
 
 Using the existing demographics and Likert data frames:
 
-1. How can you keep all rows from the Likert data where there are matching values in demographics data, keeping just columns from Likert data? How many rows are there? Are there duplicates?
+1.  How can you keep all rows from the Likert data where there are matching values in demographics data, keeping just columns from Likert data? How many rows are there? Are there duplicates?
 
 ```{r}
 
 
 ```
 
-2. How can you keep all rows from the demographics where there are **not** matching values in Likert data, keeping just columns from demographics? How many rows are there? Are there duplicates?
+2.  How can you keep all rows from the demographics where there are **not** matching values in Likert data, keeping just columns from demographics? How many rows are there? Are there duplicates?
 
 ```{r}
 
 
 ```
 
-3. How can you use `full_join()` and then a) quantify and b) handle duplicate values? 
+3.  How can you use `full_join()` and then a) quantify and b) handle duplicate values?
 
 Hint: we covered a functions to do this in the chapters Data Transformation 1 and Data Transformation 3.
 
@@ -463,12 +451,12 @@ Which columns would you apply these functions to and how? What if your dataset h
 
 Simulated data for a mixed within-between Randomized Controlled Trials examining the effect of an intervention on self-reported social media use. Hypothetically, data was collected before and after intervention, in both an intervention and placebo (waiting list control) group.
 
-Four data sets are created: 
+Four data sets are created:
 
 - demographics
 - scores at pre
-- scores at post 
-- participants to be excluded 
+- scores at post
+- participants to be excluded
 
 ```{r}
 set.seed(42)
@@ -520,10 +508,10 @@ dat_post <-
 dat_exclusions <- tibble(id = c(3, 11, 12))
 ```
 
-1. Join together the four data frames to create a data frame named `data_combined`
+1.  Join together the four data frames to create a data frame named `data_combined`
 
 - Use only `join` functions (i.e., not filter or distinct etc.).
-- Note that you must (sometimes) join by two variables this time, id and condition, to retain both of them without creating two condition variables. 
+- Note that you must (sometimes) join by two variables this time, id and condition, to retain both of them without creating two condition variables.
 - data_combined should contain all participants that have data at timepoint pre, with missing (NA) data for timepoint post.
 - data_combined should also include age and gender data, but without introducing duplicates.
 - data_combined should also **not** include participant IDs that are present in dat_exclusions.
@@ -588,6 +576,3 @@ dat_purchases_store_3 <-
   # randomise row order
   sample_frac(size = 1, replace = FALSE) 
 ```
-
-
-

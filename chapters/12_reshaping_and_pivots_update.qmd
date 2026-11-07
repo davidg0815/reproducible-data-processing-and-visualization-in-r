@@ -37,21 +37,21 @@ library(truffle) # for simulating data
 
 There are three rules that make a dataset tidy, according to the [Tidy Data chapter](https://r4ds.hadley.nz/data-tidy.html#sec-tidy-data) of R for Data Science [@wickham2023r4ds]:
 
--   Each variable is a column; each column is a variable.
--   Each observation is a row; each row is an observation.
--   Each value is a cell; each cell is a single value.
+- Each variable is a column; each column is a variable.
+- Each observation is a row; each row is an observation.
+- Each value is a cell; each cell is a single value.
 
 Read [Wickham's chapter on Tidy Data](https://r4ds.hadley.nz/data-tidy.html#sec-tidy-data) in the second edition of R4DS. His visualizations are useful, but unfortunately the license he uses means I can't directly include them in this book.
 
 The illustrations below, by [Julia Lowndes and Allison Horst](https://allisonhorst.com/other-r-fun), explain its simplest elements well. They come from the Openscapes blog post [Tidy Data for reproducibility, efficiency, and collaboration](https://openscapes.org/blog/2020-10-12-tidy-data/), which is a short and very readable introduction to the ideas in this section. Allison Horst's [other artwork](https://allisonhorst.com/) on R and data science is also well worth browsing.
 
-![Tidy data: each variable forms a column, each observation forms a row, and each cell is a single measurement.](../images/tidy data 1.jpg){fig-alt="Overview of Tidy Data, with a quote from Hadley Wickham and an example table of cats with the columns id, name, and color."}
+![Tidy data: each variable forms a column, each observation forms a row, and each cell is a single measurement.](../images/tidy%20data%201.jpg){fig-alt="Overview of Tidy Data, with a quote from Hadley Wickham and an example table of cats with the columns id, name, and color."}
 
-![Tidy datasets are all alike, but every messy dataset is messy in its own way.](../images/tidy data 2.jpg){fig-alt="Three smiling rectangular data tables whose columns are variables and rows are observations, next to four ragged, worried-looking tables, each messy in a different way."}
+![Tidy datasets are all alike, but every messy dataset is messy in its own way.](../images/tidy%20data%202.jpg){fig-alt="Three smiling rectangular data tables whose columns are variables and rows are observations, next to four ragged, worried-looking tables, each messy in a different way."}
 
-![With tidy data, the same tools can be used in similar ways for different datasets.](../images/tidy data 3.jpg){fig-alt="A happy monster using a well-fitting tool on a rectangular data frame at a tidy workbench, next to a frustrated monster using duct tape to tie untidy tables together at a cluttered workbench."}
+![With tidy data, the same tools can be used in similar ways for different datasets.](../images/tidy%20data%203.jpg){fig-alt="A happy monster using a well-fitting tool on a rectangular data frame at a tidy workbench, next to a frustrated monster using duct tape to tie untidy tables together at a cluttered workbench."}
 
-![Tidy data makes it easier to build workflows that can be reused.](../images/tidy data 4.jpg){fig-alt="Monsters putting tidy data tables on a conveyor belt that passes through stations labeled wrangle, visualize, and model, ending with a complete analysis."}
+![Tidy data makes it easier to build workflows that can be reused.](../images/tidy%20data%204.jpg){fig-alt="Monsters putting tidy data tables on a conveyor belt that passes through stations labeled wrangle, visualize, and model, ending with a complete analysis."}
 
 Illustrations from the Openscapes blog [Tidy Data for reproducibility, efficiency, and collaboration](https://openscapes.org/blog/2020-10-12-tidy-data/) by Julia Lowndes and Allison Horst.
 
@@ -117,7 +117,7 @@ What counts as a single observation depends on your question. If you are interes
 
 This animation illustrates what happens when you pivot data to be wider or longer ([source](https://github.com/gadenbuie/tidyexplain?tab=readme-ov-file#pivot-wider-and-longer)):
 
-![](../images/pivot longer.gif)
+![](../images/pivot%20longer.gif)
 
 ## Example data
 
@@ -160,8 +160,8 @@ alpha_depression2 <- round_up(res_alpha_depression2$total$raw_alpha, digits = 2)
 
 Cronbach's $\alpha$:
 
--   depression1 scale: `r alpha_depression1`
--   depression2 scale: `r alpha_depression2`
+- depression1 scale: `r alpha_depression1`
+- depression2 scale: `r alpha_depression2`
 
 But for many other tasks, wide data makes us repeat ourselves.
 
@@ -211,9 +211,9 @@ ggplot(dat_likert_long, aes(x = response)) +
 
 `pivot_longer()` has three main arguments:
 
--   `cols`: the columns to be stacked into rows.
--   `names_to`: the name of a new column that will contain the names of those columns.
--   `values_to`: the name of a new column that will contain their values.
+- `cols`: the columns to be stacked into rows.
+- `names_to`: the name of a new column that will contain the names of those columns.
+- `values_to`: the name of a new column that will contain their values.
 
 All the other columns ('id', 'gender', and 'age') are repeated in each new row. The data went from `r nrow(dat_likert_wide)` rows and `r ncol(dat_likert_wide)` columns to `r nrow(dat_likert_long)` rows (`r nrow(dat_likert_wide)` participants x 17 items) and `r ncol(dat_likert_long)` columns.
 
@@ -342,7 +342,7 @@ ggplot(dat_likert_long_tidy, aes(x = response)) +
   facet_grid(item ~ scale)
 ```
 
-`"(depression\\d+)_item(\\d+)"` means: "depression" followed by one or more digits, which goes into 'scale'; then "_item", which is dropped; then one or more digits, which go into 'item'. This does everything in the previous section in a single step, and the data is now fully tidy: one row per participant per item, with the scale and item in separate columns.
+`"(depression\\d+)_item(\\d+)"` means: "depression" followed by one or more digits, which goes into 'scale'; then "\_item", which is dropped; then one or more digits, which go into 'item'. This does everything in the previous section in a single step, and the data is now fully tidy: one row per participant per item, with the scale and item in separate columns.
 
 ## Calculating scores from long data
 
@@ -428,8 +428,8 @@ cor(dat_likert_meanscored_wide$depression1,
 
 `pivot_wider()` has two main arguments:
 
--   `names_from`: the column whose values become the new column names.
--   `values_from`: the column whose values fill the new columns.
+- `names_from`: the column whose values become the new column names.
+- `values_from`: the column whose values fill the new columns.
 
 `names_prefix` adds text to the start of each new column name, which is useful when the values are numbers or short labels, e.g., `names_prefix = "meanscore_"` would create 'meanscore_depression1' and 'meanscore_depression2'.
 
@@ -727,11 +727,11 @@ Note that if a participant had values in *both* columns, `coalesce()` would sile
 
 `coalesce()` illustrates a general pattern worth noticing. Many {tidyverse} functions are "*wrappers*": shortcuts for logic that you could already write yourself with more general functions. You have already seen several in the [Data transformation I](06_data_transformation_1.qmd) and [Data transformation II](07_data_transformation_2.qmd) chapters:
 
--   Renaming and relocating columns inside `select()` does the work of `rename()` and `relocate()`.
--   `na_if(age, -99)` is a shortcut for `if_else(age == -99, NA, age)`.
--   `slice_head(n = 5)` is a shortcut for `filter(row_number() <= 5)`.
--   `drop_na(gender)` is a shortcut for `filter(!is.na(gender))`.
--   `coalesce(age_v1, age_v2)` is a shortcut for `if_else(!is.na(age_v1), age_v1, age_v2)`.
+- Renaming and relocating columns inside `select()` does the work of `rename()` and `relocate()`.
+- `na_if(age, -99)` is a shortcut for `if_else(age == -99, NA, age)`.
+- `slice_head(n = 5)` is a shortcut for `filter(row_number() <= 5)`.
+- `drop_na(gender)` is a shortcut for `filter(!is.na(gender))`.
+- `coalesce(age_v1, age_v2)` is a shortcut for `if_else(!is.na(age_v1), age_v1, age_v2)`.
 
 Wrappers make code shorter and easier to read, and are often less error-prone. But it is useful to understand the logic they wrap: it helps you know exactly what a function will do in unusual cases (e.g., what happens when both columns contain a value), and when no wrapper exists for your problem, you can fall back on writing the logic yourself with `mutate()`, `if_else()`, and `case_when()`.
 
@@ -815,18 +815,51 @@ Note: no solutions provided here to reduce the temptation to peek or copy-paste.
 
 #### Self-report data
 
--   Load 'data_selfreport_raw.csv' from `../data/raw/`.
--   Keep only the 'subject', 'trialcode', and 'response' columns, and remove the instructions trials.
--   Convert 'response' to numeric, setting any non-numeric responses to `NA`.
--   Use `pivot_wider()` to create a data frame with one row per participant and one column for each item ('like', 'positive', 'prefer').
--   How many participants are missing at least one item? Did the pivot create any missing values that weren't in the long data? Why?
--   Calculate each participant's mean score across the three items, for participants with complete data only.
--   Then do the same calculation again, starting from the long data and without pivoting. Which approach do you find easier, and why?
+- Load 'data_selfreport_raw.csv' from `../data/raw/`.
+- Keep only the 'subject', 'trialcode', and 'response' columns, and remove the instructions trials.
+- Convert 'response' to numeric, setting any non-numeric responses to `NA`.
+- Use `pivot_wider()` to create a data frame with one row per participant and one column for each item ('like', 'positive', 'prefer').
+- How many participants are missing at least one item? Did the pivot create any missing values that weren't in the long data? Why?
+- Calculate each participant's mean score across the three items, for participants with complete data only.
+- Then do the same calculation again, starting from the long data and without pivoting. Which approach do you find easier, and why?
 
 ```{r}
-#| include: false
+library(dplyr)
+library(tidyr)
+library(readr)
 
+dat_selfreport_raw <- read_csv("../data/raw/data_selfreport_raw.csv")
 
+# nur die benötigten Spalten, Instruktionen raus, response numerisch
+dat_selfreport_long <- dat_selfreport_raw %>% 
+  select(subject, trialcode, response) %>% 
+  filter(trialcode != "instructions") %>% 
+  mutate(response = as.numeric(response))
+
+# eine Zeile pro Teilnehmer, eine Spalte pro Item
+dat_selfreport_wide <- dat_selfreport_long %>% 
+  pivot_wider(id_cols = subject,
+              names_from = trialcode,
+              values_from = response)
+
+# wie vielen Teilnehmern fehlt mindestens ein Item
+dat_selfreport_wide %>% 
+  filter(if_any(c(like, positive, prefer), is.na)) %>% 
+  nrow()
+
+# Mittelwert über die drei Items, nur bei vollständigen Daten
+# rowMeans() ohne na.rm gibt NA zurück, sobald ein Item fehlt
+dat_selfreport_scored <- dat_selfreport_wide %>% 
+  mutate(mean_selfreport = rowMeans(pick(like, positive, prefer)))
+
+dat_selfreport_scored
+
+# dieselbe Berechnung aus der Langform, ohne Pivot
+dat_selfreport_long %>% 
+  group_by(subject) %>% 
+  summarize(n_valid = sum(!is.na(response)),
+            mean_selfreport = if_else(n_valid == 3, mean(response), NA_real_)) %>% 
+  ungroup()
 
 ```
 
@@ -834,14 +867,44 @@ Note: no solutions provided here to reduce the temptation to peek or copy-paste.
 
 In the [Data transformation](06_data_transformation_1.qmd) chapters, we processed the age and gender data in 'data_demographics_raw.csv' separately, using `filter()`. This time, use a pivot:
 
--   Load 'data_demographics_raw.csv' from `../data/raw/`.
--   Keep only the 'subject', 'trialcode', and 'response' columns, and pivot the data so that there is one row per participant with an 'age' column and a 'gender' column.
--   Clean both columns, as in previous chapters.
--   Calculate the sample size, the mean and SD of age, and the number of participants of each gender.
+- Load 'data_demographics_raw.csv' from `../data/raw/`.
+- Keep only the 'subject', 'trialcode', and 'response' columns, and pivot the data so that there is one row per participant with an 'age' column and a 'gender' column.
+- Clean both columns, as in previous chapters.
+- Calculate the sample size, the mean and SD of age, and the number of participants of each gender.
 
 ```{r}
-#| include: false
 
+library(dplyr)
+library(tidyr)
+library(readr)
+library(stringr)
+
+dat_demographics <- dat_demographics_raw %>% 
+  # nach Zeit sortieren, damit der erste Durchlauf oben steht
+  arrange(subject, trialcode, date, time) %>% 
+  select(subject, trialcode, response) %>% 
+  # pro Teilnehmer und Item nur den ersten Durchlauf behalten
+  distinct(subject, trialcode, .keep_all = TRUE) %>% 
+  pivot_wider(id_cols = subject,
+              names_from = trialcode,
+              values_from = response) %>% 
+  mutate(age = as.numeric(age),
+         gender = str_squish(str_to_lower(gender)),
+         gender = case_when(gender == "male" ~ "male",
+                            gender %in% c("female", "woman") ~ "female",
+                            gender %in% c("non-binary", "non binary") ~ "non-binary",
+                            TRUE ~ NA_character_))
+
+# Stichprobengrösse sowie Mittelwert und SD des Alters
+dat_demographics %>% 
+  summarize(N = n(),
+            n_age = sum(!is.na(age)),
+            mean_age = mean(age, na.rm = TRUE),
+            sd_age = sd(age, na.rm = TRUE))
+
+# Anzahl pro Geschlecht
+dat_demographics %>% 
+  count(gender)
 
 
 ```
@@ -850,13 +913,13 @@ In the [Data transformation](06_data_transformation_1.qmd) chapters, we processe
 
 The Affect Misattribution Procedure (AMP) claims to measure automatic evaluations of stimuli without the participant's intention or awareness [@payne2013]. Participants are asked to evaluate Chinese characters as pleasant or unpleasant, and to ignore the positive or negative images (primes) that are briefly presented before each character. The idea is that participants should evaluate only the Chinese characters, but the primes nonetheless influence their evaluations. The AMP effect is the difference between evaluations of the characters preceded by positive vs. negative primes.
 
--   Load 'data_amp_raw.csv' from `../data/raw/`.
--   Remove the instructions trials and the practice trials.
--   Create an 'evaluation' variable. When 'trialcode' is "prime_positive", 'evaluation' is equal to 'correct'. When 'trialcode' is "prime_negative", 'evaluation' is 'correct' reverse scored.
--   Calculate each participant's mean evaluation for each prime type (positive vs. negative).
--   Pivot the data wider so that you have the columns 'mean_evaluation_positive' and 'mean_evaluation_negative'.
--   Calculate each participant's 'amp_effect': the difference between their mean evaluations after positive vs. negative primes.
--   Create a separate data frame with the mean and SD of 'amp_effect' in the sample. Is there an AMP effect, i.e., is the mean 'amp_effect' above 0?
+- Load 'data_amp_raw.csv' from `../data/raw/`.
+- Remove the instructions trials and the practice trials.
+- Create an 'evaluation' variable. When 'trialcode' is "prime_positive", 'evaluation' is equal to 'correct'. When 'trialcode' is "prime_negative", 'evaluation' is 'correct' reverse scored.
+- Calculate each participant's mean evaluation for each prime type (positive vs. negative).
+- Pivot the data wider so that you have the columns 'mean_evaluation_positive' and 'mean_evaluation_negative'.
+- Calculate each participant's 'amp_effect': the difference between their mean evaluations after positive vs. negative primes.
+- Create a separate data frame with the mean and SD of 'amp_effect' in the sample. Is there an AMP effect, i.e., is the mean 'amp_effect' above 0?
 
 ```{r}
 #| include: false

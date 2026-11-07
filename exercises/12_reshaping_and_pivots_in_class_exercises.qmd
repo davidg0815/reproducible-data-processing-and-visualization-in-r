@@ -186,10 +186,13 @@ The 'timepoint' column contains "wellbeing_baseline", etc. Make it contain only 
 
 dat_wellbeing_long <- dat_wellbeing_wide %>% 
   pivot_longer(cols = starts_with("wellbeing"),
-               names_to = "wellbeing",
-               values_to = "response")
-  mutate(wellbeing = str_remove(wellbeing, "wellbeing_")) %>% 
-  mutate(wellbeing = fct(wellbeing, levels = c("baseline", "followup", "post")))
+               names_to = "timepoint",
+               values_to = "wellbeing",
+               names_prefix = "wellbeing_") %>% 
+  mutate(timepoint = fct(timepoint, levels = c("baseline", "post", "followup"))) %>% 
+  group_by(condition, timepoint) %>% 
+  mutate(wellbeing_mean = mean(wellbeing)) %>% 
+  ungroup()
 
 ```
 
@@ -199,7 +202,17 @@ How many rows does `dat_wellbeing_long` have? Now pivot again with `values_drop_
 
 ```{r}
 
-
+dat_wellbeing_long_dropped <- dat_wellbeing_wide %>% 
+  pivot_longer(cols = starts_with("wellbeing"),
+               names_to = "timepoint",
+               values_to = "wellbeing",
+               names_prefix = "wellbeing_",
+               values_drop_na = TRUE) %>% 
+  mutate(timepoint = fct(timepoint, levels = c("baseline", "post", "followup"))) %>% 
+  group_by(condition, timepoint) %>% 
+  mutate(wellbeing_mean = mean(wellbeing)) %>% 
+  ungroup()
+  
 
 ```
 
@@ -212,7 +225,19 @@ Pivot `dat_items` to long format, with separate columns for 'scale' and 'item', 
 
 ```{r}
 
+dat_items_long <- dat_items %>% 
+  pivot_longer(cols = -id,
+               names_to = c("scale", "item"),
+               names_sep = "_",
+               values_to = "response") %>% 
+  group_by(id, scale) %>% 
+  mutate(participant_mean = mean(response)) %>% 
+  ungroup()
 
+  ggplot(dat_items_long, aes(x = response)) +
+  geom_histogram(binwidth = 1, boundary = -0.5) +
+  theme_linedraw() +
+  facet_wrap(~ scale)
 
 ```
 
@@ -224,7 +249,14 @@ Pivot `dat_wellbeing_long` back to wide format, with one row per participant and
 
 ```{r}
 
-
+dat_wellbeing_back_to_wide <- dat_wellbeing_long %>% 
+  pivot_wider(id_cols = c(id, condition),
+              names_from = timepoint,
+              values_from = wellbeing) %>% 
+  mutate(change = post - baseline) %>% 
+  group_by(condition) %>% 
+  mutate(change_mean_condition = mean(change)) %>% 
+  ungroup()
 
 ```
 
@@ -234,7 +266,15 @@ Use the `names_prefix` argument of `pivot_wider()` to recreate the original colu
 
 ```{r}
 
-
+dat_wellbeing_back_to_wide <- dat_wellbeing_long %>% 
+  pivot_wider(id_cols = c(id, condition),
+              names_from = timepoint,
+              names_prefix = "wellbeing_",
+              values_from = wellbeing) %>% 
+  mutate(change = wellbeing_post - wellbeing_baseline) %>% 
+  group_by(condition) %>% 
+  mutate(change_mean_condition = mean(change)) %>% 
+  ungroup()
 
 ```
 
@@ -255,7 +295,11 @@ Fix it so that there is one row per participant.
 
 ```{r}
 
-
+dat_sessions %>%
+  filter(id != 3) %>%
+  pivot_wider(id_cols = id,
+              names_from = timepoint,
+              values_from = wellbeing)
 
 ```
 
@@ -264,6 +308,13 @@ Fix it so that there is one row per participant.
 Now run the fixed code on all of `dat_sessions`, including participant 3. What happens? Find the problem using `count()`, then fix it by keeping only each participant's first session at each timepoint.
 
 ```{r}
+
+dat_sessions %>%
+  arrange(id, timepoint, date) %>%
+  distinct(id, timepoint, .keep_all = TRUE) %>% 
+  pivot_wider(id_cols = id,
+              names_from = timepoint,
+              values_from = wellbeing)
 
 
 
@@ -288,7 +339,7 @@ Using `dat_meta_long`, calculate the total sample size of each study. Then think
 
 ```{r}
 
-
+  
 
 ```
 
@@ -298,7 +349,8 @@ Create a single 'age' column from `dat_versions` using `coalesce()`. Before doin
 
 ```{r}
 
-
+dat_versions %>% 
+  mutate(Age = coalesce(age_v1, age_v2, age_v3))
 
 ```
 
@@ -307,16 +359,16 @@ Create a single 'age' column from `dat_versions` using `coalesce()`. Before doin
 This code is meant to calculate the mean change in wellbeing from baseline to post in each condition. It has (at least) four bugs. Find and fix them one at a time.
 
 ```{r}
-#| eval: false
 
 dat_wellbeing_wide %>%
-  pivot_longer(cols = -id,
+  pivot_longer(cols = starts_with("wellbeing"),
                names_to = "timepoint",
                values_to = "wellbeing",
-               names_prefix = "wellbeing") %>%
-  pivot_wider(names_from = wellbeing,
-              values_from = timepoint) %>%
+               names_prefix = "wellbeing_") %>%  
+  pivot_wider(names_from = timepoint,
+              values_from = wellbeing) %>%
   mutate(change = post - baseline) %>%
+  group_by(condition) %>% 
   summarize(mean_change = mean(change))
 
 ```
@@ -329,7 +381,28 @@ Then calculate the sample's mean and SD on each scale, and the correlation betwe
 
 ```{r}
 
+dat_scale_scores <- dat_items %>% 
+  # pivot longer zum berechnen der scores
+  pivot_longer(cols = -id,
+               names_to = c("scale", "item"),
+               names_sep = "_",
+               values_to = "response") %>% 
+  group_by(id, scale) %>% 
+  summarize(participant_mean = mean(response)) %>% 
+  ungroup() %>% 
+  # pivot wider für 1 zeile pro participant
+  pivot_wider(id_cols = id,
+              names_from = scale,
+              values_from = participant_mean)
+dat_scale_scores
 
+# zur berechnung der correlation wider notwendig
+dat_scale_scores %>% 
+  summarize(gad_mean = mean(gad, na.rm = TRUE),
+            phq_mean = mean(phq),
+            gad_sd = sd(gad, na.rm = TRUE),
+            phq_sd = sd(phq),
+            r = cor(gad, phq, use = "complete.obs"))
 
 ```
 
