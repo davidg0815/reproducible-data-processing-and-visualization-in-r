@@ -35,14 +35,15 @@ book:
       - chapters/11_strings_and_factors.qmd
       - chapters/12_reshaping_and_pivots.qmd
       - chapters/13_binding_and_joining.qmd
-      - chapters/14_sharing_and_privacy.qmd
+      - chapters/14_data_privacy.qmd
+      - chapters/15_data_sharing_and_version_control.qmd
       
       
     - part: "Part III: Visualization and reporting"
       chapters:
-      - chapters/15_visualization.qmd 
-      - chapters/16_reporting.qmd
-      - chapters/17_the_linear_model.qmd
+      - chapters/16_visualization.qmd 
+      - chapters/17_reporting.qmd
+      - chapters/18_the_linear_model.qmd
       
     - references.qmd
       

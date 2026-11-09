@@ -478,8 +478,8 @@ The order matters because many functions use it. By default, character variables
 Factor levels control:
 
 -   The order of rows in tables made with `count()` and `summarize()`.
--   The order of categories in plots, e.g., the bars of a bar chart. See the [Visualization](15_visualization.qmd) chapter.
--   The reference category in regression models, i.e., which group the others are compared to. See [The linear model](17_the_linear_model.qmd) chapter.
+-   The order of categories in plots, e.g., the bars of a bar chart. See the [Visualization](16_visualization.qmd) chapter.
+-   The reference category in regression models, i.e., which group the others are compared to. See [The linear model](18_the_linear_model.qmd) chapter.
 
 ```{r}
 dat_timepoints <- tribble(
@@ -575,7 +575,7 @@ dat_scores %>%
   summarize(mean_score = mean(score))
 ```
 
-This is most useful for plots, where ordering the categories by their values makes them much easier to compare than alphabetical order (see the [Visualization](15_visualization.qmd) chapter). Be aware that the order is then determined by the data, so it can change when the data changes. When the categories have a meaningful order of their own, e.g., timepoints, set it explicitly with `fct()` or `fct_relevel()` instead.
+This is most useful for plots, where ordering the categories by their values makes them much easier to compare than alphabetical order (see the [Visualization](16_visualization.qmd) chapter). Be aware that the order is then determined by the data, so it can change when the data changes. When the categories have a meaningful order of their own, e.g., timepoints, set it explicitly with `fct()` or `fct_relevel()` instead.
 
 ### Changing the values of levels
 

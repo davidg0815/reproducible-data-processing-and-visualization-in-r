@@ -103,13 +103,19 @@ In class:
 Before class:
 
 - [Chapter 13: Binding and joining](chapters/13_binding_and_joining.qmd)
-- [Chapter 14: Sharing and privacy](chapters/14_sharing_and_privacy.qmd)
+- [Chapter 14: Data privacy](chapters/14_data_privacy.qmd)
+- [Chapter 15: Data sharing and version control](chapters/15_data_sharing_and_version_control.qmd)
 
 In class:
 
 - Questions about binding and joining
-- Questions about sharing and privacy
-- Lecture and exercise: Intro to GitHub, diffs
+- Questions about data privacy
+- Questions about data sharing and version control
+- Lecture and exercise: Intro to Git and GitHub with GitHub Desktop
+  - Committing and pushing, and reading diffs
+  - Keeping private data and credentials out of GitHub with .gitignore and .Renviron
+  - Licensing a project, and archiving a release on Zenodo
+- Exercise: anonymize a dataset, put the project from assignment 1 on GitHub, and review its diffs
 - In-class exercises - [click to download .qmd](exercises/13_binding_and_joining_in_class_exercises.qmd)
 
 ### Week 10
@@ -132,27 +138,27 @@ In class:
 
 Before class:
 
-- [Chapter 15: Visualization](chapters/15_visualization.qmd)
-- [Chapter 16: Reporting](chapters/16_reporting.qmd)
+- [Chapter 16: Visualization](chapters/16_visualization.qmd)
+- [Chapter 17: Reporting](chapters/17_reporting.qmd)
 
 In class:
 
 - Questions about reporting
 - Questions about ggplot2 for visualization
 - Overview of assignment 2 (plotting)
-<!-- - In-class exercises - [click to download .qmd](exercises/15_to_16_reporting_in_class_exercises.qmd) -->
+<!-- - In-class exercises - [click to download .qmd](exercises/16_to_17_reporting_in_class_exercises.qmd) -->
 
 ### Week 12
 
 Before class:
 
-- [Chapter 17: The linear model](chapters/17_the_linear_model.qmd)
+- [Chapter 18: The linear model](chapters/18_the_linear_model.qmd)
 
 In class:
 
 - Questions about the linear model
 - Questions about the assignments
-<!-- - In-class exercises - [click to download .qmd](exercises/17_the_linear_model_in_class_exercises.qmd) -->
+<!-- - In-class exercises - [click to download .qmd](exercises/18_the_linear_model_in_class_exercises.qmd) -->
 
 ### Week 13 + 14
 

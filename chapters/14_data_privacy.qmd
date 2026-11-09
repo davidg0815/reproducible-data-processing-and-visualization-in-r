@@ -1,0 +1,396 @@
+# Data privacy
+
+```{r}
+#| include: false
+
+# settings, placed in a chunk that will not show in the .html file (because include=FALSE)
+
+# disables scientific notation so that small numbers appear as eg "0.00001" rather than "1e-05"
+options(scipen = 999)
+
+```
+
+Most of the data you will work with comes from people. Those people agreed to take part in your study on the condition that their data would be handled responsibly, and in most countries the law also requires it. Typically, before you share data with anyone outside the research team, e.g., by posting it on GitHub or the OSF, you must make sure it can't be used to identify the participants.
+
+However, privacy is not a reason to avoid sharing data. Most researchers are required to share their data by their university, funder, professional body, and/or the journal they publish in, and these requirements still apply when the data comes from people. The usual principle is that data should be "as open as possible, as closed as necessary": share as much of the data as you can, and restrict only what you must to protect participants. Anonymizing data is how you meet both obligations at once. Where some data can't be anonymized well enough to be made public, it can often still be shared in other ways, e.g., with only the most identifying variables removed, or through a repository that gives access only to approved researchers.
+
+Anonymizing data properly is a large topic: it involves law, ethics, and statistics, and the right approach depends on the data. This chapter does not try to cover all of it. Instead, it covers a minimal set of checks that every project should pass, and the code to fix the most common problems:
+
+1.  What counts as personal data, with the examples that turn up most often in psychology datasets.
+2.  How to check your data for identifying columns, and how to remove them with `select()`.
+3.  Where the identifiable and anonymized versions of the data should live.
+4.  How to replace participant IDs, such as Prolific IDs, with new pseudonymous IDs, so that datasets can still be joined after the original IDs are removed.
+
+::: callout-tip
+## Learn more
+
+For a thorough introduction to anonymization, see Luisa Jansen et al.'s [Data Anonymization Course](https://lmu-osc.github.io/data-anonymization/), published by the LMU Open Science Center. It covers data protection law (GDPR), what makes data identifying, techniques for anonymizing data that go beyond deleting columns, and how to balance privacy with open data. Read it before sharing data from a study that collected anything sensitive, e.g., health, clinical, or criminal justice data, or detailed demographics.
+:::
+
+```{r}
+library(dplyr) # for %>%, select(), any_of(), distinct(), left_join(), bind_rows()
+library(tibble) # for tibble()
+library(stringr) # for str_detect()
+library(uuid) # for UUIDgenerate(); install.packages("uuid") if needed
+```
+
+## What is personal data?
+
+Under the European Union's General Data Protection Regulation (GDPR), **personal data** is any information that relates to an identified or identifiable person. *Identifiable* is the important word: data is personal if someone could work out who it refers to, either directly or by combining it with other information.
+
+It helps to distinguish between two types of identifying information:
+
+-   **Direct identifiers** identify a person on their own, e.g., a name, an email address, or a platform ID such as a Prolific ID.
+-   **Indirect identifiers** (or *quasi-identifiers*) don't identify a person on their own, but can in combination, e.g., exact age, gender, postcode, occupation, and the date the person took part. Even a few demographic variables are often enough to single out one person in a dataset [@morehouse2025].
+
+This chapter focuses on direct identifiers, because they are the most common problem and the easiest to fix. Removing them is necessary but often not sufficient: see the [Data Anonymization Course](https://lmu-osc.github.io/data-anonymization/) for how to assess and reduce the risk from indirect identifiers.
+
+Two more terms are useful:
+
+-   **Pseudonymous** data has had its direct identifiers replaced with codes, but someone still has the information needed to link the codes back to the people, e.g., a table of which code belongs to which Prolific ID. In GDPR terms, pseudonymous data is still personal data.
+-   **Anonymous** data can't be linked back to the people by anyone, including you. Anonymous data is no longer personal data.
+
+### Common examples
+
+Check your data for each of these before sharing it:
+
+| Type of information | Examples of column names |
+|---------------------------|---------------------------------------------|
+| Names | 'name', 'first_name', 'RecipientFirstName', 'RecipientLastName' |
+| Contact details | 'email', 'RecipientEmail', 'phone', 'address' |
+| Participant pool or platform IDs | 'PROLIFIC_PID', 'prolific_id', 'workerId' (MTurk), 'sona_id', 'student_id' |
+| IP addresses | 'IPAddress', 'ip' |
+| Location | 'LocationLatitude', 'LocationLongitude', 'postcode' |
+| Other platform IDs that can be linked to the above | 'ExternalReference', 'STUDY_ID', 'SESSION_ID' |
+| Free-text responses | 'comments', 'feedback', 'other_specify' |
+| Recordings | Audio, video, photos, and handwriting |
+
+Free-text responses deserve special attention, because participants often write things that identify them, e.g., "I'm the only male nurse on my ward", or simply their name or email address so you can send them the results. Unlike columns, these can't be found by looking at the column names: you have to read them.
+
+### Prolific IDs
+
+[Prolific](https://www.prolific.com) is a website that many researchers use to recruit participants for online studies, and where people go to be paid to complete them. Each participant has a Prolific ID, a 24-character code such as '5f8a2b3c9d1e4f6a7b8c9d0e'. When participants are sent from Prolific to your survey, their Prolific ID is usually recorded in your data so that you know who to pay.
+
+Prolific IDs might look anonymous, but they aren't, for two reasons:
+
+1.  **They identify a person to Prolific, and to you.** Anyone with access to the Prolific account that ran the study can look up the participant behind an ID, and so can Prolific.
+2.  **They are the same in every study.** A participant keeps the same Prolific ID for every study they ever complete, with any researcher [@palan2018]. This means that anyone who downloads several public datasets that contain Prolific IDs can join them together. Each dataset on its own might contain only a few harmless variables, e.g., age in one study, gender and country in another, and a psychiatric diagnosis in a third. Joined together, they can build a detailed profile of a person that's much easier to re-identify, and which includes sensitive information that the person never agreed to have linked.
+
+The same problem was identified years ago for Amazon's Mechanical Turk, whose worker IDs are linked to the workers' Amazon accounts, including their public product reviews and wish lists [@lease2013]. Studies of the data posted on public repositories have found that platform IDs and other direct identifiers are still left in a substantial number of shared psychology datasets [@wicherts2022; @morehouse2025].
+
+<!-- TODO: add the Science news piece on Prolific IDs in public datasets here once located. -->
+
+Prolific's [official guidance](https://researcher-help.prolific.com/en/articles/445263-prolific-ids-data-collection-and-security) is simple: remove Prolific IDs before you share your data publicly. The same applies to the IDs from other participant pools, such as MTurk, CloudResearch, and SONA.
+
+### IP addresses and location data
+
+An IP address identifies the internet connection a participant used to complete your study. It can often be used to find their approximate location, and their internet service provider can link it to their account. IP addresses are personal data under the GDPR.
+
+Survey platforms often record IP addresses without being asked. Qualtrics, for example, records each participant's IP address and their approximate location ('LocationLatitude' and 'LocationLongitude', estimated from the IP address) by default. You can prevent this by turning on the *Anonymize responses* option in the survey's options before you start collecting data. If you didn't, the columns will be in your data export and you must remove them.
+
+Some researchers collect IP addresses on purpose, e.g., to detect participants who completed the study more than once. That's fine, as long as the IP addresses are used for that check and then removed before the data is shared.
+
+## Checking your data
+
+The first check is the simplest: look at every column name and ask whether it could contain personal data. Here is some simulated data in the format of a Qualtrics export from a study run on Prolific (all of the data, including the IDs, is made up).
+
+```{r}
+set.seed(42)
+
+# simulate fake 24-character Prolific IDs
+fake_prolific_id <- function(n) {
+  replicate(n, paste(sample(c(0:9, letters[1:6]), 24, replace = TRUE), collapse = ""))
+}
+
+prolific_ids <- fake_prolific_id(4)
+
+dat_survey <- tibble(
+  ResponseId = c("R_1a2B3c", "R_4d5E6f", "R_7g8H9i", "R_0j1K2l"),
+  IPAddress = c("203.0.113.15", "198.51.100.72", "192.0.2.144", "203.0.113.201"),
+  LocationLatitude = c(47.37, 46.95, 51.51, 48.14),
+  LocationLongitude = c(8.54, 7.45, -0.13, 11.58),
+  PROLIFIC_PID = prolific_ids,
+  age = c(23, 48, 31, 35),
+  gender = c("female", "male", "non-binary", "female"),
+  comments = c(NA, "Great study! Send me the results at sam.example@mail.com", NA, "none")
+)
+
+dat_survey
+```
+
+```{r}
+names(dat_survey)
+```
+
+Looking at the names, 'IPAddress', 'LocationLatitude', 'LocationLongitude', and 'PROLIFIC_PID' are all personal data. 'comments' is free text, and reading it reveals an email address.
+
+Column names can be misleading, so it's also worth searching the *contents* of every column for values that look like identifiers. The code below checks each column for values that look like an email address (contain '@'), an IP address (four numbers separated by dots), or a Prolific ID (24 characters of 0-9 and a-f).
+
+```{r}
+dat_survey %>%
+  summarize(across(everything(), ~ any(str_detect(as.character(.x),
+                                                  "@|^\\d+\\.\\d+\\.\\d+\\.\\d+$|^[0-9a-f]{24}$"),
+                                       na.rm = TRUE)))
+```
+
+The columns that are `TRUE` contain at least one suspicious value. This search is a safety net, not a guarantee: it can't find names, or identifiers in formats it doesn't know about. You still need to look at the column names and read the free-text responses.
+
+## Removing identifying columns
+
+Identifying columns are removed with `select()`, which you learned in the chapter on [Data transformation 1](06_data_transformation_1.qmd).
+
+It's useful to write the names of the identifying columns in one vector, and then remove them with `select(-any_of())`. `any_of()` selects the columns in the vector that exist in the data frame and ignores those that don't, so the same vector can be used for every data frame in a project, e.g., Qualtrics exports with and without location columns.
+
+```{r}
+identifying_columns <- c("IPAddress",
+                         "LocationLatitude",
+                         "LocationLongitude",
+                         "RecipientFirstName",
+                         "RecipientLastName",
+                         "RecipientEmail",
+                         "ExternalReference",
+                         "PROLIFIC_PID",
+                         "comments") # free text containing an email address
+
+dat_survey_anonymized <- dat_survey %>%
+  select(-any_of(identifying_columns))
+
+dat_survey_anonymized
+```
+
+Because `any_of()` doesn't complain about columns that don't exist, it also doesn't complain about typos: `select(-any_of("IPadress"))` silently removes nothing. Always run the checks above again on the anonymized data to confirm that the columns are gone.
+
+Here the 'comments' column was removed completely. If you need the free-text responses, a safer alternative is to edit only the identifying responses, e.g., with `mutate()` and `case_when()`, but each response then needs to be read and checked by a person.
+
+::: callout-note
+## Positive selection
+
+In the chapter on [Data transformation 1](06_data_transformation_1.qmd), you learned that it's often safer to say which columns you *do* want rather than which you don't. This is also true here. If you select only the columns you need for your analysis, e.g., `select(ResponseId, age, gender)`, then identifying columns can't sneak into your shared data because you forgot to list them, or because a platform added a new column to its export. The disadvantage is that other researchers can't use the columns you left out.
+:::
+
+## Where the data should live
+
+In the chapter on [Structuring projects](09_structuring_projects.qmd#raw-data-is-read-only), you learned that raw data is read-only, that only code moves data, and that the removal of identifying information is the one exception to raw data being the earliest form of the data. Putting these together gives the following workflow:
+
+``` text
+private/                      <- secure storage, never shared
+├── qualtrics_export.csv      <- identifiable data, as downloaded
+├── anonymization.qmd         <- removes identifiers, writes data/raw/ files
+└── link_table.csv            <- which new ID belongs to which Prolific ID
+
+my_project/                   <- can be shared, e.g., on GitHub
+├── code/
+│   └── processing.qmd        <- reads data/raw/, writes data/processed/
+└── data/
+    ├── raw/                  <- anonymized data, written by anonymization.qmd
+    └── processed/
+```
+
+1.  **The identifiable data stays private.** Save the data export that contains identifying information, e.g., the original Qualtrics file, *outside* the project folder, in secure storage approved by your institution, e.g., an encrypted university drive. It must never be committed to git, uploaded to GitHub or the OSF, or emailed to people outside the research team. Keeping it outside the project folder is safer than relying on `.gitignore`, because the whole project folder is often copied, zipped, or synced to a cloud service.
+2.  **The anonymization code also stays private.** Write a short script, e.g., `anonymization.qmd`, that reads the identifiable data, removes or replaces the identifiers, and writes the result to the project's `data/raw/` folder. Keep this script next to the identifiable data rather than in the project, because it often contains identifying information itself, e.g., code that excludes a specific participant by their Prolific ID.
+3.  **The anonymized data is the project's raw data.** From the project's point of view, the anonymized file in `data/raw/` is the raw data: it's read-only, and `processing.qmd` reads it as usual. Because the processed data and all outputs are created from it, they are also free of the identifiers.
+
+The only step that others can't reproduce is the anonymization itself, which is unavoidable. Everything after it can be reproduced from the shared data.
+
+## Pseudonymous IDs
+
+Removing the Prolific IDs creates a new problem if they were the only way to link the data. Data from one study is often spread across several data frames of different shapes, e.g., demographics with one row per participant, a reaction time task with many rows per participant, and a follow-up survey that only some participants completed. To join them, as in the chapter on [Binding and joining](13_binding_and_joining.qmd), each needs a participant ID that's the same across all of them.
+
+The solution is to replace each Prolific ID with a new, random ID that means nothing outside your study, using one table that's applied to every data frame:
+
+1.  Collect every unique Prolific ID from all of the data frames.
+2.  Give each one a new random ID. This is the **link table**, because it links the new IDs to the Prolific IDs.
+3.  Join the link table to each data frame, and remove the Prolific IDs.
+4.  Save the link table privately, next to the identifiable data, and destroy it when you no longer need it.
+
+### Universally unique identifiers (UUIDs)
+
+Rather than inventing your own IDs, it's best to use a standard. Universally unique identifiers (UUIDs) are a widely used standard for random IDs ([RFC 9562](https://www.rfc-editor.org/rfc/rfc9562)). A version 4 UUID, such as 'f47ac10b-58cc-4372-a567-0e02b2c3d479', is made almost entirely of random numbers, so it contains no information about the person, the order they took part in, or the time they took part. There are so many possible UUIDs that two people will, in practice, never get the same one.
+
+In R, version 4 UUIDs are created with `uuid::UUIDgenerate()`. `use.time = FALSE` makes sure that the random version is used, and `n` sets how many to create.
+
+```{r}
+UUIDgenerate(n = 3, use.time = FALSE)
+```
+
+::: callout-warning
+## Why not just use row numbers, or scramble the Prolific IDs?
+
+Numbering participants 1, 2, 3 in the order they appear in the data seems simpler, but the order often reveals when people took part, which can identify them when combined with other information. Numbering each data frame separately also gives the same person different numbers in different data frames.
+
+Some researchers instead replace each Prolific ID with a *hash* of it, i.e., a scrambled version created by a function such as `digest::digest()`. This is not anonymous: anyone who knows a person's Prolific ID can hash it the same way and find their row. Random IDs and a link table that you later destroy don't have this problem.
+:::
+
+### An example
+
+Here are three simulated data frames from one study, all containing Prolific IDs: demographics (one row per participant), trial-level data from a reaction time task (several rows per participant), and a follow-up survey that only some participants completed.
+
+```{r}
+set.seed(42)
+
+prolific_ids <- fake_prolific_id(4)
+
+dat_demographics <- tibble(
+  PROLIFIC_PID = prolific_ids,
+  age = c(23, 48, 31, 35),
+  gender = c("female", "male", "non-binary", "female")
+)
+
+dat_task <- tibble(
+  PROLIFIC_PID = rep(prolific_ids, each = 3),
+  trial = rep(1:3, times = 4),
+  rt = round(rnorm(12, mean = 600, sd = 100))
+)
+
+dat_followup <- tibble(
+  PROLIFIC_PID = prolific_ids[c(1, 3)],
+  satisfaction = c(5, 3)
+)
+```
+
+First, create the link table from every unique Prolific ID in all three data frames. `bind_rows()` stacks the ID columns, `distinct()` keeps each ID once, and `UUIDgenerate()` creates one new ID for each row with `n = n()`.
+
+```{r}
+link_table <- bind_rows(dat_demographics %>% select(PROLIFIC_PID),
+                        dat_task %>% select(PROLIFIC_PID),
+                        dat_followup %>% select(PROLIFIC_PID)) %>%
+  distinct(PROLIFIC_PID) %>%
+  mutate(id = UUIDgenerate(n = n(), use.time = FALSE))
+
+link_table
+```
+
+Next, join the link table to each data frame and remove the Prolific IDs. Each Prolific ID appears once in the link table, so `relationship = "many-to-one"` makes the join throw an error if it doesn't, e.g., because of a duplicated row.
+
+```{r}
+dat_demographics_anonymized <- dat_demographics %>%
+  left_join(link_table, by = "PROLIFIC_PID", relationship = "many-to-one") %>%
+  select(id, everything(), -PROLIFIC_PID)
+
+dat_task_anonymized <- dat_task %>%
+  left_join(link_table, by = "PROLIFIC_PID", relationship = "many-to-one") %>%
+  select(id, everything(), -PROLIFIC_PID)
+
+dat_followup_anonymized <- dat_followup %>%
+  left_join(link_table, by = "PROLIFIC_PID", relationship = "many-to-one") %>%
+  select(id, everything(), -PROLIFIC_PID)
+
+dat_task_anonymized
+```
+
+The anonymized data frames can still be joined by 'id', even though the Prolific IDs are gone:
+
+```{r}
+dat_demographics_anonymized %>%
+  left_join(dat_followup_anonymized, by = "id")
+```
+
+### Saving and destroying the link table
+
+`UUIDgenerate()` creates different IDs every time it's run. If your anonymization script created a new link table each time it was run, the IDs in your shared data would change too. Instead, create the link table once, save it with the identifiable data, and read the saved version on later runs. In `anonymization.qmd`, this looks something like this:
+
+```{r}
+#| eval: false
+link_table_path <- "link_table.csv" # in the private folder, never in the project
+
+if (file.exists(link_table_path)) {
+  link_table <- read_csv(link_table_path)
+} else {
+  link_table <- bind_rows(dat_demographics %>% select(PROLIFIC_PID),
+                          dat_task %>% select(PROLIFIC_PID),
+                          dat_followup %>% select(PROLIFIC_PID)) %>%
+    distinct(PROLIFIC_PID) %>%
+    mutate(id = UUIDgenerate(n = n(), use.time = FALSE))
+
+  write_csv(link_table, link_table_path)
+}
+```
+
+If more data is collected later, add rows to the saved link table for the new Prolific IDs only, so that existing participants keep their IDs.
+
+While the link table exists, your data is pseudonymous, not anonymous: you can still link it back to the participants' Prolific accounts. This is sometimes needed for a while, e.g., to pay bonuses, to invite participants to a follow-up, or to delete a participant's data if they withdraw their consent. Once these are done, delete the link table and the identifiable export. After that, nobody can link the IDs back to the participants, and if no other identifying information remains in the data, it's anonymous.
+
+When you're allowed to delete them, and when you must, is decided by your ethics approval, your consent form, and your institution's data management rules, so check these first. Note that participants can only withdraw their data while you can still find it: consent forms often say so, e.g., "you can withdraw your data until it's anonymized on \[date\]".
+
+## Key functions
+
+The main functions covered in this chapter:
+
+| Function | Package | What it does |
+|------------------------------|-------------|-----------------------------|
+| `select(-any_of())` | {dplyr} | Removes the columns named in a vector, ignoring names that aren't in the data frame. |
+| `str_detect()` | {stringr} | Checks whether strings match a pattern, e.g., to search columns for values that look like email addresses. |
+| `distinct()` | {dplyr} | Keeps only unique rows, e.g., each Prolific ID once. |
+| `UUIDgenerate(use.time = FALSE)` | {uuid} | Creates random version 4 UUIDs, for use as pseudonymous IDs. |
+| `left_join(relationship = "many-to-one")` | {dplyr} | Adds the new IDs to a data frame, with an error if an ID appears more than once in the link table. |
+
+## Exercises
+
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
+
+### Check your understanding
+
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
+
+1.  Prolific IDs are random codes, so they're safe to include in public data. `r webexercises::torf(FALSE)`
+2.  Qualtrics records participants' IP addresses unless you tell it not to. `r webexercises::torf(TRUE)`
+3.  You replace Prolific IDs with random IDs and save the link table on your encrypted university drive. Is the data anonymous or pseudonymous? `r webexercises::mcq(c("anonymous", answer = "pseudonymous"))`
+4.  Where should the original data export that contains Prolific IDs be stored? `r webexercises::mcq(c("data/raw/", "data/processed/", "data/raw/, but listed in .gitignore", answer = "outside the project, in secure storage"))`
+5.  `select(-any_of(c("IPadress")))` throws an error if the data frame has no column with that name. `r webexercises::torf(FALSE)`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  False. A participant has the same Prolific ID in every study they complete, so Prolific IDs can be used to link public datasets and build a profile of a person. They can also be looked up by Prolific and by the researchers who ran the study. Prolific's guidance is to remove them before sharing data.
+2.  True. Qualtrics records IP addresses and approximate locations unless *Anonymize responses* is turned on before data collection.
+3.  Pseudonymous. As long as the link table exists, the data can be linked back to the participants. It only becomes anonymous once the link table is destroyed, and only if no other identifying information remains.
+4.  Outside the project, in secure storage. The project's `data/raw/` folder contains the anonymized version. Relying on `.gitignore` is risky because the whole project folder is often copied, zipped, or synced.
+5.  False. `any_of()` ignores names that aren't in the data frame, which means a typo silently removes nothing. Always check the anonymized data again.
+:::
+
+Why isn't it enough to remove the Prolific IDs from the demographics data alone, if the same study also has trial-level task data and a follow-up survey?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+Every data frame that's shared must be free of the Prolific IDs, not just one of them. If any shared data frame still contains them, the participants can be identified, and the data can be linked to other public datasets. Creating one link table from all of the data frames and applying it to each one removes the Prolific IDs from all of them while keeping a common ID for joining.
+:::
+
+### Practice
+
+In your local copy of this chapter's .qmd file, complete the task below.
+
+The code below simulates a Qualtrics export and trial-level data from a reaction time task, from a study run on Prolific.
+
+```{r}
+#| eval: false
+set.seed(123)
+
+prolific_ids_practice <- fake_prolific_id(5)
+
+dat_practice_survey <- tibble(
+  ResponseId = paste0("R_", 1:5),
+  IPAddress = paste0("198.51.100.", sample(1:255, 5)),
+  LocationLatitude = round(runif(5, 45, 55), 2),
+  LocationLongitude = round(runif(5, 5, 15), 2),
+  RecipientEmail = NA,
+  PROLIFIC_PID = prolific_ids_practice,
+  age = sample(18:65, 5),
+  feedback = c("none", NA, "My name is Alex Example, contact me for more info", NA, "fun")
+)
+
+dat_practice_task <- tibble(
+  PROLIFIC_PID = rep(prolific_ids_practice[1:4], each = 2),
+  trial = rep(1:2, times = 4),
+  rt = round(rnorm(8, mean = 550, sd = 80))
+)
+```
+
+1.  Check both data frames for personal data, by looking at the column names and searching their contents.
+2.  Create a link table that gives every participant in either data frame a random UUID.
+3.  Create anonymized versions of both data frames that contain the new 'id' column and no personal data.
+4.  Check that the anonymized data frames can be joined by 'id', and that the checks from step 1 no longer find anything.
+
+::: {.callout-tip collapse="true" title="Hints"}
+-   Not every participant in the survey has task data, so build the link table from the Prolific IDs in both data frames with `bind_rows()` and `distinct()`.
+-   The 'feedback' column contains a name. Either remove the column, or replace only that response with `mutate()` and `case_when()`.
+-   'RecipientEmail' is empty here, but it should still be removed: in other exports it won't be.
+:::
