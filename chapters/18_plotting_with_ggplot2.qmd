@@ -17,7 +17,7 @@ dir.create("plots", showWarnings = FALSE)
 
 ```
 
-This chapter is a brief introduction to the mechanics of making plots in R with the {ggplot2} package: how a plot is built, how to make the most common types of plots, and how to adjust and save them. The previous chapter, [Principles of data visualization](16_principles_of_visualization.qmd), covers what makes a plot good, and which kind of plot to choose. This chapter covers how to make it.
+This chapter is a brief introduction to the mechanics of making plots in R with the {ggplot2} package: how a plot is built, how to make the most common types of plots, and how to adjust and save them. The previous chapter, [Principles of data visualization](17_principles_of_visualization.qmd), covers what makes a plot good, and which kind of plot to choose. This chapter covers how to make it.
 
 {ggplot2} is a large package, and this chapter only covers its essentials. The following free online books cover it in much more detail:
 
@@ -280,7 +280,7 @@ ggplot(data = dat_likert,
 
 ### Palettes for color vision deficiency
 
-The [Principles of data visualization](16_principles_of_visualization.qmd#color-palettes-and-color-vision-deficiency) chapter explains why palettes such as viridis are a better choice than rainbow palettes or {ggplot2}'s default palette, and why color shouldn't be the only way groups can be told apart. This section shows how to use them.
+The [Principles of data visualization](17_principles_of_visualization.qmd#color-palettes-and-color-vision-deficiency) chapter explains why palettes such as viridis are a better choice than rainbow palettes or {ggplot2}'s default palette, and why color shouldn't be the only way groups can be told apart. This section shows how to use them.
 
 The viridis palettes are built into {ggplot2}. Use `scale_color_viridis_c()` (or `scale_fill_viridis_c()`) for continuous variables:
 
@@ -572,7 +572,7 @@ ggplot(data = dat_amp, aes(x = gender, y = amp_score)) +
 
 ### Bar plots of means
 
-Bar plots of means are very common, but they are a poor way to display continuous data. They hide the distribution of the data and the sample size, and the bar implies that the data starts at zero and fills the whole bar, which is often not the case [@weissgerber2015] (see the [Principles of data visualization](16_principles_of_visualization.qmd#show-the-data-not-just-the-means) chapter). They are sometimes unavoidable, e.g., when a journal or supervisor insists, so here's how to make them.
+Bar plots of means are very common, but they are a poor way to display continuous data. They hide the distribution of the data and the sample size, and the bar implies that the data starts at zero and fills the whole bar, which is often not the case [@weissgerber2015] (see the [Principles of data visualization](17_principles_of_visualization.qmd#show-the-data-not-just-the-means) chapter). They are sometimes unavoidable, e.g., when a journal or supervisor insists, so here's how to make them.
 
 The summary statistics can either be calculated before plotting:
 
@@ -911,7 +911,7 @@ If your data is in long format, with one row per participant per time point, use
 
 ### Correlation heatmaps
 
-A heatmap shows a matrix of values as a grid of colored tiles, using `geom_tile()`. It is a common way to show the correlations between many variables, e.g., the items of a questionnaire. Use a diverging palette that is centered on zero, so that positive and negative correlations have different colors and correlations near zero are pale (see the [Principles of data visualization](16_principles_of_visualization.qmd#use-color-with-purpose) chapter). Adding the values as text makes them easy to read precisely.
+A heatmap shows a matrix of values as a grid of colored tiles, using `geom_tile()`. It is a common way to show the correlations between many variables, e.g., the items of a questionnaire. Use a diverging palette that is centered on zero, so that positive and negative correlations have different colors and correlations near zero are pale (see the [Principles of data visualization](17_principles_of_visualization.qmd#use-color-with-purpose) chapter). Adding the values as text makes them easy to read precisely.
 
 The data needs to be in long format, with one row per pair of variables:
 
@@ -1005,7 +1005,7 @@ ggplot(dat_likert, aes(x = self_esteem, y = depression)) +
   theme_classic()
 ```
 
-Text labels can also replace a legend, by labeling each line at its end (see the [Principles of data visualization](16_principles_of_visualization.qmd#guide-the-reader) chapter). Filter the data to the last x value, add the labels with `geom_text()`, and widen the x axis with `coord_cartesian(clip = "off")` so that the labels aren't cut off:
+Text labels can also replace a legend, by labeling each line at its end (see the [Principles of data visualization](17_principles_of_visualization.qmd#guide-the-reader) chapter). Filter the data to the last x value, add the labels with `geom_text()`, and widen the x axis with `coord_cartesian(clip = "off")` so that the labels aren't cut off:
 
 ```{r}
 dat_amp_age <- dat_amp %>%
@@ -1130,7 +1130,7 @@ plot_errorbar <- ggplot(dat_coefficients, aes(x = estimate, y = term)) +
 plot_linerange + plot_pointrange + plot_errorbar
 ```
 
-The {parameters} package's `parameters()` function, covered in the [Reporting](18_reporting.qmd) chapter, creates this data frame for many types of model, and its output can be plotted directly with `plot()`.
+The {parameters} package's `parameters()` function, covered in the [Reporting](19_reporting.qmd) chapter, creates this data frame for many types of model, and its output can be plotted directly with `plot()`.
 
 Forest plots, which show the effect size and confidence interval of each study in a meta-analysis along with the pooled estimate, are a special case of coefficient plots. They can be built in the same way, but meta-analysis packages such as [{metafor}](https://www.metafor-project.org/) (`forest()`) and {meta} make complete, publication-ready forest plots directly from the fitted model, and are usually the better choice.
 
@@ -1175,7 +1175,7 @@ The {ggeffects} package and, for Bayesian models fitted with {brms}, the `condit
 
 ### Assumption checks
 
-The assumptions of a model, e.g., that its residuals are normally distributed, are often checked visually, with plots such as Q-Q plots, or plots of residuals against fitted values. You could make these with {ggplot2}, but helper functions do it for you, for many types of model. For example, `check_model()` from the {performance} package plots the most important checks for a model at once. See the [Assumption checks](18_reporting.qmd#assumption-checks) section of the Reporting chapter.
+The assumptions of a model, e.g., that its residuals are normally distributed, are often checked visually, with plots such as Q-Q plots, or plots of residuals against fitted values. You could make these with {ggplot2}, but helper functions do it for you, for many types of model. For example, `check_model()` from the {performance} package plots the most important checks for a model at once. See the [Assumption checks](19_reporting.qmd#assumption-checks) section of the Reporting chapter.
 
 ## Overriding aesthetics and data
 

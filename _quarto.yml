@@ -35,15 +35,16 @@ book:
       - chapters/11_strings_and_factors.qmd
       - chapters/12_reshaping_and_pivots.qmd
       - chapters/13_binding_and_joining.qmd
-      - chapters/14_data_privacy.qmd
-      - chapters/15_data_sharing_and_version_control.qmd
+      - chapters/14_checking_data_processing.qmd
+      - chapters/15_data_privacy.qmd
+      - chapters/16_data_sharing_and_version_control.qmd
       
       
     - part: "Part III: Visualization and reporting"
       chapters:
-      - chapters/16_principles_of_visualization.qmd
-      - chapters/17_plotting_with_ggplot2.qmd
-      - chapters/18_reporting.qmd
+      - chapters/17_principles_of_visualization.qmd
+      - chapters/18_plotting_with_ggplot2.qmd
+      - chapters/19_reporting.qmd
       
     - references.qmd
       

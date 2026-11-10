@@ -12,7 +12,7 @@ options(scipen = 999)
 
 <!-- TODO: chapter introduction -->
 
-Before sharing any data, make sure it passes the checks in the chapter on [Data privacy](14_data_privacy.qmd).
+Before sharing any data, make sure it passes the checks in the chapter on [Data privacy](15_data_privacy.qmd).
 
 ## Version control with Git and GitHub
 
@@ -151,7 +151,7 @@ Never delete or edit the contents of the `.git` folder by hand: it contains the 
 
 #### Using .gitignore for private data
 
-In the chapter on [Data privacy](14_data_privacy.qmd), the recommendation was to keep identifiable data *outside* the project folder altogether. That is still the safest option. If you do need to keep private files inside the project, e.g., because a collaborator expects a particular folder layout, put them in one folder and ignore the whole folder:
+In the chapter on [Data privacy](15_data_privacy.qmd), the recommendation was to keep identifiable data *outside* the project folder altogether. That is still the safest option. If you do need to keep private files inside the project, e.g., because a collaborator expects a particular folder layout, put them in one folder and ignore the whole folder:
 
 ``` text
 data/private/
@@ -240,7 +240,7 @@ Zenodo reads the title, authors, and other details for the record from the proje
 Two things to be aware of:
 
 -   **Zenodo pages aren't nice to look at.** A Zenodo record is a title, a list of files, and a download button, so you can't browse the project the way you can on GitHub. That's fine: GitHub is where people look at your project, and Zenodo is where it's archived and cited. Link to each from the other, e.g., by adding the Zenodo DOI to your README.
--   **Zenodo records are permanent.** Once a version is published, its files can't be changed or deleted, except in exceptional cases. This is what makes Zenodo good for science, but it also means that a mistake can't be undone, unlike on GitHub (see [If you commit something by mistake](#if-you-commit-something-by-mistake)). Check that the repository contains nothing private, as in the chapter on [Data privacy](14_data_privacy.qmd), and that it has a licence, *before* you create a release.
+-   **Zenodo records are permanent.** Once a version is published, its files can't be changed or deleted, except in exceptional cases. This is what makes Zenodo good for science, but it also means that a mistake can't be undone, unlike on GitHub (see [If you commit something by mistake](#if-you-commit-something-by-mistake)). Check that the repository contains nothing private, as in the chapter on [Data privacy](15_data_privacy.qmd), and that it has a licence, *before* you create a release.
 
 ## Licensing
 
@@ -252,7 +252,7 @@ Without a licence, the honest answer is that nobody knows. In most countries, co
 
 A **licence** is a short, standard statement of what others may do with your work, and under which conditions. It solves the problem in advance: nobody needs to ask, and everyone knows where they stand. Sharing work without a licence is only half sharing it.
 
-Licences are for work that you are sharing publicly. They give others permission to reuse what you've shared, so they only make sense for things that are safe to share in the first place. A licence doesn't make data safe to share: first check it as in the chapter on [Data privacy](14_data_privacy.qmd). Data that can't be shared publicly, e.g., identifiable data, is instead shared under a *data use agreement* between institutions, which is a different thing.
+Licences are for work that you are sharing publicly. They give others permission to reuse what you've shared, so they only make sense for things that are safe to share in the first place. A licence doesn't make data safe to share: first check it as in the chapter on [Data privacy](15_data_privacy.qmd). Data that can't be shared publicly, e.g., identifiable data, is instead shared under a *data use agreement* between institutions, which is a different thing.
 
 ### Different licences for different things
 

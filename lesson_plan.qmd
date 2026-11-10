@@ -103,8 +103,8 @@ In class:
 Before class:
 
 - [Chapter 13: Binding and joining](chapters/13_binding_and_joining.qmd)
-- [Chapter 14: Data privacy](chapters/14_data_privacy.qmd)
-- [Chapter 15: Data sharing and version control](chapters/15_data_sharing_and_version_control.qmd)
+- [Chapter 15: Data privacy](chapters/15_data_privacy.qmd)
+- [Chapter 16: Data sharing and version control](chapters/16_data_sharing_and_version_control.qmd)
 
 In class:
 
@@ -122,7 +122,7 @@ In class:
 
 Before class:
 
-- [Chapter 16: Principles of data visualization](chapters/16_principles_of_visualization.qmd)
+- [Chapter 17: Principles of data visualization](chapters/17_principles_of_visualization.qmd)
 - Dattani, S. (2025). [Saloni's guide to data visualization](https://www.scientificdiscovery.dev/p/salonis-guide-to-data-visualization).
 - [Saloni's data visualizations](https://ourworldindata.org/team/saloni-dattani) while working at *Our World In Data*.
 
@@ -139,8 +139,8 @@ In class:
 
 Before class:
 
-- [Chapter 17: Plotting data with ggplot2](chapters/17_plotting_with_ggplot2.qmd)
-- [Chapter 18: Reporting](chapters/18_reporting.qmd)
+- [Chapter 18: Plotting data with ggplot2](chapters/18_plotting_with_ggplot2.qmd)
+- [Chapter 19: Reporting](chapters/19_reporting.qmd)
 
 In class:
 
@@ -153,10 +153,12 @@ In class:
 
 Before class:
 
+- [Chapter 14: Checking your data processing](chapters/14_checking_data_processing.qmd)
 - ['Everything is regression'](https://simulations.tidyver.se/chapters/11_everything_is_regression.html), from the companion book *Understanding Statistics Through Monte Carlo Simulations*. You can read it without first learning how to simulate data. Its exercises require simulation skills, so skip them for this course.
 
 In class:
 
+- Questions about checking data processing
 - Questions about the linear model
 - Questions about the assignments
 

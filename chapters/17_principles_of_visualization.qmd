@@ -14,7 +14,7 @@ options(scipen = 999)
 
 ```
 
-Data visualization is a large field. It has its own research literature on how people perceive and understand plots, and several excellent book-length treatments of how to make good ones. This chapter is not a substitute for them. It is a brief tour of the principles that matter most when you plot data from your own research, summarized from four sources that are well worth reading in full. The next chapter, [Plotting data with ggplot2](17_plotting_with_ggplot2.qmd), covers how to make plots in R.
+Data visualization is a large field. It has its own research literature on how people perceive and understand plots, and several excellent book-length treatments of how to make good ones. This chapter is not a substitute for them. It is a brief tour of the principles that matter most when you plot data from your own research, summarized from four sources that are well worth reading in full. The next chapter, [Plotting data with ggplot2](18_plotting_with_ggplot2.qmd), covers how to make plots in R.
 
 ::: {.callout-note title="The bad plots in this chapter are based on real ones"}
 Many of the examples of bad plots in this chapter recreate, with made-up data, real plots that appeared in published articles, in the news, and elsewhere. The originals aren't shown because of licensing complications. So if some of the examples seem absurd, bear in mind that most of them are inspired by real life.
@@ -356,7 +356,7 @@ Plots of means with error bars, especially bar plots of means, hide the distribu
 Two qualifications:
 
 -   **The problem is plotting means alone, not bars as such.** A point with error bars hides the distribution of the data just as much as a bar does. And bars are a good choice for other kinds of data, e.g., counts or proportions, where the bar's length is the quantity of interest.
--   **Showing every data point isn't always the best choice.** With large samples, thousands of overlapping points can become an uninformative blob, and a summary of the distribution, such as a box plot, violin plot, or density plot, is clearer. With small samples, individual data points can make participants identifiable, e.g., the only participant in a group with an extreme score. If the plot will be shared publicly, consider whether showing individual points is appropriate (see the [Data privacy](14_data_privacy.qmd) chapter).
+-   **Showing every data point isn't always the best choice.** With large samples, thousands of overlapping points can become an uninformative blob, and a summary of the distribution, such as a box plot, violin plot, or density plot, is clearer. With small samples, individual data points can make participants identifiable, e.g., the only participant in a group with an extreme score. If the plot will be shared publicly, consider whether showing individual points is appropriate (see the [Data privacy](15_data_privacy.qmd) chapter).
 
 In the example below, the two groups have similar means and standard errors, so their bar plots look almost identical. But the raw data shows that the intervention group's scores are bimodal: the intervention seems to have helped some participants a lot and others not at all, which is a very different finding.
 

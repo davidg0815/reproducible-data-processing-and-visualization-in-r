@@ -640,7 +640,7 @@ For example, if you specify a negative filter `dat %>% filter(gender != "non-bin
 
 However, there can be cases where you specifically do not want some rows or want to retain anything other than a given value. Protecting participant privacy is one of them.
 
-Some rows of the 'dat_demographics_renamed' data frame contain "prolific ID" values, which could be linked back to the individual's Prolific.com account where they completed the study, and therefore risk exposing identifying information. If this data was shared with other researchers or publicly, this could violate the informed consent agreement and/or local data privacy laws. (Note that the prolific IDs included in this data frame are made up.) This is discussed in more detail in the chapter on [Data privacy](14_data_privacy.qmd).
+Some rows of the 'dat_demographics_renamed' data frame contain "prolific ID" values, which could be linked back to the individual's Prolific.com account where they completed the study, and therefore risk exposing identifying information. If this data was shared with other researchers or publicly, this could violate the informed consent agreement and/or local data privacy laws. (Note that the prolific IDs included in this data frame are made up.) This is discussed in more detail in the chapter on [Data privacy](15_data_privacy.qmd).
 
 In this case, you would likely need to remove all rows referring to Prolific ID with a negative filter:
 
@@ -651,7 +651,7 @@ dat_demographics_anonymized <- dat_demographics_renamed %>%
 dat_demographics_anonymized
 ```
 
-Note that the original 'data_demographics_raw_messy.csv' data file we originally read in to R still contains the Prolific ID codes! Again, see the [Data privacy](14_data_privacy.qmd) chapter for how you would deal with this more thoroughly in your own projects.
+Note that the original 'data_demographics_raw_messy.csv' data file we originally read in to R still contains the Prolific ID codes! Again, see the [Data privacy](15_data_privacy.qmd) chapter for how you would deal with this more thoroughly in your own projects.
 
 ## Creating and modifying columns with `dplyr::mutate()`
 

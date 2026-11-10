@@ -478,7 +478,7 @@ The order matters because many functions use it. By default, character variables
 Factor levels control:
 
 -   The order of rows in tables made with `count()` and `summarize()`.
--   The order of categories in plots, e.g., the bars of a bar chart. See the [Plotting data with ggplot2](17_plotting_with_ggplot2.qmd) chapter.
+-   The order of categories in plots, e.g., the bars of a bar chart. See the [Plotting data with ggplot2](18_plotting_with_ggplot2.qmd) chapter.
 -   The reference category in regression models, i.e., which group the others are compared to. See the ['Everything is regression' chapter](https://simulations.tidyver.se/chapters/11_everything_is_regression.html) of the companion book on simulation, which shows how a two-group comparison is coded as 0 and 1 in a regression.
 
 ```{r}
@@ -575,7 +575,7 @@ dat_scores %>%
   summarize(mean_score = mean(score))
 ```
 
-This is most useful for plots, where ordering the categories by their values makes them much easier to compare than alphabetical order (see the [Plotting data with ggplot2](17_plotting_with_ggplot2.qmd) chapter). Be aware that the order is then determined by the data, so it can change when the data changes. When the categories have a meaningful order of their own, e.g., timepoints, set it explicitly with `fct()` or `fct_relevel()` instead.
+This is most useful for plots, where ordering the categories by their values makes them much easier to compare than alphabetical order (see the [Plotting data with ggplot2](18_plotting_with_ggplot2.qmd) chapter). Be aware that the order is then determined by the data, so it can change when the data changes. When the categories have a meaningful order of their own, e.g., timepoints, set it explicitly with `fct()` or `fct_relevel()` instead.
 
 ### Changing the values of levels
 
