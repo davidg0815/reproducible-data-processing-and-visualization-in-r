@@ -852,35 +852,50 @@ ggplot(data = dat_amp, aes(x = mean_self_report, y = amp_score)) +
 
 Paired data, e.g., each participant's scores before and after an intervention, are often plotted as two bars or two box plots, which hides how each participant changed. Plotting each participant's score at one time point against their score at the other shows both the individual and the overall change. These plots are known as Brinley plots, after Brinley [-@brinley1965], who used them to compare older and younger adults' reaction times, and modified versions are useful for showing change in clinical studies [@blampied2017]. Wilke recommends them for paired data ([Paired data](https://clauswilke.com/dataviz/visualizing-associations.html#associations-paired-data)).
 
-A diagonal line, with a slope of 1 and an intercept of 0, shows where participants would be if their scores didn't change. Points above the line increased, and points below it decreased. `coord_equal()` and identical axis limits make sure that the line is at 45°, so that the distance above or below it can be read the same way everywhere. The data needs one row per participant, with a column for each time point (wide data):
+A diagonal line, with a slope of 1 and an intercept of 0, shows where participants would be if their scores didn't change. Points above the line increased, points below it decreased, and points on it didn't change. `coord_equal()` and identical axis limits make sure that the line is at 45°, so that the distance above or below it can be read the same way everywhere. The data needs one row per participant, with a column for each time point (wide data).
+
+The example below uses simulated wellbeing scores (0 to 100) before and after an intervention. On average, wellbeing increased, as the large cross, which marks the means, shows. But the plot also shows what the means alone would hide: most participants improved, by very different amounts, some didn't change at all, and a few got worse.
 
 ```{r}
 #| fig-width: 5.5
 #| fig-height: 5.5
-dat_empathy_wide <- dat_empathy %>% 
-  select(unique_id, timepoint, score) %>%
-  pivot_wider(names_from = timepoint, 
-              values_from = score) %>% 
-  # keep only participants with scores at both time points
-  drop_na(Pre, Post) %>%
-  mutate(change = case_when(Post > Pre ~ "Increased", 
-                            Post < Pre ~ "Decreased", 
-                            Post == Pre ~ "No change"))
+set.seed(42)
 
-ggplot(dat_empathy_wide, aes(x = Pre, y = Post)) +
+dat_prepost <- tibble(id = 1:80,
+                      pre = round(rnorm(80, mean = 50, sd = 13)),
+                      # 55 participants who improved, 15 who didn't change, and 10 who got worse
+                      change = c(round(rnorm(55, mean = 14, sd = 7)), 
+                                 rep(0, 15), 
+                                 round(rnorm(10, mean = -8, sd = 4)))) %>%
+  mutate(post = pre + change,
+         across(c(pre, post), ~ pmin(pmax(.x, 0), 100)), # keep scores within the 0-100 scale
+         change = case_when(post > pre ~ "Increased", 
+                            post < pre ~ "Decreased", 
+                            post == pre ~ "No change"),
+         change = factor(change, levels = c("Increased", "No change", "Decreased")))
+
+dat_prepost_means <- dat_prepost %>%
+  summarize(pre = mean(pre), 
+            post = mean(post))
+
+ggplot(dat_prepost, aes(x = pre, y = post)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed") + # no change line
-  geom_point(aes(color = change), alpha = 0.7) +
-  annotate(geom = "text", x = 25, y = 95, label = "Increased", hjust = 0, color = "#0072B2") +
-  annotate(geom = "text", x = 95, y = 25, label = "Decreased", hjust = 1, color = "#D55E00") +
-  scale_color_manual(values = c(Increased = "#0072B2", Decreased = "#D55E00", `No change` = "grey50")) +
-  scale_x_continuous(limits = c(15, 105)) + 
-  scale_y_continuous(limits = c(15, 105)) + # the same limits on both axes
+  geom_point(aes(color = change), alpha = 0.7, size = 2) +
+  geom_point(data = dat_prepost_means, shape = 4, size = 6, stroke = 2) + # the means, as a large cross
+  annotate(geom = "text", x = 5, y = 95, label = "Increased", hjust = 0, color = "#0072B2") +
+  annotate(geom = "text", x = 95, y = 5, label = "Decreased", hjust = 1, color = "#D55E00") +
+  scale_color_manual(values = c(Increased = "#0072B2", Decreased = "#D55E00", `No change` = "grey40")) +
+  scale_x_continuous(limits = c(0, 100)) + 
+  scale_y_continuous(limits = c(0, 100)) + # the same limits on both axes
   coord_equal() + # one unit is the same length on both axes
-  guides(color = "none") +
-  labs(x = "IRI score before the intervention (pre)", 
-       y = "IRI score after the intervention (post)") + 
-  theme_classic()
+  labs(x = "Wellbeing before the intervention (pre)", 
+       y = "Wellbeing after the intervention (post)",
+       color = NULL) + 
+  theme_classic() +
+  theme(legend.position = "bottom")
 ```
+
+If your data is in long format, with one row per participant per time point, use `pivot_wider()` to reshape it first (see the [Reshaping and pivots](12_reshaping_and_pivots.qmd) chapter).
 
 ### Correlation heatmaps
 
