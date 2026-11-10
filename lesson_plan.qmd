@@ -123,13 +123,13 @@ In class:
 Before class:
 
 - [Chapter 16: Principles of data visualization](chapters/16_principles_of_visualization.qmd)
-- Dattani, S. (2025) Saloni's guide to data visualization. https://www.scientificdiscovery.dev/p/salonis-guide-to-data-visualization
-- Saloni's data visualizations while working at *Our World In Data*: https://ourworldindata.org/team/saloni-dattani
+- Dattani, S. (2025). [Saloni's guide to data visualization](https://www.scientificdiscovery.dev/p/salonis-guide-to-data-visualization).
+- [Saloni's data visualizations](https://ourworldindata.org/team/saloni-dattani) while working at *Our World In Data*.
 
 In class:
 
 - Lecture: Principles of visualization
-- In this course, this is often a guest lecture by Dr. Saloni Dattani.
+- In this session, this is often a guest lecture by Dr. Saloni Dattani.
   - Founding editor of [Works in Progress](https://worksinprogress.co/our-authors/saloni-dattani/)
   - See her TED talk [here](https://www.youtube.com/watch?v=6eYEi9tN6Og)
   - Her podcast, [Hard Drugs](https://harddrugs.worksinprogress.co/), is a show about "medical innovation, how to speed it up, how to scale it up, and how to make sure lifesaving tools reach the people who need them the most". 
