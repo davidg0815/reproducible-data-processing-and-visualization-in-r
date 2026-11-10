@@ -479,7 +479,7 @@ Factor levels control:
 
 -   The order of rows in tables made with `count()` and `summarize()`.
 -   The order of categories in plots, e.g., the bars of a bar chart. See the [Visualization](16_visualization.qmd) chapter.
--   The reference category in regression models, i.e., which group the others are compared to. See [The linear model](18_the_linear_model.qmd) chapter.
+-   The reference category in regression models, i.e., which group the others are compared to. See the ['Everything is regression' chapter](https://simulations.tidyver.se/chapters/11_everything_is_regression.html) of the companion book on simulation, which shows how a two-group comparison is coded as 0 and 1 in a regression.
 
 ```{r}
 dat_timepoints <- tribble(

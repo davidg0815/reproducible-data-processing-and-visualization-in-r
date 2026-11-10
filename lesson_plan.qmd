@@ -152,13 +152,12 @@ In class:
 
 Before class:
 
-- [Chapter 18: The linear model](chapters/18_the_linear_model.qmd)
+- ['Everything is regression'](https://simulations.tidyver.se/chapters/11_everything_is_regression.html), from the companion book *Understanding Statistics Through Monte Carlo Simulations*. You can read it without first learning how to simulate data. Its exercises require simulation skills, so skip them for this course.
 
 In class:
 
 - Questions about the linear model
 - Questions about the assignments
-<!-- - In-class exercises - [click to download .qmd](exercises/18_the_linear_model_in_class_exercises.qmd) -->
 
 ### Week 13 + 14
 

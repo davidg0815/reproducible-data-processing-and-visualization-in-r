@@ -35,6 +35,12 @@ library(kableExtra)
 
 ## Inference tests
 
+::: {.callout-note title="Understanding the models you report"}
+This chapter shows how to report results from models such as `lm(wt ~ 1 + am + mpg, data = mtcars)` automatically. In this formula, the outcome is to the left of `~`, the predictors are to the right, and `1` is the intercept.
+
+The ease of automated reporting has to be strongly balanced against thorough understanding of the models themselves. To learn what a linear model is, and how correlations, *t*-tests, non-parametric tests, meta-analyses, multi-level models and more are all linear models in disguise, see the ['Everything is regression' chapter](https://simulations.tidyver.se/chapters/11_everything_is_regression.html) of the companion book, *Understanding Statistics Through Monte Carlo Simulations*. You can read that chapter without first learning how to simulate data.
+:::
+
 ### Regressions
 
 ```{r}
