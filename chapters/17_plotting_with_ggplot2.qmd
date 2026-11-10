@@ -854,7 +854,7 @@ Paired data, e.g., each participant's scores before and after an intervention, a
 
 A diagonal line, with a slope of 1 and an intercept of 0, shows where participants would be if their scores didn't change. Points above the line increased, points below it decreased, and points on it didn't change. `coord_equal()` and identical axis limits make sure that the line is at 45°, so that the distance above or below it can be read the same way everywhere. The data needs one row per participant, with a column for each time point (wide data).
 
-The example below uses simulated wellbeing scores (0 to 100) before and after an intervention. On average, wellbeing increased, as the large cross, which marks the means, shows. But the plot also shows what the means alone would hide: most participants improved, by very different amounts, some didn't change at all, and a few got worse.
+The example below uses simulated wellbeing scores (0 to 100) before and after an intervention. On average, wellbeing increased: the black point marks the mean before and after the intervention, and its horizontal and vertical bars show the 95% confidence intervals of the pre and post means. But the plot also shows what the means alone would hide: most participants improved, by very different amounts, some didn't change at all, and a few got worse.
 
 ```{r}
 #| fig-width: 5.5
@@ -874,14 +874,26 @@ dat_prepost <- tibble(id = 1:80,
                             post == pre ~ "No change"),
          change = factor(change, levels = c("Increased", "No change", "Decreased")))
 
+# means and 95% confidence intervals at each time point
 dat_prepost_means <- dat_prepost %>%
-  summarize(pre = mean(pre), 
-            post = mean(post))
+  summarize(across(c(pre, post), 
+                   list(mean = mean, 
+                        ci_lower = ~ mean_cl_normal(.x)$ymin, 
+                        ci_upper = ~ mean_cl_normal(.x)$ymax)))
 
 ggplot(dat_prepost, aes(x = pre, y = post)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed") + # no change line
   geom_point(aes(color = change), alpha = 0.7, size = 2) +
-  geom_point(data = dat_prepost_means, shape = 4, size = 6, stroke = 2) + # the means, as a large cross
+  # the means, with horizontal bars for the pre CI and vertical bars for the post CI
+  geom_errorbar(data = dat_prepost_means, 
+                aes(x = pre_mean, y = post_mean, xmin = pre_ci_lower, xmax = pre_ci_upper), 
+                width = 3, linewidth = 1, inherit.aes = FALSE) +
+  geom_errorbar(data = dat_prepost_means, 
+                aes(x = pre_mean, y = post_mean, ymin = post_ci_lower, ymax = post_ci_upper), 
+                width = 3, linewidth = 1, inherit.aes = FALSE) +
+  geom_point(data = dat_prepost_means, 
+             aes(x = pre_mean, y = post_mean), 
+             size = 3, inherit.aes = FALSE) +
   annotate(geom = "text", x = 5, y = 95, label = "Increased", hjust = 0, color = "#0072B2") +
   annotate(geom = "text", x = 95, y = 5, label = "Decreased", hjust = 1, color = "#D55E00") +
   scale_color_manual(values = c(Increased = "#0072B2", Decreased = "#D55E00", `No change` = "grey40")) +
