@@ -1,4 +1,4 @@
-# Structuring projects <span class="badge badge-draft2">✎ Rough draft</span>
+# Structuring projects
 
 ```{r}
 #| include: false

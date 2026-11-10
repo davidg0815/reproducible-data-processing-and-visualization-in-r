@@ -1,4 +1,4 @@
-# Data sharing and version control <span class="badge badge-draft2">✎ Rough draft</span>
+# Data sharing and version control
 
 ```{r}
 #| include: false

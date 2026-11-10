@@ -2,6 +2,29 @@
 
 This Open Source eBook provides materials for the semester-long Master's seminar course "Reproducible Data Processing and Visualization in R" that I teach at the University of Bern's Institute of Psychology.
 
+It is meant to supplement, not replace, what you learn in your other courses. Research methods courses teach you how to design studies that collect the right data, and statistics courses teach you how to analyze that data to answer your research questions. But there is a missing link between the two. The data that real studies produce is rarely ready to be analyzed: it arrives spread across multiple files, in awkward formats, with inconsistent labels, missing values, impossible responses, and participants who need to be excluded. Before any statistical model can be fitted, the data has to be imported, cleaned, checked, reshaped, combined, scored, and visualized. This process is often called *data wrangling*. It typically takes far more time than the analysis itself, and errors made here flow directly into the results and conclusions. Yet it is rarely taught explicitly. This book focuses on that missing link, and on doing it in a way that is transparent and reproducible.
+
+```{mermaid}
+%%| fig-align: center
+flowchart LR
+  A["<b>Research methods</b><br>Designing studies<br>and collecting data"] --> B["<b>Data wrangling</b><br>Importing, cleaning,<br>checking, reshaping,<br>and visualizing data"]
+  B --> C["<b>Statistical analysis</b><br>Fitting models to<br>answer research questions"]
+  style B stroke-width:3px
+```
+
+This book doesn't teach statistics itself, but two companion books do, both written to build an understanding of the statistical analyses that wrangled data feed into:
+
+-   *[Understanding Statistics Through Monte Carlo Simulations](https://simulations.tidyver.se)* uses simulations to show how statistical methods behave. Its ['Everything is regression' chapter](https://simulations.tidyver.se/chapters/11_everything_is_regression.html) explains how correlations, *t*-tests, ANOVAs, and many other analyses are all linear models in disguise, and can be read without first learning how to simulate data.
+-   *[Trustworthiness Assessment and Forensic Meta-Science](https://trustworthyresear.ch)* covers how to understand and interpret *p*-values, effect sizes such as Cohen's *d*, and standard deviations vs. standard errors, and how to check whether published results are trustworthy.
+
+Good data wrangling is about more than getting data into a shape your analysis function will accept. It also means:
+
+-   **Producing well-structured data**: tidy, consistently formatted datasets that are easy to analyze, plot, and combine with other data.
+-   **Making data understandable**: clear variable names, sensible labels, and documentation such as codebooks, so that others (and your future self) can tell what each value means.
+-   **Making data ready to share and reuse**: datasets and code that others can check, reproduce, and build on, in line with open science practices.
+-   **Protecting participants' privacy**: removing or transforming identifying information before data leave your hands.
+-   **Supporting collaboration**: writing readable, well-organized code in structured projects, so that colleagues can review, extend, and work on it with you.
+
 ## How to use this book
 
 This book is made up of individual Quarto (.qmd) workbooks. Many of the exercises are easiest to complete in your own local copy of these .qmd files.

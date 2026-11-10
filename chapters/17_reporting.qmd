@@ -1,18 +1,57 @@
-# Reporting <span class="badge badge-draft3">✎ Small TODOs</span>
-
-## TODO
-
-add content on in-text results reporting and using LLMs to aid writing them. 
+# Reporting
 
 ```{r}
 #| include: false
 
-# settings, placed in a chunk that will not show in the .html file (because include=FALSE) 
+# settings, placed in a chunk that will not show in the .html file (because include=FALSE)
 
 # disables scientific notation so that small numbers appear as eg "0.00001" rather than "1e-05"
-options(scipen = 999)  
+options(scipen = 999)
 
 ```
+
+Most of this book has been about getting data ready for analysis: importing it, cleaning it, checking it, reshaping it, combining it, and scoring it. The end product of all that work is a tidy, processed dataset. That dataset is then fed into statistical analyses, and the results of those analyses are reported in a thesis, article, or report.
+
+```{mermaid}
+%%| fig-align: center
+flowchart LR
+  A["<b>Research methods</b><br>Designing studies<br>and collecting data"] --> B["<b>Data wrangling</b><br>Producing a tidy,<br>processed dataset"]
+  B --> C["<b>Statistical analysis</b><br>Fitting models to<br>answer research questions"]
+  C --> D["<b>Reporting</b><br>Communicating<br>the results"]
+  style D stroke-width:3px
+```
+
+This book doesn't teach you which statistical analyses to run; that is the job of your statistics courses. But the last step, reporting the results, has a lot in common with data wrangling. It is another place where results can silently go wrong, and where code can do the work more reliably than you can by hand.
+
+::: {.callout-note title="Understanding the models you report"}
+This chapter shows how to report results from models such as `lm(eval_difference ~ 1 + age + gender, data = dat_analysis)` automatically. In this formula, the outcome is to the left of `~`, the predictors are to the right, and `1` is the intercept.
+
+The ease of automated reporting has to be strongly balanced against thorough understanding of the models themselves. Two companion books cover this:
+
+-   *Understanding Statistics Through Monte Carlo Simulations* ([simulations.tidyver.se](https://simulations.tidyver.se)). To learn what a linear model is, and how correlations, *t*-tests, non-parametric tests, meta-analyses, multi-level models and more are all linear models in disguise, see its ['Everything is regression' chapter](https://simulations.tidyver.se/chapters/11_everything_is_regression.html). You can read that chapter without first learning how to simulate data.
+-   *Trustworthiness Assessment and Forensic Meta-Science* ([trustworthyresear.ch](https://trustworthyresear.ch)). Its 'Understanding statistics' part covers how to interpret *p*-values, Cohen's *d*, and standard deviations vs. standard errors, and its later chapters show how reported results can be checked for errors.
+:::
+
+## Goals of results reporting
+
+Results should be reported in a way that is:
+
+-   **Reproducible**: every number in the text comes directly from code that runs on the data, rather than being copied by hand from the console into a Word document. Copying by hand is surprisingly error-prone. An automated check of over 250,000 *p*-values in psychology articles found that about half of the articles contained at least one *p*-value that was inconsistent with its test statistic and degrees of freedom, and about one in eight contained an inconsistency large enough to change whether the result was statistically significant [@nuijten2016]. Hand-copied results also go out of date silently: if you fix an error in your data processing, every number you copied has to be found and updated by hand.
+-   **Standardized**: results are reported in a consistent and recognizable format, such as the American Psychological Association (APA) style that is used in psychology, e.g., "*t*(485) = 79.58, *p* \< .001". This makes results easier to read, compare, and check.
+-   **Comprehensive**: results include all the information a reader needs to interpret them, not just whether *p* \< .05. This includes the test statistic, degrees of freedom, *p*-value, an effect size, and a confidence interval for the effect size, and descriptive statistics such as the sample size, means, and standard deviations.
+
+Several R packages help with all three of these goals by converting fitted models into text and tables:
+
+| Package | What it does |
+|---------------------------|---------------------------------------------|
+| {report} | Converts fitted models, data frames, and R sessions into English sentences and tables, e.g., `report()`. Part of the {easystats} family of packages. |
+| {parameters} | Extracts model parameters (estimates, confidence intervals, *p*-values) into a data frame. Part of {easystats}. |
+| {effectsize} | Computes effect sizes and their confidence intervals, e.g., Cohen's *d*, partial eta squared. Part of {easystats}. |
+| {performance} | Checks model assumptions and model fit. Part of {easystats}. |
+| {insight} | Formats numbers, *p*-values, and confidence intervals for reporting. Part of {easystats}. |
+| {papaja} | Formats results in APA style, e.g., `apa_print()`, and can write a whole APA-formatted manuscript from a Quarto or R Markdown document. |
+
+This chapter mostly uses the {easystats} packages, because they work with a very wide range of models in a consistent way.
 
 ## Dependencies
 
@@ -20,73 +59,282 @@ options(scipen = 999)
 
 library(dplyr)
 library(readr)
+library(tidyr)
+library(janitor) # for round_half_up()
 library(report) # part of {easystats}
-library(see) # part of {easystats}
+library(see) # part of {easystats}, for plotting {easystats} objects
 library(parameters) # part of {easystats}
 library(correlation) # part of {easystats}
 library(effectsize) # part of {easystats}
 library(performance) # part of {easystats}
-library(janitor)
+library(insight) # part of {easystats}
+library(papaja)
 library(lme4)
 library(knitr)
 library(kableExtra)
 
 ```
 
-## Inference tests
+## Example data
 
-::: {.callout-note title="Understanding the models you report"}
-This chapter shows how to report results from models such as `lm(wt ~ 1 + am + mpg, data = mtcars)` automatically. In this formula, the outcome is to the left of `~`, the predictors are to the right, and `1` is the intercept.
+In this study, participants evaluated two stimuli, a picture of chocolate and a picture of poop, on three 7-point scales (positive-negative, pleasant-unpleasant, good-bad). Participants also completed a series of checks, such as attention checks and bot checks.
 
-The ease of automated reporting has to be strongly balanced against thorough understanding of the models themselves. To learn what a linear model is, and how correlations, *t*-tests, non-parametric tests, meta-analyses, multi-level models and more are all linear models in disguise, see the ['Everything is regression' chapter](https://simulations.tidyver.se/chapters/11_everything_is_regression.html) of the companion book, *Understanding Statistics Through Monte Carlo Simulations*. You can read that chapter without first learning how to simulate data.
-:::
+The data has already been processed into a tidy format, with one row per participant. We need a few last wrangling steps before we can analyze it: excluding participants who failed any check, and scoring each participant's evaluation of each stimulus as the mean of the three scales.
+
+```{r}
+
+dat_processed <- read_csv("../data/processed/data_processed_chocolatepoop.csv")
+
+dat_analysis <- dat_processed |>
+  # exclude participants who failed any of the checks
+  filter(if_all(attention_check1:completion_time_check, ~ .x == "passed")) |>
+  # score each participant's mean evaluation of each stimulus
+  rowwise() |>
+  mutate(eval_chocolate = mean(c_across(starts_with("classic_chocolate"))),
+         eval_poop = mean(c_across(starts_with("classic_poop")))) |>
+  ungroup() |>
+  # calculate the difference between the two evaluations: how much more positively chocolate is evaluated than poop
+  mutate(eval_difference = eval_chocolate - eval_poop) |>
+  select(participant_id, age, gender, eval_chocolate, eval_poop, eval_difference)
+
+```
+
+Our research question is simple: do people evaluate chocolate more positively than poop? We'll test this with a paired-samples *t*-test.
+
+```{r}
+
+fit_ttest <- t.test(dat_analysis$eval_chocolate,
+                    dat_analysis$eval_poop,
+                    paired = TRUE)
+
+fit_ttest
+
+```
+
+The output contains everything we need, but not in a form we can put in a results section. The rest of this chapter shows how to get from here to reproducible, standardized, and comprehensive text and tables.
+
+## Reporting results in the text
+
+### The problem with copying by hand
+
+The most common way that results end up in a thesis or article is that someone reads them from the console and types them into a Word document. This creates three problems:
+
+-   **Typos**: it's easy to type 79.85 instead of 79.58, or *p* = .03 instead of *p* = .003.
+-   **Inconsistent rounding and formatting**: e.g., some *p*-values rounded to two decimal places and others to three, or "p = 0.000" instead of "*p* \< .001".
+-   **Results going out of date**: if you later change the exclusion criteria or fix a bug in your processing code, every number in the text has to be found and updated by hand.
+
+### In-line code
+
+In the [Reproducible reports](03_reproducible_reports.qmd) chapter, you learned that Quarto can run R code in the text itself, using in-line code. This means the numbers in your text can be calculated from the data every time the document is rendered.
+
+First, extract and format the values you need in a code chunk:
+
+```{r}
+
+n_participants <- nrow(dat_analysis)
+
+mean_chocolate <- mean(dat_analysis$eval_chocolate) |> round_half_up(digits = 2)
+mean_poop <- mean(dat_analysis$eval_poop) |> round_half_up(digits = 2)
+
+t_value <- fit_ttest$statistic |> round_half_up(digits = 2)
+df <- fit_ttest$parameter
+p_value <- fit_ttest$p.value |> format_p(stars = FALSE)
+
+```
+
+Then use them in the text. Writing:
+
+> After exclusions, the sample contained `` `r knitr::inline_expr("n_participants")` `` participants. Chocolate (*M* = `` `r knitr::inline_expr("mean_chocolate")` ``) was evaluated more positively than poop (*M* = `` `r knitr::inline_expr("mean_poop")` ``), *t*(`` `r knitr::inline_expr("df")` ``) = `` `r knitr::inline_expr("t_value")` ``, `` `r knitr::inline_expr("p_value")` ``.
+
+renders as:
+
+> After exclusions, the sample contained `r n_participants` participants. Chocolate (*M* = `r mean_chocolate`) was evaluated more positively than poop (*M* = `r mean_poop`), *t*(`r df`) = `r t_value`, `r p_value`.
+
+If the data or the exclusions change, the text updates itself when you re-render the document.
+
+Notice the formatting helpers. `round_half_up()` from {janitor} rounds the way you were taught in school (2.345 becomes 2.35). Base R's `round()` rounds halves to the nearest even number instead (2.345 can become 2.34). `format_p()` from {insight} formats a *p*-value according to APA style, e.g., "p < .001" rather than "p = 0.000000000000000000000000000001".
+
+### Automated text with {report}
+
+Extracting each value by hand is reproducible, but it takes a lot of code and it's easy to leave out important information, such as the effect size. The {report} package does this work for you: `report()` converts a fitted model into an English description of the results.
+
+```{r}
+
+report(fit_ttest)
+
+```
+
+This text is reproducible, standardized, and more comprehensive than what we wrote ourselves: it includes the mean difference, its confidence interval, and an effect size (Cohen's *d*) with its own confidence interval. The labels such as "large" come from conventional cut-offs for effect sizes [@cohen1988], which are only a rough guide and not appropriate in every research area.
+
+If you only want the statistics, e.g., to put in brackets at the end of your own sentence, use `report_statistics()`:
+
+```{r}
+
+report_statistics(fit_ttest)
+
+```
+
+This can also be used in-line. Writing:
+
+> Chocolate was evaluated more positively than poop (`` `r knitr::inline_expr("report_statistics(fit_ttest)")` ``).
+
+renders as:
+
+> Chocolate was evaluated more positively than poop (`r report_statistics(fit_ttest)`).
+
+The output of `report()` is a starting point, not a finished results section. You still need to decide which results to report, write them clearly, and check that they are correct (see [Checking automated output](#checking-automated-output) below).
+
+### APA formatting with {papaja}
+
+The {papaja} package's `apa_print()` function returns several APA-formatted versions of the results that you can choose from, including the estimate, the statistic, and the full result.
+
+```{r}
+
+apa_ttest <- apa_print(fit_ttest)
+
+apa_ttest$full_result
+
+```
+
+The output is written in LaTeX math (between dollar signs), which Quarto renders nicely when used in-line. Writing:
+
+> Chocolate was evaluated more positively than poop, `` `r knitr::inline_expr("apa_ttest$full_result")` ``.
+
+renders as:
+
+> Chocolate was evaluated more positively than poop, `r apa_ttest$full_result`.
+
+{papaja} can also produce an entire APA-formatted manuscript from a .qmd or .Rmd file, so that the whole document, not just the numbers in it, is reproducible.
+
+### Describing the sample
+
+The methods section of a report usually describes the sample. `report_participants()` writes this text from the data:
+
+```{r}
+
+report_participants(dat_analysis,
+                    age = "age",
+                    gender = "gender",
+                    sex = NULL) # there is no sex column in this data
+
+```
+
+This can also be used with in-line code, so the description of the sample is always up to date with the exclusions you applied.
+
+## Reporting results in tables
+
+Tables are useful when there are too many results to report clearly in the text, e.g., several predictors in a regression or descriptive statistics for many variables.
+
+### Descriptive statistics
+
+```{r}
+
+dat_analysis |>
+  select(eval_chocolate, eval_poop, eval_difference) |>
+  report_table() |>
+  select(Variable, n_Obs, Mean, SD, Min, Max) |>
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
+  kable(row.names = FALSE) |>
+  kable_classic(full_width = FALSE)
+
+```
+
+`report_table()` also works with grouped data, e.g., to describe each variable separately for each group:
+
+```{r}
+
+dat_analysis |>
+  filter(gender %in% c("female", "male")) |>
+  select(gender, eval_chocolate, eval_poop) |>
+  group_by(gender) |>
+  report_table() |>
+  select(Group, Variable, n_Obs, Mean, SD) |>
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
+```
+
+### Model results
+
+```{r}
+
+report_table(fit_ttest) |>
+  as.data.frame() |>
+  mutate(p = format_p(p, name = NULL)) |>
+  select(Difference, CI_low, CI_high, t, df = df_error, p,
+         d = Cohens_d, d_CI_low = Cohens_d_CI_low, d_CI_high = Cohens_d_CI_high) |>
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
+  kable() |>
+  kable_classic(full_width = FALSE)
+
+```
+
+Each of these tables follows the same pattern: create a data frame of results, format the *p*-values, round the other numbers, and then use `kable()` and `kable_classic()` from {knitr} and {kableExtra} to turn it into a nicely formatted .html table. Because the result is a data frame, you can also use the {dplyr} functions you already know to select, rename, and reorder its columns before formatting it.
+
+## Reporting different types of models
+
+The functions from {report}, {parameters}, and {effectsize} work in the same way for many types of model, so once you know how to use them for one model you can use them for most others.
 
 ### Regressions
+
+Does the preference for chocolate over poop differ by age and gender?
 
 ```{r}
 
 # fit model
-model <- lm(wt ~ 1 + am + mpg, data = mtcars)
+fit_regression <- lm(eval_difference ~ 1 + age + gender,
+                     data = dat_analysis |> filter(gender %in% c("female", "male")))
 
-# report - text output (nb omits intercept!)
-report(model)
+# text output
+report(fit_regression)
 
-# each parameter (including intercept)
-report_parameters(model)
+```
 
-# just parameters in text format
-report_statistics(model)
+The text from `report()` describes the model as a whole and each of its predictors, but it doesn't describe the intercept. To get a description of every parameter, including the intercept, use `report_parameters()`:
 
-# just parameters in table format
-parameters(model)
+```{r}
 
-# just parameters in table html format 
-parameters(model) |>
-  mutate(p = insight::format_p(p)) |>
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
-  kable() |>
-  kable_classic(full_width = FALSE)
+report_parameters(fit_regression)
 
-# what if i just want some of these cols?
-parameters(model) |>
+```
+
+Or just the statistics for each parameter:
+
+```{r}
+
+report_statistics(fit_regression)
+
+```
+
+`parameters()` returns the parameters as a data frame, which is useful for tables:
+
+```{r}
+
+parameters(fit_regression)
+
+```
+
+As an .html table:
+
+```{r}
+
+parameters(fit_regression) |>
   as.data.frame() |>
-  mutate(p = insight::format_p(p)) |>
-  select(r = Coefficient, ci_lower = CI_low, ci_upper = CI_high, p) |>
-  mutate_if(is.numeric, round_half_up, digits = 2)
-
-# table in markdown format
-report_table(model)
-
-# table in html format - needs to be rounded manually
-report_table(model) |>
-  mutate(p = insight::format_p(p)) |>
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
+  mutate(p = format_p(p, name = NULL)) |>
+  select(Parameter, Estimate = Coefficient, CI_lower = CI_low, CI_upper = CI_high, p) |>
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
   kable() |>
   kable_classic(full_width = FALSE)
 
-# plot
-parameters(model) |>
-  plot() 
+```
+
+`parameters()` results can also be plotted, which is often clearer than a table:
+
+```{r}
+
+parameters(fit_regression) |>
+  plot()
 
 ```
 
@@ -94,104 +342,103 @@ parameters(model) |>
 
 #### Single correlation tests
 
+Is age correlated with the preference for chocolate over poop?
+
 ```{r}
 
 # fit model
-model <- cor.test(mtcars$mpg, mtcars$wt)
+fit_correlation <- cor.test(dat_analysis$age, dat_analysis$eval_difference)
 
-# report - text output 
-report(model)
+# text output
+report(fit_correlation)
 
-# table in html format - needs to be rounded manually
-report_table(model) |>
-  mutate(p = insight::format_p(p)) |>
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
+# table in html format
+report_table(fit_correlation) |>
+  mutate(p = format_p(p, name = NULL)) |>
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
   kable() |>
   kable_classic(full_width = FALSE)
 
 ```
 
-#### Many
+#### Many correlations
+
+The {correlation} package's `correlation()` function tests every pair of numeric variables in a data frame. Note that it corrects the *p*-values for multiple testing by default, using the Holm method.
 
 ```{r}
 
-results <- correlation(iris)
+results_correlations <- dat_analysis |>
+  select(age, eval_chocolate, eval_poop) |>
+  correlation()
 
-results
+results_correlations
 
-results %>%
-  summary(redundant = TRUE) %>%
+```
+
+A correlation matrix with the upper triangle removed, as is common in articles:
+
+```{r}
+
+results_correlations |>
+  summary(redundant = FALSE)
+
+```
+
+As a plot:
+
+```{r}
+
+results_correlations |>
+  summary(redundant = TRUE) |>
   plot()
 
 ```
 
 #### By group
 
+`correlation()` also works with grouped data:
+
 ```{r}
 
-iris %>%
-  select(Species, Sepal.Length, Sepal.Width, Petal.Width) %>%
-  group_by(Species) %>%
+dat_analysis |>
+  filter(gender %in% c("female", "male")) |>
+  select(gender, age, eval_chocolate, eval_poop) |>
+  group_by(gender) |>
   correlation()
 
 ```
 
-### t-tests
+### *t*-tests
 
-NB Cohen's d is approximated - better to calculate it separately and accurately.
+We've already seen the paired-samples *t*-test above. An independent-samples (Welch's) *t*-test, comparing women's and men's preference for chocolate over poop:
 
 ```{r}
 
 # fit model
-model <- t.test(mpg ~ am, data = mtcars)
+fit_ttest_independent <- t.test(eval_difference ~ gender,
+                                data = dat_analysis |> filter(gender %in% c("female", "male")))
 
-# report - text output 
-report(model)
-
-# table in html format - needs to be rounded manually
-report_table(model) |>
-  mutate(p = insight::format_p(p)) |>
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
-  kable() |>
-  kable_classic(full_width = FALSE)
-
-
-# estimate Cohen's d directly from data
-cohens_d(mpg ~ am, data = mtcars)
+# text output
+report(fit_ttest_independent)
 
 ```
 
-### Multilevel/hierarchical/mixed models
+`report()` approximates Cohen's *d* from the *t*-test results. It is better to calculate it directly from the data, using the {effectsize} package. For independent samples:
 
 ```{r}
 
-# fit model
-model <- lmer(Reaction ~ Days + (Days | Subject), sleepstudy)
+cohens_d(eval_difference ~ gender,
+         data = dat_analysis |> filter(gender %in% c("female", "male")))
 
-# parameters in text format 
-report(model)
+```
 
-# parameters in table format
-parameters(model) |>
-  mutate(p = insight::format_p(p)) |>
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
-  kable() |>
-  kable_classic(full_width = FALSE)
+For paired samples there are several different versions of Cohen's *d* that answer slightly different questions, so it is important to report which one you used. `repeated_measures_d()` calculates them:
 
-# table in html format - needs to be rounded manually
-report_table(model) |>
-  mutate(p = insight::format_p(p)) |>
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
-  kable() |>
-  kable_classic(full_width = FALSE)
+```{r}
 
-# plot
-parameters(model) |>
-  plot() 
-
-# check assumptions of random effects
-result <- check_normality(model, effects = "random")
-plot(result)
+repeated_measures_d(dat_analysis$eval_chocolate,
+                    dat_analysis$eval_poop,
+                    method = "z")
 
 ```
 
@@ -200,65 +447,64 @@ plot(result)
 ```{r}
 
 # fit model
-model <- aov(mpg ~ factor(gear) + factor(carb), data = mtcars)
+fit_anova <- aov(mpg ~ factor(gear) + factor(carb), data = mtcars)
+
+# text output
+report(fit_anova)
 
 # commonly used effect size: partial eta squared
-eta_squared(model)
+eta_squared(fit_anova)
 
-# better effect size: partialomega squared
-omega_squared(model)
+# less biased effect size: partial omega squared
+omega_squared(fit_anova)
 
 ```
 
-## Summary statistics
+### Multilevel/hierarchical/mixed models
+
+The `sleepstudy` data from the {lme4} package contains reaction times of participants over several days of sleep deprivation, with multiple rows per participant.
 
 ```{r}
 
-# all columns
-iris |>
-  group_by(Species) |>
-  report_table() 
+# fit model
+fit_mlm <- lmer(Reaction ~ Days + (Days | Subject), data = sleepstudy)
 
-# all columns - html output with rounding
-iris |>
-  group_by(Species) |>
-  report_table() |>
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
+# text output
+report(fit_mlm)
+
+# parameters in table format
+parameters(fit_mlm) |>
+  as.data.frame() |>
+  mutate(p = format_p(p, name = NULL)) |>
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
   kable() |>
   kable_classic(full_width = FALSE)
 
-# subset of columns
-iris |>
-  group_by(Species) |>
-  report_table() |>
-  select(Group, Variable, n_Obs, Mean, SD) |>
-  mutate_if(is.numeric, round_half_up, digits = 2) |>
-  kable() |>
-  kable_classic(full_width = FALSE)
+# plot
+parameters(fit_mlm) |>
+  plot()
 
 ```
 
 ## Assumption checks
 
-Beware that checking assumptions can lead to as many bad practices as it does good ones! (e.g., poorly justified post hoc outlier exclusion)
+Comprehensive reporting also means checking, and where relevant reporting, whether the assumptions of your model are reasonable. The {performance} package checks many assumptions at once. Be aware that checking assumptions can lead to as many bad practices as good ones, e.g., poorly justified removal of outliers after seeing the results. Decisions about how to handle assumption violations are best made, and preregistered, before seeing the results.
 
 ### Multiple checks at once
 
-```{r fig.height=8, fig.width=8}
+```{r}
+#| fig-height: 8
+#| fig-width: 8
 
-# fit model
-model <- lm(wt ~ 1 + am + mpg, data = mtcars)
-
-# check multiple model assumptions
-check_model(model)
+check_model(fit_regression)
 
 ```
 
-### Normality of distribution of residuals
+### Normality of residuals
 
 ```{r}
 
-res_normality <- check_normality(model)
+res_normality <- check_normality(fit_regression)
 
 res_normality
 plot(res_normality, type = "qq")
@@ -266,11 +512,11 @@ plot(res_normality, type = "density")
 
 ```
 
-### Multicolinearity
+### Multicollinearity
 
 ```{r}
 
-res_collinearity <- check_collinearity(model)
+res_collinearity <- check_collinearity(fit_regression)
 
 res_collinearity
 plot(res_collinearity)
@@ -281,8 +527,8 @@ plot(res_collinearity)
 
 ```{r}
 
-res_outliers <- check_outliers(model, method = "cook") # "all" requires other dependencies and can take some time to run  
-#res_outliers <- check_outliers(model, method = "all") # "all" requires other dependencies and can take some time to run  
+# method = "all" uses many methods, but requires other dependencies and can take some time to run
+res_outliers <- check_outliers(fit_regression, method = "cook")
 
 res_outliers
 plot(res_outliers)
@@ -293,9 +539,217 @@ plot(res_outliers)
 
 ```{r}
 
-res_het <- check_heteroscedasticity(model)
+res_het <- check_heteroscedasticity(fit_regression)
 
 res_het
 plot(res_het)
 
 ```
+
+### Random effects in multilevel models
+
+```{r}
+
+res_random <- check_normality(fit_mlm, effects = "random")
+
+# plot() returns a list of plots, one per random effect grouping variable; [[1]] shows the first
+plot(res_random)[[1]]
+
+```
+
+## Reporting the software you used
+
+Your results depend on the software and package versions you used, so reproducible reporting includes reporting them. `cite_packages()` creates a list of references for R and every package you have loaded:
+
+```{r}
+
+cite_packages()
+
+```
+
+## Checking automated output {#checking-automated-output}
+
+Automated reporting removes copying errors, but it does not guarantee that what you report is correct or appropriate:
+
+-   **Garbage in, garbage out**: if the processed data contains errors, the report will describe those errors perfectly. This is why the wrangling and checking covered in the rest of this book matter.
+-   **Read what it says**: check that the text describes the model you meant to fit, e.g., the right outcome, predictors, and reference levels, and that the numbers match the model output. For example, the `report()` text for the regression above describes the intercept as the score for a woman aged 0, which is not a meaningful quantity in this study. Centering age before fitting the model would make the intercept meaningful.
+-   **Check the formatting**: automated output is not always in the format you need. For example, `report()` writes some small numbers in scientific notation, e.g., "beta = -7.97e-03" in the regression above, which should be reported as "-0.01" or "-0.008". It also uses names from the code, e.g., "dat_analysis\$eval_chocolate", that should be replaced with names that readers will understand.
+-   **Defaults are choices**: functions such as `report()` make choices for you, e.g., how an effect size is calculated or which labels are used to interpret it. Check the documentation and report the choices you made.
+-   **Interpretation is your job**: `report()` can say that an effect is "statistically significant and large", but only you can say what the result means for your research question, and what it doesn't mean.
+
+## Assembling and customizing in-line results yourself
+
+Functions like `report()` produce text in a fixed format. Often you'll want to write the results in your own words and choose exactly which statistics to report and how. You can still keep every number reproducible by extracting each value yourself and assembling the text with in-line code. This section builds a complete example: a description of the sample, followed by the results of the *t*-test and its effect size.
+
+### Calculate and format the values
+
+First, calculate every value you need in a code chunk, and format each one as it should appear in the text. Doing all the calculation and formatting in one place keeps the text itself short and readable.
+
+Rounding with `round_half_up()` returns a number, and numbers drop trailing zeros, e.g., 4.80 is printed as "4.8". APA style reports the same number of decimal places throughout, so the `fmt()` function below rounds a number and then turns it into text with a fixed number of decimal places using `format(nsmall = )`.
+
+```{r}
+
+# round to a fixed number of decimal places and keep trailing zeros, e.g., 4.80 rather than 4.8
+fmt <- function(x, digits = 2) {
+  format(round_half_up(x, digits = digits), nsmall = digits)
+}
+
+# sample
+sample_n <- nrow(dat_analysis)
+age_mean <- fmt(mean(dat_analysis$age, na.rm = TRUE), digits = 1)
+age_sd <- fmt(sd(dat_analysis$age, na.rm = TRUE), digits = 1)
+percent_women <- fmt(mean(dat_analysis$gender == "female") * 100, digits = 1)
+
+# descriptive statistics for each evaluation
+chocolate_mean <- fmt(mean(dat_analysis$eval_chocolate))
+chocolate_sd <- fmt(sd(dat_analysis$eval_chocolate))
+poop_mean <- fmt(mean(dat_analysis$eval_poop))
+poop_sd <- fmt(sd(dat_analysis$eval_poop))
+
+# t-test 
+fit_ttest <- t.test(dat_analysis$eval_chocolate, 
+                    dat_analysis$eval_poop, 
+                    paired = TRUE)
+
+t_df <- fit_ttest$parameter
+t_value <- fmt(fit_ttest$statistic)
+# name = NULL drops the "p", so it can be italicized in the text, giving e.g. "< .001"
+t_p <- format_p(fit_ttest$p.value, name = NULL)
+
+# Cohen's d for paired samples, with its 95% confidence interval
+fit_d <- repeated_measures_d(dat_analysis$eval_chocolate, 
+                             dat_analysis$eval_poop, 
+                             method = "z")
+
+d_estimate <- fmt(fit_d$d_z)
+d_ci_lower <- fmt(fit_d$CI_low)
+d_ci_upper <- fmt(fit_d$CI_high)
+
+```
+
+### Write the text
+
+Then write the text, with in-line code wherever a number should appear. In your .qmd file, you would write:
+
+```markdown
+## Participants
+
+After exclusions, the final sample consisted of `r knitr::inline_expr("sample_n")` participants 
+(age *M* = `r knitr::inline_expr("age_mean")`, *SD* = `r knitr::inline_expr("age_sd")`; `r knitr::inline_expr("percent_women")`% women).
+
+## Results
+
+Participants evaluated chocolate (*M* = `r knitr::inline_expr("chocolate_mean")`, *SD* = `r knitr::inline_expr("chocolate_sd")`) 
+more positively than poop (*M* = `r knitr::inline_expr("poop_mean")`, *SD* = `r knitr::inline_expr("poop_sd")`), 
+*t*(`r knitr::inline_expr("t_df")`) = `r knitr::inline_expr("t_value")`, *p* `r knitr::inline_expr("t_p")`, 
+Cohen's *d*~z~ = `r knitr::inline_expr("d_estimate")`, 95% CI [`r knitr::inline_expr("d_ci_lower")`, `r knitr::inline_expr("d_ci_upper")`].
+```
+
+When the document is rendered, this becomes:
+
+::: {.callout-tip appearance="minimal"}
+**Participants**
+
+After exclusions, the final sample consisted of `r sample_n` participants (age *M* = `r age_mean`, *SD* = `r age_sd`; `r percent_women`% women).
+
+**Results**
+
+Participants evaluated chocolate (*M* = `r chocolate_mean`, *SD* = `r chocolate_sd`) more positively than poop (*M* = `r poop_mean`, *SD* = `r poop_sd`), *t*(`r t_df`) = `r t_value`, *p* `r t_p`, Cohen's *d*~z~ = `r d_estimate`, 95% CI [`r d_ci_lower`, `r d_ci_upper`].
+:::
+
+Every number in this text comes from the data, is rounded and formatted consistently, and will update if the data or the exclusions change. And unlike the output of `report()`, the wording, the statistics reported, and their order are entirely under your control. For example, we chose to report the version of Cohen's *d* (*d*~z~) and say so in the text, which `report()` does not do.
+
+### Using large language models to help
+
+The downside of this approach is that it is laborious. Even this short example needed nearly 20 values to be extracted and formatted, and a full results section can need many more. It's also easy to make mistakes in the code, e.g., extracting the lower bound of the wrong confidence interval.
+
+Large language models (LLMs) such as ChatGPT or Claude can take much of the tedium out of this. For example, you can give an LLM the output of your model and an example of how you want the results to read, and ask it to write the code chunk that extracts and formats each value and the text with the in-line code. LLMs can also help to turn the output of `report()` into more readable prose, to suggest how to structure a results section, or to explain model output you don't understand.
+
+However, LLMs are not a reliable way to produce the numbers themselves. They can make up, change, or mix up numbers in ways that look completely plausible. A good workflow therefore keeps the numbers in code and uses LLMs only to help write the code and the words:
+
+-   Ask the LLM to write code that extracts the values from your fitted model objects, rather than asking it to write the numbers into the text.
+-   If an LLM helps you rephrase the text, give it the text with the in-line code (e.g., `` `r knitr::inline_expr("t_value")` ``), not the rendered numbers, and ask it to keep the in-line code unchanged. That way the numbers still come from your data when the document is rendered.
+-   Read the code it writes, and check the rendered text against the model output, e.g., that each confidence interval belongs to the right estimate. Then check that the text still says what the results show.
+-   Follow your institution's and the journal's rules on the use of LLMs, and report how you used them.
+
+## Key functions
+
+The main functions covered in this chapter:
+
+| Function | Package | What it does |
+|----------|---------|--------------|
+| In-line code: `` `r ` `` | Quarto | Runs a short piece of R code inside the text and shows its result there. |
+| `round_half_up()` | {janitor} | Rounds numbers, with halves always rounded up (e.g., 2.345 to 2.35). |
+| `format(nsmall = )` | base R | Turns a number into text with a minimum number of decimal places, keeping trailing zeros (e.g., 4.80 rather than 4.8). |
+| `format_p()` | {insight} | Formats *p*-values in APA style, e.g., "p < .001". |
+| `report()` | {report} | Describes a fitted model, data frame, or R session in English text. |
+| `report_statistics()` | {report} | Returns only the statistics for a model, e.g., to use in brackets in your own sentence. |
+| `report_parameters()` | {report} | Describes every parameter of a model, including the intercept. |
+| `report_table()` | {report} | Returns model results or descriptive statistics as a data frame. |
+| `report_participants()` | {report} | Describes the sample's size, age, and gender in English text. |
+| `cite_packages()` | {report} | Creates references for R and the packages you have loaded. |
+| `apa_print()` | {papaja} | Formats model results in APA style. |
+| `parameters()` | {parameters} | Returns a model's parameters, confidence intervals, and *p*-values as a data frame. |
+| `correlation()` | {correlation} | Tests the correlations between all pairs of numeric variables. |
+| `cohens_d()`, `repeated_measures_d()` | {effectsize} | Calculate Cohen's *d* for independent and paired samples. |
+| `eta_squared()`, `omega_squared()` | {effectsize} | Calculate effect sizes for ANOVAs. |
+| `check_model()` | {performance} | Checks many model assumptions at once. |
+| `kable()`, `kable_classic()` | {knitr}, {kableExtra} | Turn a data frame into a formatted .html table. |
+
+## Exercises
+
+Check your learning with the following questions. Exercises that involve running code should be done in your local copy of this chapter's .qmd file (see the [Introduction](../index.qmd) for how to get a copy).
+
+### Check your understanding
+
+::: {.webex-check .webex-box}
+Answer the questions, then click the button at the bottom to check your answers.
+
+1.  Using in-line code means that the numbers in your text update automatically when you re-render the document after changing the data or analysis. `r webexercises::torf(TRUE)`
+2.  Which of these is the most comprehensive report of a *t*-test? `r webexercises::mcq(c("p < .05", "t(485) = 79.58, p < .001", answer = "t(485) = 79.58, p < .001, d = 3.61, 95% CI [3.36, 3.85]", "The difference was significant"))`
+3.  Which function gives you an English description of a fitted model? `r webexercises::mcq(c("parameters()", answer = "report()", "kable()", "check_model()"))`
+4.  Because `report()` generates the text automatically, you don't need to check it. `r webexercises::torf(FALSE)`
+5.  What does `round_half_up(2.345, digits = 2)` return? `r webexercises::mcq(c("2.34", answer = "2.35", "2.3", "2.345"))`
+6.  It is safe to ask an LLM to write your results section from a copy of your console output, as long as you paste the output in exactly. `r webexercises::torf(FALSE)`
+:::
+
+::: {.callout-note collapse="true" title="Click to show explanations"}
+1.  True. In-line code is run every time the document is rendered, so the numbers always match the current data and analysis.
+2.  The last one. It includes the test statistic, degrees of freedom, *p*-value, an effect size, and a confidence interval for the effect size. The others leave out information that readers need to interpret the result.
+3.  `report()`, from the {report} package. `parameters()` returns a data frame of parameters, `kable()` formats a table, and `check_model()` checks assumptions.
+4.  False. `report()` removes copying errors, but it can't tell whether you fitted the right model, whether the data was processed correctly, or whether its default choices (e.g., for effect sizes) are appropriate for your study.
+5.  2.35. `round_half_up()` always rounds halves up. Base R's `round()` rounds halves to the nearest even number, so it can give 2.34.
+6.  False. LLMs can change or make up numbers in ways that look plausible, even when the correct numbers are in the input. Keep the numbers in code, use LLMs only for the wording, and check the rendered output.
+:::
+
+Why are numbers copied by hand from the console into a Word document less reproducible than numbers created with in-line code?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+Copying by hand can introduce typos and inconsistent rounding or formatting, and nothing checks that the copied numbers match the analysis. If the data or analysis later changes, e.g., because a bug in the processing code is fixed, every copied number has to be found and updated by hand, and it is easy to miss some. In-line code calculates the numbers from the data every time the document is rendered, so they always match the analysis.
+:::
+
+What information should a comprehensive report of a statistical test include?
+
+::: {.callout-note collapse="true" title="Click to show answer"}
+The test statistic, its degrees of freedom, the *p*-value, an effect size, and a confidence interval for the effect size, along with descriptive statistics such as the sample size, means, and standard deviations. It should also say which test was used, and which choices were made, e.g., which version of Cohen's *d*.
+:::
+
+### Practice
+
+In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
+
+1.  Using `dat_analysis`, write a short methods and results section in the text of your .qmd file (i.e., not in a code chunk) that reports:
+    -   The sample: the number of participants, their age, and their gender.
+    -   Whether participants evaluated chocolate more positively than poop, including the means and standard deviations of each evaluation, the *t*-test results, and Cohen's *d* with its confidence interval.
+
+    All numbers must come from in-line code. Render the document and check that every number in the text matches the output of the code.
+
+2.  Change the exclusions in the Example data section so that participants are only excluded if they failed an attention check, and re-render the document. Which numbers in your text changed? How long would it have taken to update them by hand?
+
+3.  Create an .html table of the means and standard deviations of the evaluations of chocolate and poop, separately for each gender, with all numbers rounded to two decimal places.
+
+::: {.callout-note collapse="true" title="Click to show hint"}
+1.  Use `report_participants()` for the sample. For the results, either extract and format each value in a code chunk and use it in-line, or use `report_statistics()` in-line. Remember that `report()`'s Cohen's *d* is approximated; `repeated_measures_d()` calculates it from the data.
+2.  Change the `filter()` call so that it only uses the attention check columns, e.g., `filter(if_all(attention_check1:attention_check3, ~ .x == "passed"))`.
+3.  Use `group_by(gender)` and `report_table()`, then `select()`, `round_half_up()`, `kable()`, and `kable_classic()`.
+:::
