@@ -122,6 +122,7 @@ In class:
 
 Before class:
 
+- [Chapter 16: Principles of data visualization](chapters/16_principles_of_visualization.qmd)
 - Dattani, S. (2025) Saloni's guide to data visualization. https://www.scientificdiscovery.dev/p/salonis-guide-to-data-visualization
 - Saloni's data visualizations while working at *Our World In Data*: https://ourworldindata.org/team/saloni-dattani
 
@@ -138,8 +139,8 @@ In class:
 
 Before class:
 
-- [Chapter 16: Visualization](chapters/16_visualization.qmd)
-- [Chapter 17: Reporting](chapters/17_reporting.qmd)
+- [Chapter 17: Plotting data with ggplot2](chapters/17_plotting_with_ggplot2.qmd)
+- [Chapter 18: Reporting](chapters/18_reporting.qmd)
 
 In class:
 

@@ -57,7 +57,7 @@ This chapter mostly uses the {easystats} packages, because they work with a very
 
 ```{r}
 
-library(dplyr)
+library(dplyr) # for %>%, mutate(), filter(), select()
 library(readr)
 library(tidyr)
 library(janitor) # for round_half_up()
@@ -85,16 +85,16 @@ The data has already been processed into a tidy format, with one row per partici
 
 dat_processed <- read_csv("../data/processed/data_processed_chocolatepoop.csv")
 
-dat_analysis <- dat_processed |>
+dat_analysis <- dat_processed %>%
   # exclude participants who failed any of the checks
-  filter(if_all(attention_check1:completion_time_check, ~ .x == "passed")) |>
+  filter(if_all(attention_check1:completion_time_check, ~ .x == "passed")) %>%
   # score each participant's mean evaluation of each stimulus
-  rowwise() |>
+  rowwise() %>%
   mutate(eval_chocolate = mean(c_across(starts_with("classic_chocolate"))),
-         eval_poop = mean(c_across(starts_with("classic_poop")))) |>
-  ungroup() |>
+         eval_poop = mean(c_across(starts_with("classic_poop")))) %>%
+  ungroup() %>%
   # calculate the difference between the two evaluations: how much more positively chocolate is evaluated than poop
-  mutate(eval_difference = eval_chocolate - eval_poop) |>
+  mutate(eval_difference = eval_chocolate - eval_poop) %>%
   select(participant_id, age, gender, eval_chocolate, eval_poop, eval_difference)
 
 ```
@@ -133,12 +133,12 @@ First, extract and format the values you need in a code chunk:
 
 n_participants <- nrow(dat_analysis)
 
-mean_chocolate <- mean(dat_analysis$eval_chocolate) |> round_half_up(digits = 2)
-mean_poop <- mean(dat_analysis$eval_poop) |> round_half_up(digits = 2)
+mean_chocolate <- mean(dat_analysis$eval_chocolate) %>% round_half_up(digits = 2)
+mean_poop <- mean(dat_analysis$eval_poop) %>% round_half_up(digits = 2)
 
-t_value <- fit_ttest$statistic |> round_half_up(digits = 2)
+t_value <- fit_ttest$statistic %>% round_half_up(digits = 2)
 df <- fit_ttest$parameter
-p_value <- fit_ttest$p.value |> format_p(stars = FALSE)
+p_value <- fit_ttest$p.value %>% format_p(stars = FALSE)
 
 ```
 
@@ -229,12 +229,12 @@ Tables are useful when there are too many results to report clearly in the text,
 
 ```{r}
 
-dat_analysis |>
-  select(eval_chocolate, eval_poop, eval_difference) |>
-  report_table() |>
-  select(Variable, n_Obs, Mean, SD, Min, Max) |>
-  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
-  kable(row.names = FALSE) |>
+dat_analysis %>%
+  select(eval_chocolate, eval_poop, eval_difference) %>%
+  report_table() %>%
+  select(Variable, n_Obs, Mean, SD, Min, Max) %>%
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) %>%
+  kable(row.names = FALSE) %>%
   kable_classic(full_width = FALSE)
 
 ```
@@ -243,14 +243,14 @@ dat_analysis |>
 
 ```{r}
 
-dat_analysis |>
-  filter(gender %in% c("female", "male")) |>
-  select(gender, eval_chocolate, eval_poop) |>
-  group_by(gender) |>
-  report_table() |>
-  select(Group, Variable, n_Obs, Mean, SD) |>
-  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
-  kable() |>
+dat_analysis %>%
+  filter(gender %in% c("female", "male")) %>%
+  select(gender, eval_chocolate, eval_poop) %>%
+  group_by(gender) %>%
+  report_table() %>%
+  select(Group, Variable, n_Obs, Mean, SD) %>%
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) %>%
+  kable() %>%
   kable_classic(full_width = FALSE)
 
 ```
@@ -259,13 +259,13 @@ dat_analysis |>
 
 ```{r}
 
-report_table(fit_ttest) |>
-  as.data.frame() |>
-  mutate(p = format_p(p, name = NULL)) |>
+report_table(fit_ttest) %>%
+  as.data.frame() %>%
+  mutate(p = format_p(p, name = NULL)) %>%
   select(Difference, CI_low, CI_high, t, df = df_error, p,
-         d = Cohens_d, d_CI_low = Cohens_d_CI_low, d_CI_high = Cohens_d_CI_high) |>
-  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
-  kable() |>
+         d = Cohens_d, d_CI_low = Cohens_d_CI_low, d_CI_high = Cohens_d_CI_high) %>%
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) %>%
+  kable() %>%
   kable_classic(full_width = FALSE)
 
 ```
@@ -284,7 +284,7 @@ Does the preference for chocolate over poop differ by age and gender?
 
 # fit model
 fit_regression <- lm(eval_difference ~ 1 + age + gender,
-                     data = dat_analysis |> filter(gender %in% c("female", "male")))
+                     data = dat_analysis %>% filter(gender %in% c("female", "male")))
 
 # text output
 report(fit_regression)
@@ -319,12 +319,12 @@ As an .html table:
 
 ```{r}
 
-parameters(fit_regression) |>
-  as.data.frame() |>
-  mutate(p = format_p(p, name = NULL)) |>
-  select(Parameter, Estimate = Coefficient, CI_lower = CI_low, CI_upper = CI_high, p) |>
-  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
-  kable() |>
+parameters(fit_regression) %>%
+  as.data.frame() %>%
+  mutate(p = format_p(p, name = NULL)) %>%
+  select(Parameter, Estimate = Coefficient, CI_lower = CI_low, CI_upper = CI_high, p) %>%
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) %>%
+  kable() %>%
   kable_classic(full_width = FALSE)
 
 ```
@@ -333,7 +333,7 @@ parameters(fit_regression) |>
 
 ```{r}
 
-parameters(fit_regression) |>
+parameters(fit_regression) %>%
   plot()
 
 ```
@@ -353,10 +353,10 @@ fit_correlation <- cor.test(dat_analysis$age, dat_analysis$eval_difference)
 report(fit_correlation)
 
 # table in html format
-report_table(fit_correlation) |>
-  mutate(p = format_p(p, name = NULL)) |>
-  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
-  kable() |>
+report_table(fit_correlation) %>%
+  mutate(p = format_p(p, name = NULL)) %>%
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) %>%
+  kable() %>%
   kable_classic(full_width = FALSE)
 
 ```
@@ -367,8 +367,8 @@ The {correlation} package's `correlation()` function tests every pair of numeric
 
 ```{r}
 
-results_correlations <- dat_analysis |>
-  select(age, eval_chocolate, eval_poop) |>
+results_correlations <- dat_analysis %>%
+  select(age, eval_chocolate, eval_poop) %>%
   correlation()
 
 results_correlations
@@ -379,7 +379,7 @@ A correlation matrix with the upper triangle removed, as is common in articles:
 
 ```{r}
 
-results_correlations |>
+results_correlations %>%
   summary(redundant = FALSE)
 
 ```
@@ -388,8 +388,8 @@ As a plot:
 
 ```{r}
 
-results_correlations |>
-  summary(redundant = TRUE) |>
+results_correlations %>%
+  summary(redundant = TRUE) %>%
   plot()
 
 ```
@@ -400,10 +400,10 @@ results_correlations |>
 
 ```{r}
 
-dat_analysis |>
-  filter(gender %in% c("female", "male")) |>
-  select(gender, age, eval_chocolate, eval_poop) |>
-  group_by(gender) |>
+dat_analysis %>%
+  filter(gender %in% c("female", "male")) %>%
+  select(gender, age, eval_chocolate, eval_poop) %>%
+  group_by(gender) %>%
   correlation()
 
 ```
@@ -416,7 +416,7 @@ We've already seen the paired-samples *t*-test above. An independent-samples (We
 
 # fit model
 fit_ttest_independent <- t.test(eval_difference ~ gender,
-                                data = dat_analysis |> filter(gender %in% c("female", "male")))
+                                data = dat_analysis %>% filter(gender %in% c("female", "male")))
 
 # text output
 report(fit_ttest_independent)
@@ -428,7 +428,7 @@ report(fit_ttest_independent)
 ```{r}
 
 cohens_d(eval_difference ~ gender,
-         data = dat_analysis |> filter(gender %in% c("female", "male")))
+         data = dat_analysis %>% filter(gender %in% c("female", "male")))
 
 ```
 
@@ -473,15 +473,15 @@ fit_mlm <- lmer(Reaction ~ Days + (Days | Subject), data = sleepstudy)
 report(fit_mlm)
 
 # parameters in table format
-parameters(fit_mlm) |>
-  as.data.frame() |>
-  mutate(p = format_p(p, name = NULL)) |>
-  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) |>
-  kable() |>
+parameters(fit_mlm) %>%
+  as.data.frame() %>%
+  mutate(p = format_p(p, name = NULL)) %>%
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) %>%
+  kable() %>%
   kable_classic(full_width = FALSE)
 
 # plot
-parameters(fit_mlm) |>
+parameters(fit_mlm) %>%
   plot()
 
 ```

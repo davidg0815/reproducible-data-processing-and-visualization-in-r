@@ -41,8 +41,9 @@ book:
       
     - part: "Part III: Visualization and reporting"
       chapters:
-      - chapters/16_visualization.qmd 
-      - chapters/17_reporting.qmd
+      - chapters/16_principles_of_visualization.qmd
+      - chapters/17_plotting_with_ggplot2.qmd
+      - chapters/18_reporting.qmd
       
     - references.qmd
       
