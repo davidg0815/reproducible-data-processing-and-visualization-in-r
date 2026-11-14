@@ -103,26 +103,33 @@ In class:
 Before class:
 
 - [Chapter 13: Binding and joining](chapters/13_binding_and_joining.qmd)
-- [Chapter 14: Sharing and privacy](chapters/14_sharing_and_privacy.qmd)
+- [Chapter 15: Data privacy](chapters/15_data_privacy.qmd)
+- [Chapter 16: Data sharing and version control](chapters/16_data_sharing_and_version_control.qmd)
 
 In class:
 
 - Questions about binding and joining
-- Questions about sharing and privacy
-- Lecture and exercise: Intro to GitHub, diffs
+- Questions about data privacy
+- Questions about data sharing and version control
+- Lecture and exercise: Intro to Git and GitHub with GitHub Desktop
+  - Committing and pushing, and reading diffs
+  - Keeping private data and credentials out of GitHub with .gitignore and .Renviron
+  - Licensing a project, and archiving a release on Zenodo
+- Exercise: anonymize a dataset, put the project from assignment 1 on GitHub, and review its diffs
 - In-class exercises - [click to download .qmd](exercises/13_binding_and_joining_in_class_exercises.qmd)
 
 ### Week 10
 
 Before class:
 
-- Dattani, S. (2025) Saloni's guide to data visualization. https://www.scientificdiscovery.dev/p/salonis-guide-to-data-visualization
-- Saloni's data visualizations while working at *Our World In Data*: https://ourworldindata.org/team/saloni-dattani
+- [Chapter 17: Principles of data visualization](chapters/17_principles_of_visualization.qmd)
+- Dattani, S. (2025). [Saloni's guide to data visualization](https://www.scientificdiscovery.dev/p/salonis-guide-to-data-visualization).
+- [Saloni's data visualizations](https://ourworldindata.org/team/saloni-dattani) while working at *Our World In Data*.
 
 In class:
 
 - Lecture: Principles of visualization
-- In this course, this is often a guest lecture by Dr. Saloni Dattani.
+- In this session, this is often a guest lecture by Dr. Saloni Dattani.
   - Founding editor of [Works in Progress](https://worksinprogress.co/our-authors/saloni-dattani/)
   - See her TED talk [here](https://www.youtube.com/watch?v=6eYEi9tN6Og)
   - Her podcast, [Hard Drugs](https://harddrugs.worksinprogress.co/), is a show about "medical innovation, how to speed it up, how to scale it up, and how to make sure lifesaving tools reach the people who need them the most". 
@@ -132,27 +139,28 @@ In class:
 
 Before class:
 
-- [Chapter 15: Visualization](chapters/15_visualization.qmd)
-- [Chapter 16: Reporting](chapters/16_reporting.qmd)
+- [Chapter 18: Plotting data with ggplot2](chapters/18_plotting_with_ggplot2.qmd)
+- [Chapter 19: Reporting](chapters/19_reporting.qmd)
 
 In class:
 
 - Questions about reporting
 - Questions about ggplot2 for visualization
 - Overview of assignment 2 (plotting)
-<!-- - In-class exercises - [click to download .qmd](exercises/15_to_16_reporting_in_class_exercises.qmd) -->
+<!-- - In-class exercises - [click to download .qmd](exercises/16_to_17_reporting_in_class_exercises.qmd) -->
 
 ### Week 12
 
 Before class:
 
-- [Chapter 17: The linear model](chapters/17_the_linear_model.qmd)
+- [Chapter 14: Checking your data processing](chapters/14_checking_data_processing.qmd)
+- ['Everything is regression'](https://simulations.tidyver.se/chapters/11_everything_is_regression.html), from the companion book *Understanding Statistics Through Monte Carlo Simulations*. You can read it without first learning how to simulate data. Its exercises require simulation skills, so skip them for this course.
 
 In class:
 
+- Questions about checking data processing
 - Questions about the linear model
 - Questions about the assignments
-<!-- - In-class exercises - [click to download .qmd](exercises/17_the_linear_model_in_class_exercises.qmd) -->
 
 ### Week 13 + 14
 

@@ -35,14 +35,16 @@ book:
       - chapters/11_strings_and_factors.qmd
       - chapters/12_reshaping_and_pivots.qmd
       - chapters/13_binding_and_joining.qmd
-      - chapters/14_sharing_and_privacy.qmd
+      - chapters/14_checking_data_processing.qmd
+      - chapters/15_data_privacy.qmd
+      - chapters/16_data_sharing_and_version_control.qmd
       
       
     - part: "Part III: Visualization and reporting"
       chapters:
-      - chapters/15_visualization.qmd 
-      - chapters/16_reporting.qmd
-      - chapters/17_the_linear_model.qmd
+      - chapters/17_principles_of_visualization.qmd
+      - chapters/18_plotting_with_ggplot2.qmd
+      - chapters/19_reporting.qmd
       
     - references.qmd
       
@@ -87,6 +89,8 @@ format:
           /* Observable Inputs.button uses .btn-quarto: give it the plots' blue (the default text colour matched its background), and space between stacked buttons */
           .btn.btn-quarto { color: #fff; background-color: #2780e3; border-color: #2780e3; margin: 0.4rem 0; }
           .btn.btn-quarto:hover { background-color: #1f6ab8; border-color: #1f6ab8; }
+          /* quarto adds a copy button to every code cell, which still appears at the top right of Observable JS cells whose code is hidden (echo: false). hide it for those cells only */
+          .code-copy-outer-scaffold > .cell-code.hidden:has(> pre.js) ~ .code-copy-button { display: none; }
           .badge {
             display: inline-flex; align-items: center; gap: 0.3em;
             padding: 0.2em 0.65em; border-radius: 20px;
