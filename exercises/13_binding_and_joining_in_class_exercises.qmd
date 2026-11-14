@@ -53,6 +53,25 @@ library(dplyr) # for %>%, joins, bind_rows, count, distinct, mutate, summarize, 
 library(tibble) # for tribble
 
 ```
+#in class
+```{r}
+# how to use joining within a sanity check
+dat_summary <- dat %>% 
+  group_by(id) %>% 
+  summarize(n = n()) %>% 
+  mutate(correct_n_trials = n == 60)
+
+dat_summary <- dat %>% 
+  count(id) %>% 
+  mutate(correct_n_trials = n == 60)
+
+dat_with_sanity_check <- dat %>% 
+  full_join(dat_summary, by = "id")
+
+#
+
+```
+
 
 # Today's data
 
@@ -245,12 +264,13 @@ This code is meant to combine the pre, post, and demographics data, remove the e
 #| error: true
 
 dat_pre %>%
-  left_join(dat_post, by = "id") %>%
-  left_join(dat_demographics, by = "id") %>%
-  semi_join(dat_exclusions, by = "id") %>%
+  left_join(dat_post, by = c("id", "condition")) %>%
+  left_join(distinct(dat_demographics), by = "id") %>% 
+  anti_join(dat_exclusions, by = "id") %>%
   mutate(change = wellbeing_post - wellbeing_pre) %>%
   group_by(condition) %>%
-  summarize(mean_change = mean(change))
+  summarize(mean_change = mean(change, na.rm = TRUE)) %>% 
+  ungroup()
 
 ```
 
