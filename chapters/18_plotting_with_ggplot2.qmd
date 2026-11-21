@@ -21,10 +21,10 @@ This chapter is a brief introduction to the mechanics of making plots in R with 
 
 {ggplot2} is a large package, and this chapter only covers its essentials. The following free online books cover it in much more detail:
 
--   *ggplot2: Elegant Graphics for Data Analysis* by Hadley Wickham, Danielle Navarro, and Thomas Lin Pedersen ([ggplot2-book.org](https://ggplot2-book.org/)). The definitive guide to {ggplot2}, written by its authors. Start with the chapters on [the grammar of graphics](https://ggplot2-book.org/mastery.html).
--   *R Graphics Cookbook* by Winston Chang [@chang2018] ([r-graphics.org](https://r-graphics.org/)). Short, practical 'recipes' for making specific plots and solving common problems in {ggplot2}. Useful when you know what you want to make but not how.
--   *Data Visualization: A Practical Introduction* by Kieran Healy [@healy2018] ([socviz.co](https://socviz.co/)). Teaches {ggplot2} alongside the principles of good visualization, aimed at social scientists.
--   The [visualization chapters](https://r4ds.hadley.nz/data-visualize) of *R for Data Science* [@wickham2023r4ds].
+- *ggplot2: Elegant Graphics for Data Analysis* by Hadley Wickham, Danielle Navarro, and Thomas Lin Pedersen ([ggplot2-book.org](https://ggplot2-book.org/)). The definitive guide to {ggplot2}, written by its authors. Start with the chapters on [the grammar of graphics](https://ggplot2-book.org/mastery.html).
+- *R Graphics Cookbook* by Winston Chang [@chang2018] ([r-graphics.org](https://r-graphics.org/)). Short, practical 'recipes' for making specific plots and solving common problems in {ggplot2}. Useful when you know what you want to make but not how.
+- *Data Visualization: A Practical Introduction* by Kieran Healy [@healy2018] ([socviz.co](https://socviz.co/)). Teaches {ggplot2} alongside the principles of good visualization, aimed at social scientists.
+- The [visualization chapters](https://r4ds.hadley.nz/data-visualize) of *R for Data Science* [@wickham2023r4ds].
 
 ```{r}
 library(readr) # for read_csv()
@@ -48,7 +48,7 @@ library(RColorBrewer) # for the brewer color palettes
 # Hmisc is not loaded, but must be installed for stat_summary(fun.data = mean_cl_normal) to work
 
 # devtools::install_github("matthewbjane/ThemePark")
-library(ThemePark) # for fun themes, e.g., theme_barbie()
+library(ThemePark)# for fun themes, e.g., theme_barbie()
 
 # devtools::install_github("ianhussey/truffle")
 library(truffle) # for simulating data
@@ -101,7 +101,7 @@ dat_empathy <- read_csv("../data/processed/data_empathy_plotting.csv") %>%
          timepoint = fct_relevel(timepoint, "Pre", "Post"))
 ```
 
-## Structure of a ggplot
+## Structure of a ggplot {#structure-of-a-ggplot}
 
 {ggplot2} is based on the 'layered grammar of graphics' [@wickham2010]. Every plot is built from the same components: data, a mapping of variables onto visual properties of the plot, and layers of geometric objects (geoms) that display the data. Scales, labels, themes, and facets can then be added to adjust how the plot looks.
 
@@ -177,10 +177,10 @@ p
 
 Legends are created automatically for every aesthetic that is mapped to a variable, e.g., `color = gender`. A few common adjustments:
 
--   **Position**: `theme(legend.position = "bottom")` moves the legend below the plot ("top", "left", "right", or "inside" are also possible), and `theme(legend.position = "none")` removes all legends.
--   **Removing one legend**: `guides(color = "none")` removes only the legend for the `color` aesthetic.
--   **Title**: set it with `labs()`, e.g., `labs(color = "Gender")`.
--   **Order**: the entries are in the order of the factor's levels, so change the order with {forcats} functions such as `fct_relevel()` (see [Ordering categories](#ordering-categories)). Where possible, put the entries in the same order as the data in the plot, e.g., the order in which lines end.
+- **Position**: `theme(legend.position = "bottom")` moves the legend below the plot ("top", "left", "right", or "inside" are also possible), and `theme(legend.position = "none")` removes all legends.
+- **Removing one legend**: `guides(color = "none")` removes only the legend for the `color` aesthetic.
+- **Title**: set it with `labs()`, e.g., `labs(color = "Gender")`.
+- **Order**: the entries are in the order of the factor's levels, so change the order with {forcats} functions such as `fct_relevel()` (see [Ordering categories](#ordering-categories)). Where possible, put the entries in the same order as the data in the plot, e.g., the order in which lines end.
 
 ```{r}
 ggplot(data = dat_likert, aes(x = self_esteem, y = depression, color = gender)) +
@@ -387,9 +387,9 @@ plot_linear + plot_log
 
 Coordinate functions change how the x and y positions are drawn, without changing the data:
 
--   `coord_cartesian()` zooms in or out without removing data (see [Limits vs. `coord_cartesian()`](#limits-vs.-coord_cartesian)).
--   `coord_flip()` swaps the x and y axes. It is often simpler to map variables to the axes you want directly, e.g., `aes(x = value, y = category)` for horizontal bars.
--   `coord_equal()` makes one unit on the x axis the same length as one unit on the y axis, and `coord_fixed(ratio = )` sets a different ratio. Use them when both axes show the same variable, or the same units, so that a 45° line means that the two are equal, as in [Brinley plots](#paired-data-brinley-plots) below.
+- `coord_cartesian()` zooms in or out without removing data (see [Limits vs. `coord_cartesian()`](#limits-vs.-coord_cartesian)).
+- `coord_flip()` swaps the x and y axes. It is often simpler to map variables to the axes you want directly, e.g., `aes(x = value, y = category)` for horizontal bars.
+- `coord_equal()` makes one unit on the x axis the same length as one unit on the y axis, and `coord_fixed(ratio = )` sets a different ratio. Use them when both axes show the same variable, or the same units, so that a 45° line means that the two are equal, as in [Brinley plots](#paired-data-brinley-plots) below.
 
 ## Plotting the distribution of one variable
 
@@ -454,9 +454,13 @@ ggplot(data = dat_amp, aes(x = amp_score)) +
 Create a histogram of the 'age' variable in `dat_amp_processed` (i.e., before exclusions). Choose a sensible bin width, and name the axes clearly.
 
 ```{r}
-#| include: false
 
-
+ggplot(data = dat_amp_processed, aes(x = age)) +
+  geom_histogram(binwidth = 5, boundary = 0) +
+  scale_x_continuous(breaks = breaks_pretty(n = 8)) +
+  labs(x = "Age (years)",
+       y = "Count") +
+  theme_linedraw()
 
 ```
 
@@ -501,15 +505,22 @@ ggplot(data = dat_amp, aes(x = amp_score, fill = gender)) +
 
 Make a density plot of the AMP scores in `dat_amp` that:
 
--   Uses a theme.
--   Uses colors of your choice.
--   Has prettier x axis breaks.
--   Names both axes more clearly.
+- Uses a theme.
+- Uses colors of your choice.
+- Has prettier x axis breaks.
+- Names both axes more clearly.
 
 ```{r}
 #| include: false
 
-
+ggplot(data = dat_amp, aes(x = amp_score)) +
+  geom_density(color = "darkorange",
+               fill = "darkorange",
+               alpha = 0.3) +
+  scale_x_continuous(breaks = breaks_pretty(n = 10)) +
+  labs(x = "AMP score (proportion of prime-congruent trials)",
+       y = "Density") +
+  theme_classic()
 
 ```
 
@@ -538,7 +549,7 @@ ggplot(data = dat_amp_processed, aes(x = gender)) +
   theme_linedraw()
 ```
 
-### Ordering categories
+### Ordering categories {#ordering-categories}
 
 By default, categories are plotted in alphabetical order (with `NA` last), which is rarely the most useful order. As you learned in the [Strings and factors](11_strings_and_factors.qmd) chapter, the order is controlled by the levels of a factor. {forcats} functions can change the order directly in the `aes()` call, e.g., `fct_infreq()` orders the categories from most to least common:
 
@@ -613,10 +624,10 @@ Notice that `geom_col()` plots values that are already in the data, whereas `geo
 
 Make a plot of the means and 95% confidence intervals of the self-report scores (`mean_self_report`) in `dat_amp` for each gender, using points rather than bars:
 
--   Use `coord_flip()` to swap the x and y axes.
--   Add a theme.
--   Change the size and shape of the points.
--   Name both axes more clearly.
+- Use `coord_flip()` to swap the x and y axes.
+- Add a theme.
+- Change the size and shape of the points.
+- Name both axes more clearly.
 
 ```{r}
 #| include: false
@@ -768,7 +779,6 @@ ggplot(dat_empathy, aes(x = timepoint, y = score, fill = timepoint)) +
   theme_linedraw()
 ```
 
-
 Several other packages can make raincloud plots, or plots like them. The [{ggdist}](https://mjskay.github.io/ggdist/) package, for example, has flexible geoms for plotting distributions, including half-violin plots (`stat_halfeye()`) and dot plots (`stat_dots()`), which can be combined into raincloud plots (see its [raincloud plot example](https://mjskay.github.io/ggdist/articles/dotsinterval.html#raindrop-plots)). The [{see}](https://easystats.github.io/see/) package, part of {easystats}, has `geom_violinhalf()`. Allen and colleagues' [raincloud plots tutorial](https://github.com/RainCloudPlots/RainCloudPlots) also shows how to make them with {ggplot2} alone.
 
 ```{r}
@@ -848,7 +858,7 @@ ggplot(data = dat_amp, aes(x = mean_self_report, y = amp_score)) +
   theme_linedraw()
 ```
 
-### Paired data: Brinley plots
+### Paired data: Brinley plots {#paired-data-brinley-plots}
 
 Paired data, e.g., each participant's scores before and after an intervention, are often plotted as two bars or two box plots, which hides how each participant changed. Plotting each participant's score at one time point against their score at the other shows both the individual and the overall change. These plots are known as Brinley plots, after Brinley [-@brinley1965], who used them to compare older and younger adults' reaction times, and modified versions are useful for showing change in clinical studies [@blampied2017]. Wilke recommends them for paired data ([Paired data](https://clauswilke.com/dataviz/visualizing-associations.html#associations-paired-data)).
 
@@ -1360,7 +1370,7 @@ ggplot(data = dat_likert, aes(x = self_esteem, y = depression)) +
 
 ggplot expects one row per observation, with one column for each variable you want to map to an aesthetic. To plot pre and post scores in different colors or facets, the data needs a single 'score' column and a single 'timepoint' column, i.e., long data. If your data has one column per time point, use `pivot_longer()` first (see the [Reshaping and pivots](12_reshaping_and_pivots.qmd) chapter). Conversely, a scatter plot of pre scores against post scores needs wide data, with one column for each.
 
-### Limits vs. `coord_cartesian()`
+### Limits vs. `coord_cartesian()` {#limits-vs.-coord_cartesian}
 
 Setting an axis's `limits` (e.g., with `ylim()` or `scale_y_continuous(limits = )`) removes the data outside the limits before plotting, like using `filter()`. This can change regression lines and other summaries, which are calculated only from the data that is plotted. `coord_cartesian()` instead zooms the plot in or out to the specified coordinates, without removing any data. Notice how the slope of the regression line changes in the second plot below, but not the third.
 
@@ -1438,10 +1448,10 @@ ggsave(plot = plot_1,
        dpi = 300)
 ```
 
--   Vector formats such as .pdf and .svg can be enlarged without losing quality, and are often preferred by journals.
--   Image formats such as .png are made of pixels, so set a high enough resolution (`dpi`), e.g., 300 dots per inch, for them to look sharp.
--   Always set the `width` and `height`. Otherwise, the size depends on the size of the plot window in RStudio when the code was run, so the saved plot looks different each time.
--   The size of the text is fixed relative to these dimensions: the same plot saved at a smaller size has relatively larger text. If the text is too small or large, change the `width` and `height`, or the text size in `theme()`.
+- Vector formats such as .pdf and .svg can be enlarged without losing quality, and are often preferred by journals.
+- Image formats such as .png are made of pixels, so set a high enough resolution (`dpi`), e.g., 300 dots per inch, for them to look sharp.
+- Always set the `width` and `height`. Otherwise, the size depends on the size of the plot window in RStudio when the code was run, so the saved plot looks different each time.
+- The size of the text is fixed relative to these dimensions: the same plot saved at a smaller size has relatively larger text. If the text is too small or large, change the `width` and `height`, or the text size in `theme()`.
 
 The size of plots shown in the rendered .html file below each chunk is set separately, with the `fig-width` and `fig-height` chunk options (in inches), e.g., `#| fig-width: 6`.
 
@@ -1450,7 +1460,7 @@ The size of plots shown in the rendered .html file below each chunk is set separ
 The main functions covered in this chapter:
 
 | Function | Package | What it does |
-|----------|---------|--------------|
+|----------------------|--------------------|------------------------------|
 | `ggplot()` | {ggplot2} | Creates a plot from a data frame, with default aesthetic mappings. |
 | `aes()` | {ggplot2} | Maps variables to aesthetics, e.g., `x`, `y`, `color`, `fill`, `shape`, `group`. |
 | `geom_point()`, `geom_jitter()` | {ggplot2} | Plot points, e.g., for scatter plots. `geom_jitter()` moves each point by a small random amount. |
@@ -1542,14 +1552,21 @@ In your local copy of this chapter's .qmd file, complete the tasks below. No sol
 
 Using the `dat_empathy` data frame, create the following plots:
 
--   Plot 1: Create a density plot of the IRI scores, using different colors for the two time points. Clean up the axes, theme, colors, etc.
--   Plot 2: Wrangle the data to a wider format. Create a scatter plot with a linear regression line that predicts IRI scores at post from IRI scores at pre. Clean up the axes, theme, colors, etc.
--   Combine both plots into one figure using the {patchwork} package. The density plot should be above the scatter plot, and only half its height.
--   Save the figure to disk as both a .pdf and a .png using `ggsave()`. Set the height and width of the saved plots, and of the plots shown below the chunk, so that their proportions are reasonable.
+- Plot 1: Create a density plot of the IRI scores, using different colors for the two time points. Clean up the axes, theme, colors, etc.
+- Plot 2: Wrangle the data to a wider format. Create a scatter plot with a linear regression line that predicts IRI scores at post from IRI scores at pre. Clean up the axes, theme, colors, etc.
+- Combine both plots into one figure using the {patchwork} package. The density plot should be above the scatter plot, and only half its height.
+- Save the figure to disk as both a .pdf and a .png using `ggsave()`. Set the height and width of the saved plots, and of the plots shown below the chunk, so that their proportions are reasonable.
+
+```{r}
+
+ggplot(ddat_empathy, )
+
+```
+
 
 ::: {.callout-note collapse="true" title="Click to show hint"}
--   Plot 1: map 'timepoint' to `fill` and use `geom_density()` with `alpha` below 1, so that both distributions can be seen.
--   Plot 2: use `pivot_wider()` with `names_from = timepoint` and `values_from = score`. Remove the 'scale' column first, if needed. Participants without post scores will have `NA`, and are dropped from the plot with a warning.
--   Combine the plots with `/`, and set their relative heights with `plot_layout(heights = c(1, 2))`.
--   Use the `#| fig-width:` and `#| fig-height:` chunk options for the plot below the chunk, and the `width` and `height` arguments of `ggsave()` for the saved files.
+- Plot 1: map 'timepoint' to `fill` and use `geom_density()` with `alpha` below 1, so that both distributions can be seen.
+- Plot 2: use `pivot_wider()` with `names_from = timepoint` and `values_from = score`. Remove the 'scale' column first, if needed. Participants without post scores will have `NA`, and are dropped from the plot with a warning.
+- Combine the plots with `/`, and set their relative heights with `plot_layout(heights = c(1, 2))`.
+- Use the `#| fig-width:` and `#| fig-height:` chunk options for the plot below the chunk, and the `width` and `height` arguments of `ggsave()` for the saved files.
 :::

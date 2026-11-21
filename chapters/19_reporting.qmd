@@ -28,17 +28,17 @@ This chapter shows how to report results from models such as `lm(eval_difference
 
 The ease of automated reporting has to be strongly balanced against thorough understanding of the models themselves. Two companion books cover this:
 
--   *Understanding Statistics Through Monte Carlo Simulations* ([simulations.tidyver.se](https://simulations.tidyver.se)). To learn what a linear model is, and how correlations, *t*-tests, non-parametric tests, meta-analyses, multi-level models and more are all linear models in disguise, see its ['Everything is regression' chapter](https://simulations.tidyver.se/chapters/11_everything_is_regression.html). You can read that chapter without first learning how to simulate data.
--   *Trustworthiness Assessment and Forensic Meta-Science* ([trustworthyresear.ch](https://trustworthyresear.ch)). Its 'Understanding statistics' part covers how to interpret *p*-values, Cohen's *d*, and standard deviations vs. standard errors, and its later chapters show how reported results can be checked for errors.
+- *Understanding Statistics Through Monte Carlo Simulations* ([simulations.tidyver.se](https://simulations.tidyver.se)). To learn what a linear model is, and how correlations, *t*-tests, non-parametric tests, meta-analyses, multi-level models and more are all linear models in disguise, see its ['Everything is regression' chapter](https://simulations.tidyver.se/chapters/11_everything_is_regression.html). You can read that chapter without first learning how to simulate data.
+- *Trustworthiness Assessment and Forensic Meta-Science* ([trustworthyresear.ch](https://trustworthyresear.ch)). Its 'Understanding statistics' part covers how to interpret *p*-values, Cohen's *d*, and standard deviations vs. standard errors, and its later chapters show how reported results can be checked for errors.
 :::
 
 ## Goals of results reporting
 
 Results should be reported in a way that is:
 
--   **Reproducible**: every number in the text comes directly from code that runs on the data, rather than being copied by hand from the console into a Word document. Copying by hand is surprisingly error-prone. An automated check of over 250,000 *p*-values in psychology articles found that about half of the articles contained at least one *p*-value that was inconsistent with its test statistic and degrees of freedom, and about one in eight contained an inconsistency large enough to change whether the result was statistically significant [@nuijten2016]. Hand-copied results also go out of date silently: if you fix an error in your data processing, every number you copied has to be found and updated by hand.
--   **Standardized**: results are reported in a consistent and recognizable format, such as the American Psychological Association (APA) style that is used in psychology, e.g., "*t*(485) = 79.58, *p* \< .001". This makes results easier to read, compare, and check.
--   **Comprehensive**: results include all the information a reader needs to interpret them, not just whether *p* \< .05. This includes the test statistic, degrees of freedom, *p*-value, an effect size, and a confidence interval for the effect size, and descriptive statistics such as the sample size, means, and standard deviations.
+- **Reproducible**: every number in the text comes directly from code that runs on the data, rather than being copied by hand from the console into a Word document. Copying by hand is surprisingly error-prone. An automated check of over 250,000 *p*-values in psychology articles found that about half of the articles contained at least one *p*-value that was inconsistent with its test statistic and degrees of freedom, and about one in eight contained an inconsistency large enough to change whether the result was statistically significant [@nuijten2016]. Hand-copied results also go out of date silently: if you fix an error in your data processing, every number you copied has to be found and updated by hand.
+- **Standardized**: results are reported in a consistent and recognizable format, such as the American Psychological Association (APA) style that is used in psychology, e.g., "*t*(485) = 79.58, *p* \< .001". This makes results easier to read, compare, and check.
+- **Comprehensive**: results include all the information a reader needs to interpret them, not just whether *p* \< .05. This includes the test statistic, degrees of freedom, *p*-value, an effect size, and a confidence interval for the effect size, and descriptive statistics such as the sample size, means, and standard deviations.
 
 Several R packages help with all three of these goals by converting fitted models into text and tables:
 
@@ -119,9 +119,9 @@ The output contains everything we need, but not in a form we can put in a result
 
 The most common way that results end up in a thesis or article is that someone reads them from the console and types them into a Word document. This creates three problems:
 
--   **Typos**: it's easy to type 79.85 instead of 79.58, or *p* = .03 instead of *p* = .003.
--   **Inconsistent rounding and formatting**: e.g., some *p*-values rounded to two decimal places and others to three, or "p = 0.000" instead of "*p* \< .001".
--   **Results going out of date**: if you later change the exclusion criteria or fix a bug in your processing code, every number in the text has to be found and updated by hand.
+- **Typos**: it's easy to type 79.85 instead of 79.58, or *p* = .03 instead of *p* = .003.
+- **Inconsistent rounding and formatting**: e.g., some *p*-values rounded to two decimal places and others to three, or "p = 0.000" instead of "*p* \< .001".
+- **Results going out of date**: if you later change the exclusion criteria or fix a bug in your processing code, every number in the text has to be found and updated by hand.
 
 ### In-line code
 
@@ -152,7 +152,7 @@ renders as:
 
 If the data or the exclusions change, the text updates itself when you re-render the document.
 
-Notice the formatting helpers. `round_half_up()` from {janitor} rounds the way you were taught in school (2.345 becomes 2.35). Base R's `round()` rounds halves to the nearest even number instead (2.345 can become 2.34). `format_p()` from {insight} formats a *p*-value according to APA style, e.g., "p < .001" rather than "p = 0.000000000000000000000000000001".
+Notice the formatting helpers. `round_half_up()` from {janitor} rounds the way you were taught in school (2.345 becomes 2.35). Base R's `round()` rounds halves to the nearest even number instead (2.345 can become 2.34). `format_p()` from {insight} formats a *p*-value according to APA style, e.g., "p \< .001" rather than "p = 0.000000000000000000000000000001".
 
 ### Automated text with {report}
 
@@ -571,11 +571,11 @@ cite_packages()
 
 Automated reporting removes copying errors, but it does not guarantee that what you report is correct or appropriate:
 
--   **Garbage in, garbage out**: if the processed data contains errors, the report will describe those errors perfectly. This is why the wrangling and checking covered in the rest of this book matter.
--   **Read what it says**: check that the text describes the model you meant to fit, e.g., the right outcome, predictors, and reference levels, and that the numbers match the model output. For example, the `report()` text for the regression above describes the intercept as the score for a woman aged 0, which is not a meaningful quantity in this study. Centering age before fitting the model would make the intercept meaningful.
--   **Check the formatting**: automated output is not always in the format you need. For example, `report()` writes some small numbers in scientific notation, e.g., "beta = -7.97e-03" in the regression above, which should be reported as "-0.01" or "-0.008". It also uses names from the code, e.g., "dat_analysis\$eval_chocolate", that should be replaced with names that readers will understand.
--   **Defaults are choices**: functions such as `report()` make choices for you, e.g., how an effect size is calculated or which labels are used to interpret it. Check the documentation and report the choices you made.
--   **Interpretation is your job**: `report()` can say that an effect is "statistically significant and large", but only you can say what the result means for your research question, and what it doesn't mean.
+- **Garbage in, garbage out**: if the processed data contains errors, the report will describe those errors perfectly. This is why the wrangling and checking covered in the rest of this book matter.
+- **Read what it says**: check that the text describes the model you meant to fit, e.g., the right outcome, predictors, and reference levels, and that the numbers match the model output. For example, the `report()` text for the regression above describes the intercept as the score for a woman aged 0, which is not a meaningful quantity in this study. Centering age before fitting the model would make the intercept meaningful.
+- **Check the formatting**: automated output is not always in the format you need. For example, `report()` writes some small numbers in scientific notation, e.g., "beta = -7.97e-03" in the regression above, which should be reported as "-0.01" or "-0.008". It also uses names from the code, e.g., "dat_analysis\$eval_chocolate", that should be replaced with names that readers will understand.
+- **Defaults are choices**: functions such as `report()` make choices for you, e.g., how an effect size is calculated or which labels are used to interpret it. Check the documentation and report the choices you made.
+- **Interpretation is your job**: `report()` can say that an effect is "statistically significant and large", but only you can say what the result means for your research question, and what it doesn't mean.
 
 ## Assembling and customizing in-line results yourself
 
@@ -631,7 +631,7 @@ d_ci_upper <- fmt(fit_d$CI_high)
 
 Then write the text, with in-line code wherever a number should appear. In your .qmd file, you would write:
 
-```markdown
+``` markdown
 ## Participants
 
 After exclusions, the final sample consisted of `r knitr::inline_expr("sample_n")` participants 
@@ -654,7 +654,7 @@ After exclusions, the final sample consisted of `r sample_n` participants (age *
 
 **Results**
 
-Participants evaluated chocolate (*M* = `r chocolate_mean`, *SD* = `r chocolate_sd`) more positively than poop (*M* = `r poop_mean`, *SD* = `r poop_sd`), *t*(`r t_df`) = `r t_value`, *p* `r t_p`, Cohen's *d*~z~ = `r d_estimate`, 95% CI [`r d_ci_lower`, `r d_ci_upper`].
+Participants evaluated chocolate (*M* = `r chocolate_mean`, *SD* = `r chocolate_sd`) more positively than poop (*M* = `r poop_mean`, *SD* = `r poop_sd`), *t*(`r t_df`) = `r t_value`, *p* `r t_p`, Cohen's *d*~z~ = `r d_estimate`, 95% CI \[`r d_ci_lower`, `r d_ci_upper`\].
 :::
 
 Every number in this text comes from the data, is rounded and formatted consistently, and will update if the data or the exclusions change. And unlike the output of `report()`, the wording, the statistics reported, and their order are entirely under your control. For example, we chose to report the version of Cohen's *d* (*d*~z~) and say so in the text, which `report()` does not do.
@@ -667,21 +667,21 @@ Large language models (LLMs) such as ChatGPT or Claude can take much of the tedi
 
 However, LLMs are not a reliable way to produce the numbers themselves. They can make up, change, or mix up numbers in ways that look completely plausible. A good workflow therefore keeps the numbers in code and uses LLMs only to help write the code and the words:
 
--   Ask the LLM to write code that extracts the values from your fitted model objects, rather than asking it to write the numbers into the text.
--   If an LLM helps you rephrase the text, give it the text with the in-line code (e.g., `` `r knitr::inline_expr("t_value")` ``), not the rendered numbers, and ask it to keep the in-line code unchanged. That way the numbers still come from your data when the document is rendered.
--   Read the code it writes, and check the rendered text against the model output, e.g., that each confidence interval belongs to the right estimate. Then check that the text still says what the results show.
--   Follow your institution's and the journal's rules on the use of LLMs, and report how you used them.
+- Ask the LLM to write code that extracts the values from your fitted model objects, rather than asking it to write the numbers into the text.
+- If an LLM helps you rephrase the text, give it the text with the in-line code (e.g., `` `r knitr::inline_expr("t_value")` ``), not the rendered numbers, and ask it to keep the in-line code unchanged. That way the numbers still come from your data when the document is rendered.
+- Read the code it writes, and check the rendered text against the model output, e.g., that each confidence interval belongs to the right estimate. Then check that the text still says what the results show.
+- Follow your institution's and the journal's rules on the use of LLMs, and report how you used them.
 
 ## Key functions
 
 The main functions covered in this chapter:
 
 | Function | Package | What it does |
-|----------|---------|--------------|
+|----------------------|--------------------|------------------------------|
 | In-line code: `` `r ` `` | Quarto | Runs a short piece of R code inside the text and shows its result there. |
 | `round_half_up()` | {janitor} | Rounds numbers, with halves always rounded up (e.g., 2.345 to 2.35). |
 | `format(nsmall = )` | base R | Turns a number into text with a minimum number of decimal places, keeping trailing zeros (e.g., 4.80 rather than 4.8). |
-| `format_p()` | {insight} | Formats *p*-values in APA style, e.g., "p < .001". |
+| `format_p()` | {insight} | Formats *p*-values in APA style, e.g., "p \< .001". |
 | `report()` | {report} | Describes a fitted model, data frame, or R session in English text. |
 | `report_statistics()` | {report} | Returns only the statistics for a model, e.g., to use in brackets in your own sentence. |
 | `report_parameters()` | {report} | Describes every parameter of a model, including the intercept. |
@@ -739,8 +739,9 @@ The test statistic, its degrees of freedom, the *p*-value, an effect size, and a
 In your local copy of this chapter's .qmd file, complete the tasks below. No solutions are provided for these tasks, to reduce the temptation to peek or copy-paste. Use the hints if you get stuck.
 
 1.  Using `dat_analysis`, write a short methods and results section in the text of your .qmd file (i.e., not in a code chunk) that reports:
-    -   The sample: the number of participants, their age, and their gender.
-    -   Whether participants evaluated chocolate more positively than poop, including the means and standard deviations of each evaluation, the *t*-test results, and Cohen's *d* with its confidence interval.
+
+    - The sample: the number of participants, their age, and their gender.
+    - Whether participants evaluated chocolate more positively than poop, including the means and standard deviations of each evaluation, the *t*-test results, and Cohen's *d* with its confidence interval.
 
     All numbers must come from in-line code. Render the document and check that every number in the text matches the output of the code.
 
