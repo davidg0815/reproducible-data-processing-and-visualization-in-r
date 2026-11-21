@@ -40,15 +40,15 @@ Under the European Union's General Data Protection Regulation (GDPR), **personal
 
 It helps to distinguish between two types of identifying information:
 
--   **Direct identifiers** identify a person on their own, e.g., a name, an email address, or a platform ID such as a Prolific ID.
--   **Indirect identifiers** (or *quasi-identifiers*) don't identify a person on their own, but can in combination, e.g., exact age, gender, postcode, occupation, and the date the person took part. Even a few demographic variables are often enough to single out one person in a dataset [@morehouse2025].
+- **Direct identifiers** identify a person on their own, e.g., a name, an email address, or a platform ID such as a Prolific ID.
+- **Indirect identifiers** (or *quasi-identifiers*) don't identify a person on their own, but can in combination, e.g., exact age, gender, postcode, occupation, and the date the person took part. Even a few demographic variables are often enough to single out one person in a dataset [@morehouse2025].
 
 This chapter focuses on direct identifiers, because they are the most common problem and the easiest to fix. Removing them is necessary but often not sufficient: see the [Data Anonymization Course](https://lmu-osc.github.io/data-anonymization/) for how to assess and reduce the risk from indirect identifiers.
 
 Two more terms are useful:
 
--   **Pseudonymous** data has had its direct identifiers replaced with codes, but someone still has the information needed to link the codes back to the people, e.g., a table of which code belongs to which Prolific ID. In GDPR terms, pseudonymous data is still personal data.
--   **Anonymous** data can't be linked back to the people by anyone, including you. Anonymous data is no longer personal data.
+- **Pseudonymous** data has had its direct identifiers replaced with codes, but someone still has the information needed to link the codes back to the people, e.g., a table of which code belongs to which Prolific ID. In GDPR terms, pseudonymous data is still personal data.
+- **Anonymous** data can't be linked back to the people by anyone, including you. Anonymous data is no longer personal data.
 
 ### Common examples
 
@@ -124,7 +124,7 @@ names(dat_survey)
 
 Looking at the names, 'IPAddress', 'LocationLatitude', 'LocationLongitude', and 'PROLIFIC_PID' are all personal data. 'comments' is free text, and reading it reveals an email address.
 
-Column names can be misleading, so it's also worth searching the *contents* of every column for values that look like identifiers. The code below checks each column for values that look like an email address (contain '@'), an IP address (four numbers separated by dots), or a Prolific ID (24 characters of 0-9 and a-f).
+Column names can be misleading, so it's also worth searching the *contents* of every column for values that look like identifiers. The code below checks each column for values that look like an email address (contain '\@'), an IP address (four numbers separated by dots), or a Prolific ID (24 characters of 0-9 and a-f).
 
 ```{r}
 dat_survey %>%
@@ -317,7 +317,7 @@ When you're allowed to delete them, and when you must, is decided by your ethics
 The main functions covered in this chapter:
 
 | Function | Package | What it does |
-|------------------------------|-------------|-----------------------------|
+|----------------------------|-----------------|---------------------------|
 | `select(-any_of())` | {dplyr} | Removes the columns named in a vector, ignoring names that aren't in the data frame. |
 | `str_detect()` | {stringr} | Checks whether strings match a pattern, e.g., to search columns for values that look like email addresses. |
 | `distinct()` | {dplyr} | Keeps only unique rows, e.g., each Prolific ID once. |
@@ -390,7 +390,7 @@ dat_practice_task <- tibble(
 4.  Check that the anonymized data frames can be joined by 'id', and that the checks from step 1 no longer find anything.
 
 ::: {.callout-tip collapse="true" title="Hints"}
--   Not every participant in the survey has task data, so build the link table from the Prolific IDs in both data frames with `bind_rows()` and `distinct()`.
--   The 'feedback' column contains a name. Either remove the column, or replace only that response with `mutate()` and `case_when()`.
--   'RecipientEmail' is empty here, but it should still be removed: in other exports it won't be.
+- Not every participant in the survey has task data, so build the link table from the Prolific IDs in both data frames with `bind_rows()` and `distinct()`.
+- The 'feedback' column contains a name. Either remove the column, or replace only that response with `mutate()` and `case_when()`.
+- 'RecipientEmail' is empty here, but it should still be removed: in other exports it won't be.
 :::
