@@ -1559,9 +1559,55 @@ Using the `dat_empathy` data frame, create the following plots:
 
 ```{r}
 
-ggplot(ddat_empathy, )
+#| fig-width: 6
+#| fig-height: 8
 
+# Plot 1: Dichteverteilung der IRI-Werte, getrennt nach Zeitpunkt
+plot_density <- ggplot(dat_empathy, aes(x = score, fill = timepoint)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_viridis_d(begin = 0.2, end = 0.8) +
+  scale_x_continuous(breaks = breaks_pretty(n = 8)) +
+  labs(x = "IRI score",
+       y = "Density",
+       fill = "Timepoint") +
+  theme_linedraw()
+
+# für Plot 2 ins Wide-Format: eine Zeile pro Person, je eine Spalte für Pre und Post
+dat_empathy_wide <- dat_empathy %>%
+  select(-scale) %>%
+  pivot_wider(names_from = timepoint,
+              values_from = score)
+
+# Plot 2: Streudiagramm mit Regressionsgerade
+plot_scatter <- ggplot(dat_empathy_wide, aes(x = Pre, y = Post)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm") +
+  labs(x = "IRI score at pre",
+       y = "IRI score at post") +
+  theme_linedraw()
+
+# Dichteplot oben, halb so hoch wie das Streudiagramm
+plot_combined <- plot_density / plot_scatter +
+  plot_layout(heights = c(1, 2))
+
+plot_combined
 ```
+
+```{r}
+
+ggsave(plot = plot_combined,
+       filename = "plots/empathy_figure.pdf",
+       width = 6,
+       height = 8)
+
+ggsave(plot = plot_combined,
+       filename = "plots/empathy_figure.png",
+       width = 6,
+       height = 8,
+       units = "in",
+       dpi = 300)
+```
+
 
 
 ::: {.callout-note collapse="true" title="Click to show hint"}

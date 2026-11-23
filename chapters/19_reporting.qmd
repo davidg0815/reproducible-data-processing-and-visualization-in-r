@@ -87,7 +87,7 @@ dat_processed <- read_csv("../data/processed/data_processed_chocolatepoop.csv")
 
 dat_analysis <- dat_processed %>%
   # exclude participants who failed any of the checks
-  filter(if_all(attention_check1:completion_time_check, ~ .x == "passed")) %>%
+  filter(if_all(attention_check1:attention_check3, ~ .x == "passed")) %>%
   # score each participant's mean evaluation of each stimulus
   rowwise() %>%
   mutate(eval_chocolate = mean(c_across(starts_with("classic_chocolate"))),
@@ -745,9 +745,70 @@ In your local copy of this chapter's .qmd file, complete the tasks below. No sol
 
     All numbers must come from in-line code. Render the document and check that every number in the text matches the output of the code.
 
+```{r}
+n_participants <- nrow(dat_analysis)
+
+mean_chocolate <- mean(dat_analysis$eval_chocolate) %>% round_half_up(digits = 2)
+mean_poop <- mean(dat_analysis$eval_poop) %>% round_half_up(digits = 2)
+
+t_value <- fit_ttest$statistic %>% round_half_up(digits = 2)
+df <- fit_ttest$parameter
+p_value <- fit_ttest$p.value %>% format_p(stars = FALSE)
+```
+
+```{r}
+
+fmt <- function(x, digits = 2) {
+  format(round_half_up(x, digits = digits), nsmall = digits)
+}
+
+chocolate_mean <- fmt(mean(dat_analysis$eval_chocolate))
+chocolate_sd   <- fmt(sd(dat_analysis$eval_chocolate))
+poop_mean      <- fmt(mean(dat_analysis$eval_poop))
+poop_sd        <- fmt(sd(dat_analysis$eval_poop))
+
+fit_ttest <- t.test(dat_analysis$eval_chocolate,
+                    dat_analysis$eval_poop,
+                    paired = TRUE)
+
+t_df    <- fit_ttest$parameter
+t_value <- fmt(fit_ttest$statistic)
+t_p     <- format_p(fit_ttest$p.value, name = NULL)
+
+fit_d <- repeated_measures_d(dat_analysis$eval_chocolate,
+                             dat_analysis$eval_poop,
+                             method = "z")
+
+d_estimate <- fmt(fit_d$d_z)
+d_ci_lower <- fmt(fit_d$CI_low)
+d_ci_upper <- fmt(fit_d$CI_high)
+
+```
+
+## Methods
+
+`r report_participants(dat_analysis)`
+
+## Results
+
+Participants evaluated chocolate (*M* = `r chocolate_mean`, *SD* = `r chocolate_sd`) more positively than poop (*M* = `r poop_mean`, *SD* = `r poop_sd`), *t*(`r t_df`) = `r t_value`, *p* `r t_p`, Cohen's *d*~z~ = `r d_estimate`, 95% CI \[`r d_ci_lower`, `r d_ci_upper`\].
+
 2.  Change the exclusions in the Example data section so that participants are only excluded if they failed an attention check, and re-render the document. Which numbers in your text changed? How long would it have taken to update them by hand?
 
 3.  Create an .html table of the means and standard deviations of the evaluations of chocolate and poop, separately for each gender, with all numbers rounded to two decimal places.
+
+```{r}
+dat_analysis %>%
+  filter(gender %in% c("female", "male", "non-binary")) %>%
+  select(gender, eval_chocolate, eval_poop) %>%
+  group_by(gender) %>%
+  report_table() %>%
+  select(Group, Variable, Mean, SD) %>%
+  mutate(across(where(is.numeric), ~ round_half_up(.x, digits = 2))) %>%
+  kable() %>%
+  kable_classic(full_width = FALSE)
+```
+
 
 ::: {.callout-note collapse="true" title="Click to show hint"}
 1.  Use `report_participants()` for the sample. For the results, either extract and format each value in a code chunk and use it in-line, or use `report_statistics()` in-line. Remember that `report()`'s Cohen's *d* is approximated; `repeated_measures_d()` calculates it from the data.
